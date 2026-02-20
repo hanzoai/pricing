@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: pricing-sync
+  namespace: hanzo
+  labels:
+    app: pricing
+spec:
+  # Run daily at 04:00 UTC.
+  schedule: "0 4 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          imagePullSecrets:
+            - name: ghcr-secret
+          containers:
+            - name: pricing-sync
+              image: ghcr.io/hanzoai/pricing:latest
+              command: ["node", "src/sync.mjs"]
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+          restartPolicy: OnFailure

@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pricing
+  namespace: hanzo
+  labels:
+    app: pricing
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pricing
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: pricing
+    spec:
+      imagePullSecrets:
+        - name: ghcr-secret
+      containers:
+        - name: pricing
+          image: ghcr.io/hanzoai/pricing:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PRICING_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: pricing-secrets
+                  key: PRICING_API_KEY
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi

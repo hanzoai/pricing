@@ -1,0 +1,14 @@
+{
+  "name": "@hanzo/pricing",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node src/server.mjs",
+    "sync": "node src/sync.mjs",
+    "dev": "node --watch src/server.mjs"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}
