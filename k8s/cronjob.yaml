@@ -20,13 +20,25 @@ spec:
             - name: ghcr-secret
           containers:
             - name: pricing-sync
-              image: ghcr.io/hanzoai/pricing:latest
-              command: ["node", "src/sync.mjs"]
+              image: curlimages/curl:latest
+              command:
+                - sh
+                - -c
+                - |
+                  curl -sf -X POST \
+                    -H "Authorization: Bearer $(PRICING_API_KEY)" \
+                    http://pricing.hanzo.svc.cluster.local:8080/v1/sync
+              env:
+                - name: PRICING_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: pricing-secrets
+                      key: PRICING_API_KEY
               resources:
                 requests:
-                  cpu: 50m
-                  memory: 64Mi
+                  cpu: 10m
+                  memory: 16Mi
                 limits:
-                  cpu: 200m
-                  memory: 128Mi
+                  cpu: 50m
+                  memory: 32Mi
           restartPolicy: OnFailure
