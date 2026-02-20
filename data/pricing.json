@@ -1,7 +1,7 @@
 {
   "markup": 1.2,
   "zenMultiplier": 3,
-  "updated": "2026-02-19T23:41:49.060Z",
+  "updated": "2026-02-20T00:53:39.305Z",
   "hanzoModels": [
     {
       "name": "Zen",
@@ -17,25 +17,6 @@
       "pricing": {
         "input": 1.08,
         "output": 9.18,
-        "cacheRead": null,
-        "cacheWrite": null
-      }
-    },
-    {
-      "name": "Sho",
-      "fullName": "Sho - Next-Gen Diffusion LLM",
-      "description": "Revolutionary diffusion model with breakthrough efficiency.",
-      "features": [
-        "200k context window",
-        "Diffusion architecture",
-        "Ultra-fast inference",
-        "50% discount with batch processing*"
-      ],
-      "baseModel": "deepseek/deepseek-chat",
-      "multiplier": 3,
-      "pricing": {
-        "input": 1.15,
-        "output": 3.21,
         "cacheRead": null,
         "cacheWrite": null
       }

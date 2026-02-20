@@ -3,7 +3,7 @@
 // 20% markup on all third-party model pricing.
 export const MARKUP = 1.20;
 
-// Zen/Sho models are priced at 3x the underlying base model (after markup).
+// Zen models are priced at 3x the underlying base model (after markup).
 export const ZEN_MULTIPLIER = 3.0;
 
 // Hanzo proprietary models. Pricing is derived from a base third-party model.
@@ -20,21 +20,6 @@ export const hanzoModels = [
     ],
     // Zen pricing = 3x what we charge for GLM-5 (which already has 20% markup)
     baseOpenrouterId: "z-ai/glm-5",
-    multiplier: ZEN_MULTIPLIER,
-  },
-  {
-    name: "Sho",
-    fullName: "Sho - Next-Gen Diffusion LLM",
-    description:
-      "Revolutionary diffusion model with breakthrough efficiency.",
-    features: [
-      "200k context window",
-      "Diffusion architecture",
-      "Ultra-fast inference",
-      "50% discount with batch processing*",
-    ],
-    // Sho pricing = 3x what we charge for DeepSeek V3 (which already has 20% markup)
-    baseOpenrouterId: "deepseek/deepseek-chat",
     multiplier: ZEN_MULTIPLIER,
   },
 ];
