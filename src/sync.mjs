@@ -108,48 +108,22 @@ export async function sync() {
     });
   }
 
-  // Build a lookup for third-party priced models by openrouterId.
-  const thirdPartyLookup = new Map();
-  for (const m of pricedThirdParty) {
-    thirdPartyLookup.set(m.openrouterId, m);
-  }
-
-  // Process Hanzo proprietary models.
+  // Process Hanzo Zen models.
+  // Zen pricing = fireworksCost * ZEN_MULTIPLIER (hardcoded from gateway config).
   const pricedHanzo = [];
   for (const model of hanzoModels) {
-    const base = thirdPartyLookup.get(model.baseOpenrouterId);
-    if (!base || !base.pricing.input) {
-      console.warn(
-        `[sync] WARN: Base model pricing not available for ${model.name} (base: ${model.baseOpenrouterId})`
-      );
-      pricedHanzo.push({
-        name: model.name,
-        fullName: model.fullName,
-        description: model.description,
-        features: model.features,
-        baseModel: model.baseOpenrouterId,
-        multiplier: model.multiplier,
-        pricing: { input: null, output: null, cacheRead: null, cacheWrite: null },
-      });
-      continue;
-    }
-
+    const fc = model.fireworksCost;
     pricedHanzo.push({
       name: model.name,
       fullName: model.fullName,
       description: model.description,
       features: model.features,
-      baseModel: model.baseOpenrouterId,
-      multiplier: model.multiplier,
+      tier: model.tier,
       pricing: {
-        input: roundPrice(base.pricing.input * model.multiplier),
-        output: roundPrice(base.pricing.output * model.multiplier),
-        cacheRead: base.pricing.cacheRead
-          ? roundPrice(base.pricing.cacheRead * model.multiplier)
-          : null,
-        cacheWrite: base.pricing.cacheWrite
-          ? roundPrice(base.pricing.cacheWrite * model.multiplier)
-          : null,
+        input: roundPrice(fc.input * ZEN_MULTIPLIER),
+        output: roundPrice(fc.output * ZEN_MULTIPLIER),
+        cacheRead: null,
+        cacheWrite: null,
       },
     });
   }
