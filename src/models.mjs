@@ -17,6 +17,7 @@ export const hanzoModels = [
     description: "Flagship model built on GLM-5. Optimal for complex reasoning and multi-domain tasks.",
     features: ["202k context window", "Flagship intelligence"],
     tier: "ultra max",
+    upstream: { model: "GLM-5", provider: "Zhipu AI", params: "~400B", arch: "Dense Transformer" },
     fireworksCost: { input: 1.00, output: 3.20 },
   },
   {
@@ -25,6 +26,7 @@ export const hanzoModels = [
     description: "High-capability model with efficient MoE architecture for demanding workloads.",
     features: ["131k context window", "MoE architecture"],
     tier: "ultra",
+    upstream: { model: "Qwen3-Next-80B-A3B", provider: "Alibaba Qwen", params: "80B (3B active)", arch: "MoE" },
     fireworksCost: { input: 0.90, output: 0.90 },
   },
   {
@@ -33,6 +35,7 @@ export const hanzoModels = [
     description: "Extended context MoE model for large document processing and analysis.",
     features: ["131k context window", "235B MoE parameters"],
     tier: "ultra",
+    upstream: { model: "Qwen3-235B-A22B", provider: "Alibaba Qwen", params: "235B (22B active)", arch: "MoE" },
     fireworksCost: { input: 1.20, output: 1.20 },
   },
   {
@@ -41,6 +44,7 @@ export const hanzoModels = [
     description: "Lightweight model optimized for speed and cost efficiency.",
     features: ["40k context window", "Ultra-fast inference"],
     tier: "pro",
+    upstream: { model: "Qwen3-8B", provider: "Alibaba Qwen", params: "8B", arch: "Dense Transformer" },
     fireworksCost: { input: 0.20, output: 0.20 },
   },
   {
@@ -49,6 +53,7 @@ export const hanzoModels = [
     description: "Maximum reasoning capability with extended thinking for complex problems.",
     features: ["202k context window", "Deep reasoning"],
     tier: "ultra max",
+    upstream: { model: "GLM-5 (thinking)", provider: "Zhipu AI", params: "~400B", arch: "Dense Transformer + CoT" },
     fireworksCost: { input: 1.00, output: 3.20 },
   },
   {
@@ -57,6 +62,7 @@ export const hanzoModels = [
     description: "Dedicated reasoning model with explicit chain-of-thought capabilities.",
     features: ["131k context window", "Chain-of-thought"],
     tier: "pro max",
+    upstream: { model: "Qwen3-Next-80B-A3B (thinking)", provider: "Alibaba Qwen", params: "80B (3B active)", arch: "MoE + CoT" },
     fireworksCost: { input: 0.90, output: 0.90 },
   },
   {
@@ -65,6 +71,7 @@ export const hanzoModels = [
     description: "Code-specialized model for generation, review, and debugging.",
     features: ["262k context window", "480B MoE parameters"],
     tier: "ultra",
+    upstream: { model: "Qwen3-Coder-480B-A35B", provider: "Alibaba Qwen", params: "480B (35B active)", arch: "MoE" },
     fireworksCost: { input: 1.20, output: 1.20 },
   },
   {
@@ -73,6 +80,7 @@ export const hanzoModels = [
     description: "Lightweight code model optimized for speed and inline completions.",
     features: ["262k context window", "Fast inference"],
     tier: "pro max",
+    upstream: { model: "Qwen3-Coder-30B-A3B", provider: "Alibaba Qwen", params: "30B (3B active)", arch: "MoE" },
     fireworksCost: { input: 0.50, output: 0.50 },
   },
   {
@@ -81,6 +89,7 @@ export const hanzoModels = [
     description: "Full-precision code model for maximum accuracy on complex codebases.",
     features: ["262k context window", "BF16 full precision"],
     tier: "ultra max",
+    upstream: { model: "Qwen3-Coder-480B BF16", provider: "Alibaba Qwen", params: "480B", arch: "Dense BF16" },
     fireworksCost: { input: 1.50, output: 1.50 },
   },
 
@@ -91,6 +100,7 @@ export const hanzoModels = [
     description: "Multimodal model supporting text, vision, and structured output.",
     features: ["202k context window", "Multimodal"],
     tier: "pro max",
+    upstream: { model: "GLM-4.7", provider: "Zhipu AI", params: "~200B", arch: "Dense Multimodal" },
     fireworksCost: { input: 0.60, output: 2.20 },
   },
   {
@@ -99,6 +109,7 @@ export const hanzoModels = [
     description: "Vision-language model for image understanding and visual reasoning.",
     features: ["131k context window", "Vision + language"],
     tier: "pro max",
+    upstream: { model: "Qwen3-VL-30B-A3B", provider: "Alibaba Qwen", params: "30B (3B active)", arch: "MoE Vision-Language" },
     fireworksCost: { input: 0.15, output: 0.60 },
   },
   {
@@ -107,6 +118,7 @@ export const hanzoModels = [
     description: "Ultra-lightweight model for edge deployment and low-latency tasks.",
     features: ["40k context window", "4B parameters"],
     tier: "pro",
+    upstream: { model: "Qwen3-4B", provider: "Alibaba Qwen", params: "4B", arch: "Dense Transformer" },
     fireworksCost: { input: 0.10, output: 0.10 },
   },
   {
@@ -115,6 +127,7 @@ export const hanzoModels = [
     description: "Content safety classifier for moderation and guardrails.",
     features: ["40k context window", "Safety classifier"],
     tier: "pro",
+    upstream: { model: "Qwen3-4B", provider: "Alibaba Qwen", params: "4B", arch: "Dense Transformer" },
     fireworksCost: { input: 0.10, output: 0.10 },
   },
   {
@@ -123,7 +136,7 @@ export const hanzoModels = [
     description: "High-quality text embeddings for search, clustering, and retrieval.",
     features: ["8k context window", "3072 dimensions"],
     tier: "pro max",
-    // OpenAI text-embedding-3-large cost
+    upstream: { model: "text-embedding-3-large", provider: "OpenAI", params: "N/A", arch: "Embedding" },
     fireworksCost: { input: 0.13, output: 0.13 },
   },
 ];
