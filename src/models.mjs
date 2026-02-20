@@ -16,7 +16,7 @@ export const hanzoModels = [
     fullName: "Zen4 — Flagship",
     description: "Flagship model built on GLM-5. Optimal for complex reasoning and multi-domain tasks.",
     features: ["202k context window", "Flagship intelligence"],
-    tier: "pro",
+    tier: "ultra max",
     fireworksCost: { input: 1.00, output: 3.20 },
   },
   {
@@ -24,7 +24,7 @@ export const hanzoModels = [
     fullName: "Zen4 Pro — High Capability",
     description: "High-capability model with efficient MoE architecture for demanding workloads.",
     features: ["131k context window", "MoE architecture"],
-    tier: "pro",
+    tier: "ultra",
     fireworksCost: { input: 0.90, output: 0.90 },
   },
   {
@@ -32,7 +32,7 @@ export const hanzoModels = [
     fullName: "Zen4 Max — Extended Context",
     description: "Extended context MoE model for large document processing and analysis.",
     features: ["131k context window", "235B MoE parameters"],
-    tier: "pro",
+    tier: "ultra",
     fireworksCost: { input: 1.20, output: 1.20 },
   },
   {
@@ -40,7 +40,7 @@ export const hanzoModels = [
     fullName: "Zen4 Mini — Fast & Efficient",
     description: "Lightweight model optimized for speed and cost efficiency.",
     features: ["40k context window", "Ultra-fast inference"],
-    tier: "free",
+    tier: "pro",
     fireworksCost: { input: 0.20, output: 0.20 },
   },
   {
@@ -48,7 +48,7 @@ export const hanzoModels = [
     fullName: "Zen4 Ultra — Maximum Reasoning",
     description: "Maximum reasoning capability with extended thinking for complex problems.",
     features: ["202k context window", "Deep reasoning"],
-    tier: "pro",
+    tier: "ultra max",
     fireworksCost: { input: 1.00, output: 3.20 },
   },
   {
@@ -56,7 +56,7 @@ export const hanzoModels = [
     fullName: "Zen4 Thinking — Deep Reasoning",
     description: "Dedicated reasoning model with explicit chain-of-thought capabilities.",
     features: ["131k context window", "Chain-of-thought"],
-    tier: "standard",
+    tier: "pro max",
     fireworksCost: { input: 0.90, output: 0.90 },
   },
   {
@@ -64,7 +64,7 @@ export const hanzoModels = [
     fullName: "Zen4 Coder — Code Generation",
     description: "Code-specialized model for generation, review, and debugging.",
     features: ["262k context window", "480B MoE parameters"],
-    tier: "pro",
+    tier: "ultra",
     fireworksCost: { input: 1.20, output: 1.20 },
   },
   {
@@ -72,7 +72,7 @@ export const hanzoModels = [
     fullName: "Zen4 Coder Flash — Fast Code",
     description: "Lightweight code model optimized for speed and inline completions.",
     features: ["262k context window", "Fast inference"],
-    tier: "standard",
+    tier: "pro max",
     fireworksCost: { input: 0.50, output: 0.50 },
   },
   {
@@ -80,7 +80,7 @@ export const hanzoModels = [
     fullName: "Zen4 Coder Pro — Premium Code",
     description: "Full-precision code model for maximum accuracy on complex codebases.",
     features: ["262k context window", "BF16 full precision"],
-    tier: "pro",
+    tier: "ultra max",
     fireworksCost: { input: 1.50, output: 1.50 },
   },
 
@@ -90,7 +90,7 @@ export const hanzoModels = [
     fullName: "Zen3 Omni — Hypermodal",
     description: "Multimodal model supporting text, vision, and structured output.",
     features: ["202k context window", "Multimodal"],
-    tier: "standard",
+    tier: "pro max",
     fireworksCost: { input: 0.60, output: 2.20 },
   },
   {
@@ -98,7 +98,7 @@ export const hanzoModels = [
     fullName: "Zen3 VL — Vision-Language",
     description: "Vision-language model for image understanding and visual reasoning.",
     features: ["131k context window", "Vision + language"],
-    tier: "standard",
+    tier: "pro max",
     fireworksCost: { input: 0.15, output: 0.60 },
   },
   {
@@ -106,7 +106,7 @@ export const hanzoModels = [
     fullName: "Zen3 Nano — Edge",
     description: "Ultra-lightweight model for edge deployment and low-latency tasks.",
     features: ["40k context window", "4B parameters"],
-    tier: "free",
+    tier: "pro",
     fireworksCost: { input: 0.10, output: 0.10 },
   },
   {
@@ -114,7 +114,7 @@ export const hanzoModels = [
     fullName: "Zen3 Guard — Content Safety",
     description: "Content safety classifier for moderation and guardrails.",
     features: ["40k context window", "Safety classifier"],
-    tier: "free",
+    tier: "pro",
     fireworksCost: { input: 0.10, output: 0.10 },
   },
   {
@@ -122,7 +122,7 @@ export const hanzoModels = [
     fullName: "Zen3 Embedding — Text Embeddings",
     description: "High-quality text embeddings for search, clustering, and retrieval.",
     features: ["8k context window", "3072 dimensions"],
-    tier: "standard",
+    tier: "pro max",
     // OpenAI text-embedding-3-large cost
     fireworksCost: { input: 0.13, output: 0.13 },
   },
