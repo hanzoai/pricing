@@ -119,7 +119,7 @@ export async function sync() {
       description: model.description,
       features: model.features,
       tier: model.tier,
-      upstream: model.upstream,
+      upstream: { params: model.upstream.params, arch: model.upstream.arch },
       pricing: {
         input: roundPrice(fc.input * ZEN_MULTIPLIER),
         output: roundPrice(fc.output * ZEN_MULTIPLIER),

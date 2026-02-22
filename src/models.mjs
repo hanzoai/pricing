@@ -14,7 +14,7 @@ export const hanzoModels = [
   {
     name: "zen4",
     fullName: "Zen4 — Flagship",
-    description: "Flagship model built on GLM-5. Optimal for complex reasoning and multi-domain tasks.",
+    description: "Flagship model optimized for complex reasoning and multi-domain tasks.",
     features: ["202k context window", "Flagship intelligence"],
     tier: "ultra max",
     upstream: { model: "GLM-5", provider: "Zhipu AI", params: "~400B", arch: "Dense Transformer" },
