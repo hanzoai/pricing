@@ -1,11 +1,15 @@
 // Hanzo pricing API server.
 //
 // Endpoints:
-//   GET  /health              — health check
-//   GET  /v1/pricing          — full pricing data
-//   GET  /v1/pricing/models   — all models (hanzo + third-party) with pricing
-//   GET  /v1/pricing/model/:name — single model lookup (case-insensitive)
-//   POST /v1/sync             — trigger manual sync (requires PRICING_API_KEY)
+//   GET  /health                    — health check
+//   GET  /v1/pricing                — full pricing data (all models, tools, infra)
+//   GET  /v1/pricing/models         — all models (hanzo + third-party) with pricing
+//   GET  /v1/pricing/model/:name    — single model lookup (case-insensitive, matches name or id)
+//   GET  /v1/pricing/summary        — model counts and provider breakdown
+//   GET  /v1/pricing/free           — free models only
+//   GET  /v1/pricing/featured       — featured third-party models only
+//   GET  /v1/pricing/providers      — provider breakdown with counts
+//   POST /v1/sync                   — trigger manual sync (requires PRICING_API_KEY)
 
 import { readFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -35,9 +39,21 @@ function loadPricing() {
 const app = express();
 app.use(express.json());
 
+// CORS for frontend.
+app.use((_req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Authorization, Content-Type");
+  next();
+});
+
 // Health check.
 app.get("/health", (_req, res) => {
-  res.json({ status: "ok" });
+  const data = loadPricing();
+  res.json({
+    status: "ok",
+    lastSync: data?.updated || null,
+    models: data?.summary || null,
+  });
 });
 
 // Full pricing data.
@@ -49,33 +65,77 @@ app.get("/v1/pricing", (_req, res) => {
   res.json(data);
 });
 
-// All models with pricing.
+// All models with pricing (flat list).
 app.get("/v1/pricing/models", (_req, res) => {
   const data = loadPricing();
   if (!data) {
     return res.status(503).json({ error: "Pricing data not yet available" });
   }
   const models = [
-    ...data.hanzoModels.map((m) => ({ ...m, provider: "hanzo" })),
-    ...data.thirdPartyModels.map((m) => ({ ...m, provider: "third-party" })),
+    ...data.hanzoModels.map((m) => ({ ...m, provider: "Hanzo", category: "zen" })),
+    ...data.thirdPartyModels.map((m) => ({ ...m, category: m.featured ? "featured" : "third-party" })),
   ];
-  res.json({ updated: data.updated, models });
+  res.json({ updated: data.updated, total: models.length, models });
 });
 
-// Single model lookup by name (case-insensitive).
+// Single model lookup by name or id (case-insensitive).
 app.get("/v1/pricing/model/:name", (req, res) => {
   const data = loadPricing();
   if (!data) {
     return res.status(503).json({ error: "Pricing data not yet available" });
   }
-  const name = req.params.name.toLowerCase();
+  const q = req.params.name.toLowerCase();
   const model =
-    data.hanzoModels.find((m) => m.name.toLowerCase() === name) ||
-    data.thirdPartyModels.find((m) => m.name.toLowerCase() === name);
+    data.hanzoModels.find((m) => m.name.toLowerCase() === q) ||
+    data.thirdPartyModels.find(
+      (m) => m.name.toLowerCase() === q || (m.id && m.id.toLowerCase() === q)
+    );
   if (!model) {
     return res.status(404).json({ error: `Model not found: ${req.params.name}` });
   }
   res.json(model);
+});
+
+// Summary endpoint.
+app.get("/v1/pricing/summary", (_req, res) => {
+  const data = loadPricing();
+  if (!data) {
+    return res.status(503).json({ error: "Pricing data not yet available" });
+  }
+  res.json({
+    updated: data.updated,
+    ...data.summary,
+    providers: data.providers,
+  });
+});
+
+// Free models only.
+app.get("/v1/pricing/free", (_req, res) => {
+  const data = loadPricing();
+  if (!data) {
+    return res.status(503).json({ error: "Pricing data not yet available" });
+  }
+  const free = data.thirdPartyModels.filter((m) => m.isFree);
+  res.json({ updated: data.updated, total: free.length, models: free });
+});
+
+// Featured third-party models only.
+app.get("/v1/pricing/featured", (_req, res) => {
+  const data = loadPricing();
+  if (!data) {
+    return res.status(503).json({ error: "Pricing data not yet available" });
+  }
+  const featured = data.thirdPartyModels.filter((m) => m.featured);
+  res.json({ updated: data.updated, total: featured.length, models: featured });
+});
+
+// Provider breakdown.
+app.get("/v1/pricing/providers", (_req, res) => {
+  const data = loadPricing();
+  if (!data) {
+    return res.status(503).json({ error: "Pricing data not yet available" });
+  }
+  res.json({ updated: data.updated, providers: data.providers });
 });
 
 // Manual sync trigger (protected by API key).
@@ -88,7 +148,7 @@ app.post("/v1/sync", async (req, res) => {
   }
   try {
     const data = await sync();
-    res.json({ status: "ok", updated: data.updated });
+    res.json({ status: "ok", updated: data.updated, summary: data.summary });
   } catch (err) {
     console.error("[server] Sync failed:", err.message);
     res.status(500).json({ error: "Sync failed", message: err.message });

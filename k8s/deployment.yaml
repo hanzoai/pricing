@@ -30,6 +30,9 @@ spec:
           envFrom:
             - secretRef:
                 name: pricing-secrets
+          env:
+            - name: ZEN_GATEWAY_URL
+              value: "http://zen-gateway.zen.svc.cluster.local:4100"
           livenessProbe:
             httpGet:
               path: /health

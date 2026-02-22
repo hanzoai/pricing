@@ -1,16 +1,16 @@
-// Model catalog and static pricing for Hanzo pricing service.
+// Model catalog for Hanzo pricing service.
 //
 // Zen model PRICING is fetched live from zen-gateway at sync time.
-// Only catalog metadata (name, description, features, specs) lives here.
+// Third-party models are detected DYNAMICALLY from OpenRouter.
+// Only Zen catalog metadata (name, description, features, specs) lives here.
 
-// Hanzo Zen model catalog — metadata only, no prices.
-// Pricing is the single source of truth in zen-gateway config.
+// ── Hanzo Zen model catalog — metadata only, no prices ──────────────
 export const zenCatalog = [
-  // ── Zen4 Generation ────────────────────────────────────────────────
+  // Zen4 Generation
   {
     name: "zen4",
     fullName: "Zen4 — Flagship",
-    description: "Flagship model optimized for complex reasoning and multi-domain tasks.",
+    description: "Flagship model for complex reasoning and multi-domain tasks.",
     features: ["202k context window", "Flagship intelligence"],
     tier: "ultra max",
     specs: { params: "~400B", arch: "Dense Transformer" },
@@ -79,8 +79,7 @@ export const zenCatalog = [
     tier: "ultra max",
     specs: { params: "480B", arch: "Dense BF16" },
   },
-
-  // ── Zen3 Generation ────────────────────────────────────────────────
+  // Zen3 Generation
   {
     name: "zen3-omni",
     fullName: "Zen3 Omni — Hypermodal",
@@ -123,61 +122,24 @@ export const zenCatalog = [
   },
 ];
 
-// Third-party models served through Hanzo (pricing synced from OpenRouter).
-export const thirdPartyModels = [
-  {
-    name: "Claude Opus 4.6",
-    openrouterId: "anthropic/claude-opus-4.6",
-    features: ["1000k context window", "Most capable model"],
-  },
-  {
-    name: "Claude Sonnet 4.6",
-    openrouterId: "anthropic/claude-sonnet-4.6",
-    features: ["1000k context window", "Best balance of speed and intelligence"],
-  },
-  {
-    name: "Claude Haiku 4.5",
-    openrouterId: "anthropic/claude-haiku-4.5",
-    features: ["200k context window", "Fastest and most affordable"],
-  },
-  {
-    name: "GPT-5",
-    openrouterId: "openai/gpt-5",
-    features: ["400k context window", "OpenAI flagship"],
-  },
-  {
-    name: "GPT-5 Mini",
-    openrouterId: "openai/gpt-5-mini",
-    features: ["400k context window", "Fast and affordable"],
-  },
-  {
-    name: "Qwen3-235B",
-    openrouterId: "qwen/qwen3-235b-a22b",
-    features: ["131k context window", "Open-weight MoE"],
-  },
-  {
-    name: "DeepSeek R1",
-    openrouterId: "deepseek/deepseek-r1",
-    features: ["64k context window", "Reasoning model"],
-  },
-  {
-    name: "DeepSeek V3",
-    openrouterId: "deepseek/deepseek-chat",
-    features: ["164k context window", "Fast and efficient"],
-  },
-  {
-    name: "Kimi K2.5",
-    openrouterId: "moonshotai/kimi-k2.5",
-    features: ["262k context window", "Multimodal reasoning"],
-  },
-  {
-    name: "GLM-5",
-    openrouterId: "z-ai/glm-5",
-    features: ["205k context window", "Multilingual"],
-  },
+// ── Featured third-party model IDs (pinned to top of third-party list) ──
+// These are detected from OpenRouter — IDs must match OpenRouter model IDs.
+export const featuredModelIds = [
+  "anthropic/claude-opus-4.6",
+  "anthropic/claude-sonnet-4.6",
+  "anthropic/claude-haiku-4.5",
+  "openai/gpt-5",
+  "openai/gpt-5-mini",
+  "google/gemini-2.5-pro",
+  "deepseek/deepseek-r1",
+  "deepseek/deepseek-chat",
+  "meta-llama/llama-4-maverick",
+  "mistralai/mistral-large-2512",
+  "cohere/command-a",
+  "x-ai/grok-3",
 ];
 
-// Static tool pricing.
+// ── Static tool pricing ─────────────────────────────────────────────
 export const toolPricing = [
   { name: "Web Search", unit: "per query", price: 0.005 },
   { name: "Code Interpreter", unit: "per session minute", price: 0.03 },
@@ -187,7 +149,7 @@ export const toolPricing = [
   { name: "Text-to-Speech", unit: "per 1M characters", price: 15.0 },
 ];
 
-// Static infrastructure pricing (PaaS compute and GPU tiers).
+// ── Static infrastructure pricing ───────────────────────────────────
 export const computeTiers = [
   { name: "Starter", vcpus: 1, memory: "2 GB", storage: "50 GB", price: 8.4 },
   { name: "Basic", vcpus: 2, memory: "4 GB", storage: "80 GB", price: 21.6 },
