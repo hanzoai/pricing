@@ -27,25 +27,9 @@ spec:
           image: ghcr.io/hanzoai/pricing:latest
           ports:
             - containerPort: 8080
-          env:
-            - name: PRICING_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: pricing-secrets
-                  key: PRICING_API_KEY
-            - name: ZEN_GATEWAY_URL
-              value: "http://zen-gateway.zen.svc.cluster.local:4100"
-            - name: ZEN_MASTER_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: pricing-secrets
-                  key: ZEN_MASTER_KEY
-            - name: THIRD_PARTY_MARKUP
-              valueFrom:
-                secretKeyRef:
-                  name: pricing-secrets
-                  key: THIRD_PARTY_MARKUP
-                  optional: true
+          envFrom:
+            - secretRef:
+                name: pricing-secrets
           livenessProbe:
             httpGet:
               path: /health
