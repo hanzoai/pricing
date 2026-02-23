@@ -121,6 +121,8 @@ async function fetchZenPricing() {
     pricing.set(name, {
       input: perTokenToMTok(info.input_cost_per_token),
       output: perTokenToMTok(info.output_cost_per_token),
+      cacheRead: perTokenToMTok(info.input_cost_per_token_cache_read),
+      cacheWrite: perTokenToMTok(info.input_cost_per_token_cache_write),
     });
   }
 
@@ -220,8 +222,8 @@ export async function sync() {
       pricing: {
         input: prices?.input ?? null,
         output: prices?.output ?? null,
-        cacheRead: null,
-        cacheWrite: null,
+        cacheRead: prices?.cacheRead ?? null,
+        cacheWrite: prices?.cacheWrite ?? null,
       },
     });
     if (!prices) {
