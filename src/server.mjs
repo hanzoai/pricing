@@ -138,13 +138,11 @@ app.get("/v1/pricing/providers", (_req, res) => {
   res.json({ updated: data.updated, providers: data.providers });
 });
 
-// Manual sync trigger (protected by API key).
+// Manual sync trigger (always requires API key).
 app.post("/v1/sync", async (req, res) => {
-  if (API_KEY) {
-    const auth = req.headers.authorization;
-    if (!auth || auth !== `Bearer ${API_KEY}`) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+  const auth = req.headers.authorization;
+  if (!API_KEY || !auth || auth !== `Bearer ${API_KEY}`) {
+    return res.status(401).json({ error: "Unauthorized" });
   }
   try {
     const data = await sync();

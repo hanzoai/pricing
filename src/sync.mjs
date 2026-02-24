@@ -103,12 +103,10 @@ async function fetchZenPricing() {
     headers["Authorization"] = `Bearer ${ZEN_MASTER_KEY}`;
   }
 
-  console.log(`[sync] Fetching Zen pricing from ${url}...`);
+  console.log(`[sync] Fetching Zen pricing...`);
   const res = await fetch(url, { headers });
   if (!res.ok) {
-    throw new Error(
-      `Zen gateway /model/info returned ${res.status}: ${await res.text()}`
-    );
+    throw new Error(`Zen gateway returned ${res.status}`);
   }
 
   const body = await res.json();
@@ -148,10 +146,11 @@ async function fetchOpenRouterModels() {
 }
 
 /**
- * Compute markup from OpenRouter base prices.
+ * Markup for OpenRouter pass-through prices.
+ * Default: 1.0 (no markup). Zen models use zen-gateway pricing directly.
  */
 function getThirdPartyMarkup() {
-  return parseFloat(process.env.THIRD_PARTY_MARKUP || "1.20");
+  return parseFloat(process.env.THIRD_PARTY_MARKUP || "1.0");
 }
 
 /**
@@ -218,6 +217,7 @@ export async function sync() {
       description: model.description,
       features: model.features,
       tier: model.tier,
+      context: model.context || null,
       specs: model.specs,
     };
 
