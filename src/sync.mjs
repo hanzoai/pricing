@@ -212,23 +212,36 @@ export async function sync() {
   const pricedHanzo = [];
   for (const model of zenCatalog) {
     const prices = zenPricing.get(model.name);
-    pricedHanzo.push({
+    const entry = {
       name: model.name,
       fullName: model.fullName,
       description: model.description,
       features: model.features,
       tier: model.tier,
       specs: model.specs,
-      pricing: {
+    };
+
+    // Pass through optional metadata.
+    if (model.endpoint) entry.endpoint = model.endpoint;
+
+    if (model.staticPricing) {
+      // Non-token models (image, audio) use static per-unit pricing.
+      entry.pricingUnit = model.pricingUnit;
+      entry.pricing = { perUnit: model.staticPricing.perUnit };
+    } else {
+      // Token-based models: merge live gateway pricing.
+      entry.pricing = {
         input: prices?.input ?? null,
         output: prices?.output ?? null,
         cacheRead: prices?.cacheRead ?? null,
         cacheWrite: prices?.cacheWrite ?? null,
-      },
-    });
-    if (!prices) {
-      console.warn(`[sync] WARN: No pricing from zen-gateway for ${model.name}`);
+      };
+      if (!prices) {
+        console.warn(`[sync] WARN: No pricing from zen-gateway for ${model.name}`);
+      }
     }
+
+    pricedHanzo.push(entry);
   }
 
   // 2. Fetch ALL third-party models from OpenRouter (dynamic detection).
