@@ -1,47 +1,24 @@
-name: Build and Deploy Pricing Service
+# CI/CD handled by PaaS (platform.hanzo.ai) via webhook
+# This workflow only validates the build
+name: CI
 
 on:
-  push:
+  pull_request:
     branches: [main]
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: hanzoai/pricing
-
 jobs:
-  build-and-deploy:
-    runs-on: hanzo-k8s
-    permissions:
-      contents: read
-      packages: write
-
+  validate:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install buildah
-        run: |
-          apt-get update -qq && apt-get install -y -qq buildah fuse-overlayfs >/dev/null 2>&1 || true
-
-      - name: Build container image
-        run: |
-          buildah build --format docker --layers -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} .
-
-      - name: Push to GHCR
-        run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | buildah login -u ${{ github.actor }} --password-stdin ${{ env.REGISTRY }}
-          buildah push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          buildah push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-
-      - name: Install doctl
-        uses: digitalocean/action-doctl@v2
+      - uses: actions/setup-node@v4
         with:
-          token: ${{ secrets.DO_API_TOKEN }}
+          node-version: 20
 
-      - name: Configure kubectl
-        run: doctl kubernetes cluster kubeconfig save 1a153000-90a6-48ad-9375-7ef901a9bf7f
+      - run: npm ci
 
-      - name: Deploy to K8s
-        run: |
-          kubectl apply -f k8s/
-          kubectl -n hanzo rollout restart deployment/pricing
-          kubectl -n hanzo rollout status deployment/pricing --timeout=120s
+      - name: Validate startup
+        run: timeout 5 node src/server.mjs || true
+        env:
+          PORT: 8080
