@@ -381,24 +381,28 @@ export async function sync() {
     else providerCounts[m.provider].paid++;
   }
 
-  // 5. Build cloud VM resale plans with margin data.
+  // 5. Build Hanzo Cloud plans (customer-facing — no provider details).
   const cloud = {
     plans: cloudPlans.map((plan) => {
-      const routing = planRouting[plan.id] || {};
       const hourly = Math.round((plan.priceMonthly / 720) * 10000) / 10000;
+      // Strip internal fields before exposing
+      const { freeTier, popular, ...rest } = plan;
       return {
-        ...plan,
+        ...rest,
         priceHourly: hourly,
         centsPerHour: Math.ceil(hourly * 100),
-        routing: {
-          default: routing.default || null,
-          premium: routing.premium || null,
-        },
+        ...(freeTier && { freeTier }),
+        ...(popular && { popular }),
       };
     }),
     regions: cloudRegions,
-    blockStorage: blockStoragePricing,
-    providerCosts,
+    blockStorage: {
+      pricePerGBMonthly: blockStoragePricing.pricePerGBMonthly,
+      minSizeGB: blockStoragePricing.minSizeGB,
+      maxSizeGB: blockStoragePricing.maxSizeGB,
+    },
+    // Internal routing data — kept in memory for backend, NOT in API response
+    _internal: { providerCosts, planRouting },
   };
 
   // 6. Build final pricing response.

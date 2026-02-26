@@ -62,11 +62,16 @@ app.get("/health", (_req, res) => {
   });
 });
 
-// Full pricing data.
+// Full pricing data (strips internal cost/routing data).
 app.get("/v1/pricing", (_req, res) => {
   const data = loadPricing();
   if (!data) {
     return res.status(503).json({ error: "Pricing data not yet available" });
+  }
+  // Strip internal provider routing from cloud section.
+  if (data.cloud) {
+    const { _internal, ...publicCloud } = data.cloud;
+    return res.json({ ...data, cloud: publicCloud });
   }
   res.json(data);
 });
@@ -153,14 +158,14 @@ app.get("/v1/pricing/compute/presets", (_req, res) => {
   res.json({ presets: data.infrastructure.compute.presets });
 });
 
-// Cloud VM resale plans.
+// Hanzo Cloud plans.
 app.get("/v1/pricing/cloud", (_req, res) => {
   const data = loadPricing();
   if (!data?.cloud) {
     return res.status(503).json({ error: "Cloud pricing not yet available" });
   }
-  // Public response omits internal provider costs.
-  const { providerCosts: _, ...publicCloud } = data.cloud;
+  // Strip internal routing/cost data from public response.
+  const { _internal, ...publicCloud } = data.cloud;
   res.json(publicCloud);
 });
 
