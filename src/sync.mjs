@@ -13,7 +13,9 @@ import {
   zenCatalog,
   featuredModelIds,
   toolPricing,
-  computeTiers,
+  computePresets,
+  doDropletSlugs,
+  doFallbackPrices,
   gpuTiers,
 } from "./models.mjs";
 
@@ -28,6 +30,11 @@ const ZEN_GATEWAY_URL =
   process.env.ZEN_GATEWAY_URL ||
   "http://zen-gateway.zen.svc.cluster.local:4100";
 const ZEN_MASTER_KEY = process.env.ZEN_MASTER_KEY || "";
+
+// DigitalOcean API for real droplet pricing.
+const DO_API = "https://api.digitalocean.com/v2/sizes";
+const DO_TOKEN = process.env.DO_API_TOKEN || "";
+const COMPUTE_MARKUP_MONTHLY = parseFloat(process.env.COMPUTE_MARKUP_MONTHLY || "1.0");
 
 /**
  * Round pricing nicely:
@@ -200,7 +207,52 @@ function processOpenRouterModel(orModel, markup) {
 }
 
 /**
- * Run the full sync: fetch from zen-gateway + OpenRouter, write to disk.
+ * Fetch real droplet pricing from the DigitalOcean API.
+ * Falls back to doFallbackPrices if no token or API error.
+ */
+async function fetchDOPricing() {
+  if (!DO_TOKEN) {
+    console.warn("[sync] No DO_API_TOKEN — using fallback pricing");
+    return doFallbackPrices;
+  }
+  try {
+    console.log("[sync] Fetching DO droplet pricing...");
+    const res = await fetch(DO_API, {
+      headers: { Authorization: `Bearer ${DO_TOKEN}` },
+    });
+    if (!res.ok) {
+      console.warn(`[sync] DO API returned ${res.status} — using fallback pricing`);
+      return doFallbackPrices;
+    }
+    const body = await res.json();
+    const prices = {};
+    for (const size of body.sizes || []) {
+      if (doDropletSlugs.includes(size.slug)) {
+        prices[size.slug] = {
+          vcpus: size.vcpus,
+          memoryMB: size.memory,
+          diskGB: size.disk,
+          priceMonthly: size.price_monthly,
+          priceHourly: size.price_hourly,
+        };
+      }
+    }
+    // Merge fallbacks for any slugs not returned by API.
+    for (const slug of doDropletSlugs) {
+      if (!prices[slug] && doFallbackPrices[slug]) {
+        prices[slug] = doFallbackPrices[slug];
+      }
+    }
+    console.log(`[sync] Got pricing for ${Object.keys(prices).length} DO droplet sizes.`);
+    return prices;
+  } catch (err) {
+    console.warn(`[sync] DO API fetch failed: ${err.message} — using fallback pricing`);
+    return doFallbackPrices;
+  }
+}
+
+/**
+ * Run the full sync: fetch from zen-gateway + OpenRouter + DO, write to disk.
  * Returns the pricing object.
  */
 export async function sync() {
@@ -279,7 +331,41 @@ export async function sync() {
   // Combine: featured first, then all others.
   const thirdPartyModels = [...featured, ...others];
 
-  // 3. Provider summary for frontend.
+  // 3. Fetch DO droplet pricing.
+  const doPricing = await fetchDOPricing();
+
+  // Build compute tiers with markup.
+  const compute = {
+    provider: "digitalocean",
+    region: "sfo3",
+    markupMonthly: COMPUTE_MARKUP_MONTHLY,
+    tiers: Object.entries(doPricing).map(([slug, info]) => ({
+      slug,
+      vcpus: info.vcpus,
+      memoryMB: info.memoryMB,
+      diskGB: info.diskGB,
+      basePriceMonthly: info.priceMonthly,
+      basePriceHourly: info.priceHourly,
+      priceMonthly: roundPrice(info.priceMonthly + COMPUTE_MARKUP_MONTHLY),
+      priceHourly: roundPrice((info.priceMonthly + COMPUTE_MARKUP_MONTHLY) / 720),
+      centsPerHour: Math.ceil(((info.priceMonthly + COMPUTE_MARKUP_MONTHLY) / 720) * 100),
+    })),
+    presets: computePresets.map((p) => {
+      const info = doPricing[p.slug] || doFallbackPrices[p.slug];
+      const monthly = info.priceMonthly + COMPUTE_MARKUP_MONTHLY;
+      return {
+        ...p,
+        vcpus: info.vcpus,
+        memoryGB: Math.round(info.memoryMB / 1024),
+        diskGB: info.diskGB,
+        priceMonthly: roundPrice(monthly),
+        priceHourly: roundPrice(monthly / 720),
+        centsPerHour: Math.ceil((monthly / 720) * 100),
+      };
+    }),
+  };
+
+  // 4. Provider summary for frontend.
   const providerCounts = {};
   for (const m of allThirdParty) {
     if (!providerCounts[m.provider]) {
@@ -290,7 +376,7 @@ export async function sync() {
     else providerCounts[m.provider].paid++;
   }
 
-  // 4. Build final pricing response.
+  // 5. Build final pricing response.
   const pricingData = {
     updated: new Date().toISOString(),
     summary: {
@@ -307,7 +393,7 @@ export async function sync() {
     providers: providerCounts,
     tools: toolPricing,
     infrastructure: {
-      compute: computeTiers,
+      compute,
       gpu: gpuTiers,
     },
   };

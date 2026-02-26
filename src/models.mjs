@@ -363,15 +363,39 @@ export const toolPricing = [
   { name: "Text-to-Speech", unit: "per 1M characters", price: 15.0 },
 ];
 
-// ── Static infrastructure pricing ───────────────────────────────────
-export const computeTiers = [
-  { name: "Starter", vcpus: 1, memory: "2 GB", storage: "50 GB", price: 8.4 },
-  { name: "Basic", vcpus: 2, memory: "4 GB", storage: "80 GB", price: 21.6 },
-  { name: "Standard", vcpus: 4, memory: "8 GB", storage: "160 GB", price: 57.6 },
-  { name: "Professional", vcpus: 8, memory: "16 GB", storage: "320 GB", price: 115.2 },
-  { name: "Enterprise", vcpus: 16, memory: "32 GB", storage: "640 GB", price: 230.4 },
+// ── Compute presets mapped to real DO droplet slugs ─────────────────
+// Base prices fetched from DO API at sync time; markup applied on top.
+export const computePresets = [
+  { id: "starter", name: "Starter", slug: "s-1vcpu-2gb", description: "Light tasks, chat bots, simple automations" },
+  { id: "pro", name: "Pro", slug: "s-2vcpu-4gb", description: "Code generation, research, multi-tool agents" },
+  { id: "power", name: "Power", slug: "s-4vcpu-8gb", description: "Heavy workloads, browser automation, large projects" },
+  { id: "gpu", name: "GPU", slug: "g-2vcpu-8gb", description: "ML training, image generation, video processing" },
 ];
 
+// Full DO droplet catalog (all sizes we support).
+export const doDropletSlugs = [
+  "s-1vcpu-1gb", "s-1vcpu-2gb", "s-2vcpu-2gb", "s-2vcpu-4gb",
+  "s-4vcpu-8gb", "s-8vcpu-16gb", "s-16vcpu-32gb",
+  "g-2vcpu-8gb", "g-4vcpu-16gb",
+  "c-2vcpu-4gb", "c-4vcpu-8gb",
+];
+
+// Fallback prices if DO API is unreachable (actual DO prices as of 2026-02).
+export const doFallbackPrices = {
+  "s-1vcpu-1gb":   { vcpus: 1,  memoryMB: 1024,  diskGB: 25,  priceMonthly: 6,   priceHourly: 0.00893 },
+  "s-1vcpu-2gb":   { vcpus: 1,  memoryMB: 2048,  diskGB: 50,  priceMonthly: 12,  priceHourly: 0.01786 },
+  "s-2vcpu-2gb":   { vcpus: 2,  memoryMB: 2048,  diskGB: 60,  priceMonthly: 18,  priceHourly: 0.02679 },
+  "s-2vcpu-4gb":   { vcpus: 2,  memoryMB: 4096,  diskGB: 80,  priceMonthly: 24,  priceHourly: 0.03571 },
+  "s-4vcpu-8gb":   { vcpus: 4,  memoryMB: 8192,  diskGB: 160, priceMonthly: 48,  priceHourly: 0.07143 },
+  "s-8vcpu-16gb":  { vcpus: 8,  memoryMB: 16384, diskGB: 320, priceMonthly: 96,  priceHourly: 0.14286 },
+  "s-16vcpu-32gb": { vcpus: 16, memoryMB: 32768, diskGB: 640, priceMonthly: 192, priceHourly: 0.28571 },
+  "g-2vcpu-8gb":   { vcpus: 2,  memoryMB: 8192,  diskGB: 25,  priceMonthly: 48,  priceHourly: 0.07143 },
+  "g-4vcpu-16gb":  { vcpus: 4,  memoryMB: 16384, diskGB: 50,  priceMonthly: 96,  priceHourly: 0.14286 },
+  "c-2vcpu-4gb":   { vcpus: 2,  memoryMB: 4096,  diskGB: 25,  priceMonthly: 40,  priceHourly: 0.05952 },
+  "c-4vcpu-8gb":   { vcpus: 4,  memoryMB: 8192,  diskGB: 50,  priceMonthly: 80,  priceHourly: 0.11905 },
+};
+
+// GPU tiers (H100s not on DO standard API — kept static).
 export const gpuTiers = [
   { name: "GPU Standard", gpu: "1x H100", vram: "80 GB", price: 3.48 },
   { name: "GPU Pro", gpu: "2x H100", vram: "160 GB", price: 6.96 },

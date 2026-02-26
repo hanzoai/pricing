@@ -1,15 +1,17 @@
 // Hanzo pricing API server.
 //
 // Endpoints:
-//   GET  /health                    — health check
-//   GET  /v1/pricing                — full pricing data (all models, tools, infra)
-//   GET  /v1/pricing/models         — all models (hanzo + third-party) with pricing
-//   GET  /v1/pricing/model/:name    — single model lookup (case-insensitive, matches name or id)
-//   GET  /v1/pricing/summary        — model counts and provider breakdown
-//   GET  /v1/pricing/free           — free models only
-//   GET  /v1/pricing/featured       — featured third-party models only
-//   GET  /v1/pricing/providers      — provider breakdown with counts
-//   POST /v1/sync                   — trigger manual sync (requires PRICING_API_KEY)
+//   GET  /health                        — health check
+//   GET  /v1/pricing                    — full pricing data (all models, tools, infra)
+//   GET  /v1/pricing/models             — all models (hanzo + third-party) with pricing
+//   GET  /v1/pricing/model/:name        — single model lookup (case-insensitive, matches name or id)
+//   GET  /v1/pricing/summary            — model counts and provider breakdown
+//   GET  /v1/pricing/free               — free models only
+//   GET  /v1/pricing/featured           — featured third-party models only
+//   GET  /v1/pricing/compute            — DO-backed compute tiers with markup
+//   GET  /v1/pricing/compute/presets    — curated compute presets for LaunchPage
+//   GET  /v1/pricing/providers          — provider breakdown with counts
+//   POST /v1/sync                       — trigger manual sync (requires PRICING_API_KEY)
 
 import { readFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -127,6 +129,24 @@ app.get("/v1/pricing/featured", (_req, res) => {
   }
   const featured = data.thirdPartyModels.filter((m) => m.featured);
   res.json({ updated: data.updated, total: featured.length, models: featured });
+});
+
+// Compute pricing (for playground backend).
+app.get("/v1/pricing/compute", (_req, res) => {
+  const data = loadPricing();
+  if (!data?.infrastructure?.compute) {
+    return res.status(503).json({ error: "Compute pricing not yet available" });
+  }
+  res.json(data.infrastructure.compute);
+});
+
+// Compute presets (for LaunchPage).
+app.get("/v1/pricing/compute/presets", (_req, res) => {
+  const data = loadPricing();
+  if (!data?.infrastructure?.compute?.presets) {
+    return res.status(503).json({ error: "Compute presets not yet available" });
+  }
+  res.json({ presets: data.infrastructure.compute.presets });
 });
 
 // Provider breakdown.
