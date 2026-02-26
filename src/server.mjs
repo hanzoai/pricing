@@ -10,6 +10,10 @@
 //   GET  /v1/pricing/featured           — featured third-party models only
 //   GET  /v1/pricing/compute            — DO-backed compute tiers with markup
 //   GET  /v1/pricing/compute/presets    — curated compute presets for LaunchPage
+//   GET  /v1/pricing/cloud              — cloud VM resale plans (multi-provider)
+//   GET  /v1/pricing/cloud/plans        — cloud plans only (for pricing page)
+//   GET  /v1/pricing/cloud/regions      — available cloud regions
+//   GET  /v1/pricing/cloud/storage      — block storage pricing
 //   GET  /v1/pricing/providers          — provider breakdown with counts
 //   POST /v1/sync                       — trigger manual sync (requires PRICING_API_KEY)
 
@@ -147,6 +151,44 @@ app.get("/v1/pricing/compute/presets", (_req, res) => {
     return res.status(503).json({ error: "Compute presets not yet available" });
   }
   res.json({ presets: data.infrastructure.compute.presets });
+});
+
+// Cloud VM resale plans.
+app.get("/v1/pricing/cloud", (_req, res) => {
+  const data = loadPricing();
+  if (!data?.cloud) {
+    return res.status(503).json({ error: "Cloud pricing not yet available" });
+  }
+  // Public response omits internal provider costs.
+  const { providerCosts: _, ...publicCloud } = data.cloud;
+  res.json(publicCloud);
+});
+
+// Cloud plans only (for pricing page).
+app.get("/v1/pricing/cloud/plans", (_req, res) => {
+  const data = loadPricing();
+  if (!data?.cloud?.plans) {
+    return res.status(503).json({ error: "Cloud plans not yet available" });
+  }
+  res.json({ plans: data.cloud.plans });
+});
+
+// Cloud regions.
+app.get("/v1/pricing/cloud/regions", (_req, res) => {
+  const data = loadPricing();
+  if (!data?.cloud?.regions) {
+    return res.status(503).json({ error: "Cloud regions not yet available" });
+  }
+  res.json({ regions: data.cloud.regions });
+});
+
+// Block storage pricing.
+app.get("/v1/pricing/cloud/storage", (_req, res) => {
+  const data = loadPricing();
+  if (!data?.cloud?.blockStorage) {
+    return res.status(503).json({ error: "Storage pricing not yet available" });
+  }
+  res.json(data.cloud.blockStorage);
 });
 
 // Provider breakdown.

@@ -363,6 +363,179 @@ export const toolPricing = [
   { name: "Text-to-Speech", unit: "per 1M characters", price: 15.0 },
 ];
 
+// ── Cloud VM resale plans ──────────────────────────────────────────
+// Customer-facing pricing is CONSISTENT regardless of backend provider.
+// Routing: Hetzner for best margins, DO/AWS Lightsail as premium regions.
+//
+// Competitor benchmark: exe.dev — $20/mo, 25 VMs, 2 CPU, 8GB RAM, 25GB disk
+// Our standard plan undercuts at $15/mo with same specs.
+
+export const cloudPlans = [
+  {
+    id: "nano",
+    name: "Nano",
+    description: "Cheapest single VM. Perfect for lightweight bots and scripts.",
+    vcpus: 1, memoryGB: 1, diskGB: 20, cpuType: "shared",
+    maxVMs: 1,
+    priceMonthly: 5,
+    features: ["1 VM", "1 vCPU", "1 GB RAM", "20 GB SSD", "500 GB transfer"],
+  },
+  {
+    id: "bot",
+    name: "Bot",
+    description: "Standard bot runner. Enough resources for most automation tasks.",
+    vcpus: 2, memoryGB: 2, diskGB: 40, cpuType: "shared",
+    maxVMs: 5,
+    priceMonthly: 10,
+    features: ["Up to 5 VMs", "2 vCPU", "2 GB RAM", "40 GB SSD", "1 TB transfer"],
+  },
+  {
+    id: "standard",
+    name: "Standard",
+    description: "Default plan. Matches top competitors at a lower price. Run bots, agents, and services.",
+    vcpus: 2, memoryGB: 8, diskGB: 25, cpuType: "shared",
+    maxVMs: 25,
+    priceMonthly: 15,
+    features: ["Up to 25 VMs", "2 vCPU", "8 GB RAM", "25 GB SSD", "3 TB transfer"],
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    description: "Dedicated CPU for consistent performance. Ideal for production workloads.",
+    vcpus: 2, memoryGB: 8, diskGB: 80, cpuType: "dedicated",
+    maxVMs: 25,
+    priceMonthly: 25,
+    features: ["Up to 25 VMs", "2 dedicated vCPU", "8 GB RAM", "80 GB SSD", "2 TB transfer"],
+  },
+  {
+    id: "power",
+    name: "Power",
+    description: "High performance for demanding workloads, browser automation, and large projects.",
+    vcpus: 4, memoryGB: 16, diskGB: 160, cpuType: "shared",
+    maxVMs: 25,
+    priceMonthly: 39,
+    features: ["Up to 25 VMs", "4 vCPU", "16 GB RAM", "160 GB SSD", "4 TB transfer"],
+  },
+  {
+    id: "power-dedicated",
+    name: "Power Dedicated",
+    description: "Maximum dedicated CPU performance for enterprise and heavy compute.",
+    vcpus: 4, memoryGB: 16, diskGB: 160, cpuType: "dedicated",
+    maxVMs: 25,
+    priceMonthly: 49,
+    features: ["Up to 25 VMs", "4 dedicated vCPU", "16 GB RAM", "160 GB SSD", "4 TB transfer"],
+  },
+];
+
+// ── Block storage pricing ─────────────────────────────────────────
+export const blockStoragePricing = {
+  pricePerGBMonthly: 0.08, // $/GB/month — matches DO level
+  minSizeGB: 1,
+  maxSizeGB: 16384,
+  providers: {
+    hetzner: { costPerGBMonthly: 0.048 },  // €0.044 ≈ $0.048
+    digitalocean: { costPerGBMonthly: 0.10 },
+    lightsail: { costPerGBMonthly: 0.10 },
+  },
+};
+
+// ── Multi-provider internal costs ─────────────────────────────────
+// Used for margin calculation and provider routing decisions.
+// Customer-facing price is ALWAYS from cloudPlans above.
+
+export const providerCosts = {
+  hetzner: {
+    regions: ["eu-central", "us-east", "us-west", "ap-southeast"],
+    costs: {
+      // EU (Falkenstein/Nuremberg) — best margins
+      "eu-central": {
+        "cpx11": { vcpus: 2, memoryMB: 2048,  diskGB: 40,  priceMonthly: 4.20 },
+        "cpx21": { vcpus: 3, memoryMB: 4096,  diskGB: 80,  priceMonthly: 7.10 },
+        "cpx31": { vcpus: 4, memoryMB: 8192,  diskGB: 160, priceMonthly: 13.70 },
+        "cpx41": { vcpus: 8, memoryMB: 16384, diskGB: 240, priceMonthly: 24.60 },
+        "ccx13": { vcpus: 2, memoryMB: 8192,  diskGB: 80,  priceMonthly: 14.80 },
+        "ccx23": { vcpus: 4, memoryMB: 16384, diskGB: 160, priceMonthly: 27.90 },
+        "ccx33": { vcpus: 8, memoryMB: 32768, diskGB: 240, priceMonthly: 54.20 },
+        "cx22":  { vcpus: 2, memoryMB: 4096,  diskGB: 40,  priceMonthly: 3.60 },
+      },
+      // US (Ashburn/Hillsboro)
+      "us-east": {
+        "cpx11": { vcpus: 2, memoryMB: 2048,  diskGB: 40,  priceMonthly: 4.49 },
+        "cpx21": { vcpus: 3, memoryMB: 4096,  diskGB: 80,  priceMonthly: 7.49 },
+        "cpx31": { vcpus: 4, memoryMB: 8192,  diskGB: 160, priceMonthly: 14.49 },
+        "cpx41": { vcpus: 8, memoryMB: 16384, diskGB: 240, priceMonthly: 25.99 },
+        "ccx13": { vcpus: 2, memoryMB: 8192,  diskGB: 80,  priceMonthly: 15.49 },
+        "ccx23": { vcpus: 4, memoryMB: 16384, diskGB: 160, priceMonthly: 29.49 },
+        "ccx33": { vcpus: 8, memoryMB: 32768, diskGB: 240, priceMonthly: 56.99 },
+        "cx22":  { vcpus: 2, memoryMB: 4096,  diskGB: 40,  priceMonthly: 3.99 },
+      },
+      "us-west": {
+        "cpx11": { vcpus: 2, memoryMB: 2048,  diskGB: 40,  priceMonthly: 4.49 },
+        "cpx21": { vcpus: 3, memoryMB: 4096,  diskGB: 80,  priceMonthly: 7.49 },
+        "cpx31": { vcpus: 4, memoryMB: 8192,  diskGB: 160, priceMonthly: 14.49 },
+        "cpx41": { vcpus: 8, memoryMB: 16384, diskGB: 240, priceMonthly: 25.99 },
+        "ccx13": { vcpus: 2, memoryMB: 8192,  diskGB: 80,  priceMonthly: 15.49 },
+        "ccx23": { vcpus: 4, memoryMB: 16384, diskGB: 160, priceMonthly: 29.49 },
+        "ccx33": { vcpus: 8, memoryMB: 32768, diskGB: 240, priceMonthly: 56.99 },
+        "cx22":  { vcpus: 2, memoryMB: 4096,  diskGB: 40,  priceMonthly: 3.99 },
+      },
+      // Singapore
+      "ap-southeast": {
+        "cpx12": { vcpus: 2, memoryMB: 2048,  diskGB: 40,  priceMonthly: 5.49 },
+        "cpx22": { vcpus: 3, memoryMB: 4096,  diskGB: 80,  priceMonthly: 8.99 },
+        "cpx32": { vcpus: 4, memoryMB: 8192,  diskGB: 160, priceMonthly: 17.49 },
+        "cpx42": { vcpus: 8, memoryMB: 16384, diskGB: 240, priceMonthly: 30.99 },
+        "ccx13": { vcpus: 2, memoryMB: 8192,  diskGB: 80,  priceMonthly: 17.49 },
+        "ccx23": { vcpus: 4, memoryMB: 16384, diskGB: 160, priceMonthly: 33.49 },
+        "ccx33": { vcpus: 8, memoryMB: 32768, diskGB: 240, priceMonthly: 63.99 },
+      },
+    },
+  },
+  digitalocean: {
+    regions: ["us-east", "us-west", "eu-central", "ap-southeast"],
+    premium: true, // higher customer-facing price for DO regions
+    costs: {
+      "s-1vcpu-1gb":   { vcpus: 1,  memoryMB: 1024,  diskGB: 25,  priceMonthly: 6 },
+      "s-1vcpu-2gb":   { vcpus: 1,  memoryMB: 2048,  diskGB: 50,  priceMonthly: 12 },
+      "s-2vcpu-2gb":   { vcpus: 2,  memoryMB: 2048,  diskGB: 60,  priceMonthly: 18 },
+      "s-2vcpu-4gb":   { vcpus: 2,  memoryMB: 4096,  diskGB: 80,  priceMonthly: 24 },
+      "s-4vcpu-8gb":   { vcpus: 4,  memoryMB: 8192,  diskGB: 160, priceMonthly: 48 },
+      "s-8vcpu-16gb":  { vcpus: 8,  memoryMB: 16384, diskGB: 320, priceMonthly: 96 },
+    },
+  },
+  lightsail: {
+    regions: ["us-east", "us-west", "eu-central", "ap-southeast"],
+    premium: true,
+    costs: {
+      "nano_3_0":   { vcpus: 1, memoryMB: 512,   diskGB: 20,  priceMonthly: 3.50 },
+      "micro_3_0":  { vcpus: 1, memoryMB: 1024,  diskGB: 40,  priceMonthly: 5 },
+      "small_3_0":  { vcpus: 1, memoryMB: 2048,  diskGB: 60,  priceMonthly: 10 },
+      "medium_3_0": { vcpus: 2, memoryMB: 4096,  diskGB: 80,  priceMonthly: 20 },
+      "large_3_0":  { vcpus: 2, memoryMB: 8192,  diskGB: 160, priceMonthly: 40 },
+      "xlarge_3_0": { vcpus: 4, memoryMB: 16384, diskGB: 320, priceMonthly: 80 },
+    },
+  },
+};
+
+// ── Plan-to-provider routing ──────────────────────────────────────
+// Maps each cloud plan to the cheapest backend provider per region.
+export const planRouting = {
+  nano:    { default: { provider: "hetzner", type: "cx22" },   premium: { provider: "lightsail", type: "nano_3_0" } },
+  bot:     { default: { provider: "hetzner", type: "cpx11" },  premium: { provider: "digitalocean", type: "s-2vcpu-2gb" } },
+  standard:{ default: { provider: "hetzner", type: "cpx31" },  premium: { provider: "lightsail", type: "large_3_0" } },
+  pro:     { default: { provider: "hetzner", type: "ccx13" },  premium: { provider: "lightsail", type: "large_3_0" } },
+  power:   { default: { provider: "hetzner", type: "cpx41" },  premium: { provider: "digitalocean", type: "s-8vcpu-16gb" } },
+  "power-dedicated": { default: { provider: "hetzner", type: "ccx23" }, premium: { provider: "digitalocean", type: "s-8vcpu-16gb" } },
+};
+
+// ── Cloud regions ─────────────────────────────────────────────────
+export const cloudRegions = [
+  { id: "us-east",       name: "US East",        location: "Ashburn, VA",   providers: ["hetzner", "digitalocean", "lightsail"] },
+  { id: "us-west",       name: "US West",        location: "Hillsboro, OR", providers: ["hetzner", "digitalocean", "lightsail"] },
+  { id: "eu-central",    name: "Europe Central",  location: "Germany",      providers: ["hetzner", "digitalocean"] },
+  { id: "ap-southeast",  name: "Asia Pacific",    location: "Singapore",    providers: ["hetzner", "digitalocean", "lightsail"] },
+];
+
 // ── Compute presets mapped to real DO droplet slugs ─────────────────
 // Base prices fetched from DO API at sync time; markup applied on top.
 export const computePresets = [

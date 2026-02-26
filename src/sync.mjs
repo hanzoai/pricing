@@ -17,6 +17,11 @@ import {
   doDropletSlugs,
   doFallbackPrices,
   gpuTiers,
+  cloudPlans,
+  blockStoragePricing,
+  providerCosts,
+  planRouting,
+  cloudRegions,
 } from "./models.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -376,7 +381,27 @@ export async function sync() {
     else providerCounts[m.provider].paid++;
   }
 
-  // 5. Build final pricing response.
+  // 5. Build cloud VM resale plans with margin data.
+  const cloud = {
+    plans: cloudPlans.map((plan) => {
+      const routing = planRouting[plan.id] || {};
+      const hourly = Math.round((plan.priceMonthly / 720) * 10000) / 10000;
+      return {
+        ...plan,
+        priceHourly: hourly,
+        centsPerHour: Math.ceil(hourly * 100),
+        routing: {
+          default: routing.default || null,
+          premium: routing.premium || null,
+        },
+      };
+    }),
+    regions: cloudRegions,
+    blockStorage: blockStoragePricing,
+    providerCosts,
+  };
+
+  // 6. Build final pricing response.
   const pricingData = {
     updated: new Date().toISOString(),
     summary: {
@@ -386,6 +411,8 @@ export async function sync() {
       featuredModels: featured.length,
       providers: Object.keys(providerCounts).length,
       totalModels: pricedHanzo.length + thirdPartyModels.length,
+      cloudPlans: cloudPlans.length,
+      cloudRegions: cloudRegions.length,
     },
     hanzoModels: pricedHanzo,
     thirdPartyModels,
@@ -396,6 +423,7 @@ export async function sync() {
       compute,
       gpu: gpuTiers,
     },
+    cloud,
   };
 
   // Ensure data directory exists.
