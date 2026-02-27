@@ -11,12 +11,17 @@
       "60 requests/min",
       "100K tokens/min",
       "Community support",
-      "API access"
+      "API access",
+      "Earn up to 20% on idle compute & LLM resale"
     ],
     "limits": {
       "requestsPerMinute": 60,
       "tokensPerMinute": 100000,
       "freeCredit": 5
+    },
+    "payouts": {
+      "idleResalePercent": 20,
+      "description": "Earn up to 20% on any resold compute or LLM usage when your account is idle"
     }
   },
   {
@@ -32,11 +37,16 @@
       "1M tokens/min",
       "Email support",
       "Analytics dashboard",
-      "Priority inference"
+      "Priority inference",
+      "Earn up to 20% on idle compute & LLM resale"
     ],
     "limits": {
       "requestsPerMinute": 500,
       "tokensPerMinute": 1000000
+    },
+    "payouts": {
+      "idleResalePercent": 20,
+      "description": "Earn up to 20% on any resold compute or LLM usage when your account is idle"
     }
   },
   {
@@ -52,12 +62,17 @@
       "Priority support",
       "Custom model training",
       "Shared billing",
-      "Usage analytics"
+      "Usage analytics",
+      "Earn up to 20% on idle compute & LLM resale"
     ],
     "limits": {
       "requestsPerMinute": 2000,
       "tokensPerMinute": 5000000,
       "maxMembers": 10
+    },
+    "payouts": {
+      "idleResalePercent": 20,
+      "description": "Earn up to 20% on any resold compute or LLM usage when your account is idle"
     }
   },
   {
@@ -75,11 +90,16 @@
       "Custom rate limits",
       "On-premise deployment",
       "SOC 2 compliance",
-      "Custom model fine-tuning"
+      "Custom model fine-tuning",
+      "Earn up to 20% on idle compute & LLM resale"
     ],
     "limits": {
       "requestsPerMinute": null,
       "tokensPerMinute": null
+    },
+    "payouts": {
+      "idleResalePercent": 20,
+      "description": "Earn up to 20% on any resold compute or LLM usage when your account is idle"
     }
   }
 ]

@@ -16,6 +16,7 @@ import { createRequire } from 'node:module'
 const require = createRequire(import.meta.url)
 export const subscriptionPlans = require('../plans/subscription.json')
 export const blockchainPlans = require('../plans/blockchain.json')
+export const pricingPolicy = require('../plans/pricing-policy.json')
 
 // ── Hanzo Zen model catalog — metadata only, no prices ──────────────
 export const zenCatalog = [
