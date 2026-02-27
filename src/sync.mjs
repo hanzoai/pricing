@@ -28,6 +28,19 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(__dirname, "..", "data");
 const DATA_FILE = join(DATA_DIR, "pricing.json");
 
+/**
+ * fetch() with an AbortController timeout.
+ */
+async function fetchWithTimeout(url, opts = {}, timeoutMs = 30_000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...opts, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 const OPENROUTER_API = "https://openrouter.ai/api/v1/models";
 
 // Zen gateway internal endpoint — single source of truth for Zen pricing.
@@ -116,7 +129,7 @@ async function fetchZenPricing() {
   }
 
   console.log(`[sync] Fetching Zen pricing...`);
-  const res = await fetch(url, { headers });
+  const res = await fetchWithTimeout(url, { headers });
   if (!res.ok) {
     throw new Error(`Zen gateway returned ${res.status}`);
   }
@@ -145,7 +158,7 @@ async function fetchZenPricing() {
  */
 async function fetchOpenRouterModels() {
   console.log("[sync] Fetching ALL models from OpenRouter...");
-  const res = await fetch(OPENROUTER_API);
+  const res = await fetchWithTimeout(OPENROUTER_API);
   if (!res.ok) {
     throw new Error(
       `OpenRouter API returned ${res.status}: ${await res.text()}`
@@ -170,7 +183,7 @@ function getThirdPartyMarkup() {
  */
 function formatContext(ctxLength) {
   if (!ctxLength) return null;
-  if (ctxLength >= 1_000_000) return `${Math.round(ctxLength / 1000)}k context window`;
+  if (ctxLength >= 1_000_000) return `${Math.round(ctxLength / 1_000_000)}M context window`;
   if (ctxLength >= 1000) return `${Math.round(ctxLength / 1000)}k context window`;
   return `${ctxLength} context window`;
 }
@@ -222,7 +235,7 @@ async function fetchDOPricing() {
   }
   try {
     console.log("[sync] Fetching DO droplet pricing...");
-    const res = await fetch(DO_API, {
+    const res = await fetchWithTimeout(DO_API, {
       headers: { Authorization: `Bearer ${DO_TOKEN}` },
     });
     if (!res.ok) {

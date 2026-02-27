@@ -32,23 +32,41 @@ const API_KEY = process.env.PRICING_API_KEY || "";
 // Sync interval: 6 hours.
 const SYNC_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
+// In-memory cache so we don't hit disk on every request.
+let _cache = null;
+
+function invalidateCache() {
+  _cache = null;
+}
+
 /**
- * Load pricing data from disk.
+ * Load pricing data from disk (cached).
  */
 function loadPricing() {
+  if (_cache) return _cache;
   if (!existsSync(DATA_FILE)) {
     return null;
   }
-  return JSON.parse(readFileSync(DATA_FILE, "utf-8"));
+  try {
+    _cache = JSON.parse(readFileSync(DATA_FILE, "utf-8"));
+  } catch (err) {
+    console.error("[server] Failed to parse pricing data:", err.message);
+    return null;
+  }
+  return _cache;
 }
 
 const app = express();
 app.use(express.json());
 
 // CORS for frontend.
-app.use((_req, res, next) => {
+app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Authorization, Content-Type");
+  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
   next();
 });
 
@@ -213,6 +231,7 @@ app.post("/v1/sync", async (req, res) => {
   }
   try {
     const data = await sync();
+    invalidateCache();
     res.json({ status: "ok", updated: data.updated, summary: data.summary });
   } catch (err) {
     console.error("[server] Sync failed:", err.message);
@@ -221,22 +240,33 @@ app.post("/v1/sync", async (req, res) => {
 });
 
 // Start server.
-const server = app.listen(PORT, async () => {
+let syncInterval = null;
+
+const server = app.listen(PORT, () => {
   console.log(`[server] Hanzo Pricing API listening on port ${PORT}`);
 
-  // Run initial sync on startup.
-  try {
-    await sync();
-    console.log("[server] Initial sync complete.");
-  } catch (err) {
-    console.error("[server] Initial sync failed:", err.message);
-    console.error("[server] Will retry in 6 hours.");
+  // Serve immediately from disk cache if available.
+  const cached = loadPricing();
+  if (cached) {
+    console.log("[server] Loaded existing pricing data from disk.");
   }
 
+  // Run initial sync in background — don't block startup.
+  sync()
+    .then(() => {
+      invalidateCache();
+      console.log("[server] Initial sync complete.");
+    })
+    .catch((err) => {
+      console.error("[server] Initial sync failed:", err.message);
+      console.error("[server] Will retry in 6 hours.");
+    });
+
   // Schedule periodic sync every 6 hours.
-  setInterval(async () => {
+  syncInterval = setInterval(async () => {
     try {
       await sync();
+      invalidateCache();
       console.log("[server] Periodic sync complete.");
     } catch (err) {
       console.error("[server] Periodic sync failed:", err.message);
@@ -245,12 +275,11 @@ const server = app.listen(PORT, async () => {
 });
 
 // Graceful shutdown.
-process.on("SIGTERM", () => {
-  console.log("[server] SIGTERM received, shutting down...");
+function shutdown(signal) {
+  console.log(`[server] ${signal} received, shutting down...`);
+  if (syncInterval) clearInterval(syncInterval);
   server.close(() => process.exit(0));
-});
+}
 
-process.on("SIGINT", () => {
-  console.log("[server] SIGINT received, shutting down...");
-  server.close(() => process.exit(0));
-});
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
