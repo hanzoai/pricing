@@ -15,6 +15,8 @@
 //   GET  /v1/pricing/cloud/regions      — available cloud regions
 //   GET  /v1/pricing/cloud/storage      — block storage pricing
 //   GET  /v1/pricing/providers          — provider breakdown with counts
+//   GET  /v1/pricing/subscriptions      — subscription plans (from @hanzo/plans)
+//   GET  /v1/pricing/blockchain         — blockchain / RPC plans (from @hanzo/plans)
 //   POST /v1/sync                       — trigger manual sync (requires PRICING_API_KEY)
 
 import { readFileSync, existsSync } from "node:fs";
@@ -22,6 +24,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import express from "express";
 import { sync } from "./sync.mjs";
+import { subscriptionPlans, blockchainPlans } from "./models.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_FILE = join(__dirname, "..", "data", "pricing.json");
@@ -221,6 +224,16 @@ app.get("/v1/pricing/providers", (_req, res) => {
     return res.status(503).json({ error: "Pricing data not yet available" });
   }
   res.json({ updated: data.updated, providers: data.providers });
+});
+
+// Subscription plans (from @hanzo/plans).
+app.get("/v1/pricing/subscriptions", (_req, res) => {
+  res.json({ plans: subscriptionPlans });
+});
+
+// Blockchain / RPC plans (from @hanzo/plans).
+app.get("/v1/pricing/blockchain", (_req, res) => {
+  res.json({ plans: blockchainPlans });
 });
 
 // Manual sync trigger (always requires API key).

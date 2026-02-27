@@ -4,7 +4,13 @@
 // Third-party models are detected DYNAMICALLY from OpenRouter.
 // Only Zen catalog metadata (name, description, features, specs) lives here.
 //
+// Subscription and blockchain plans are imported from @hanzo/plans
+// (the canonical single source of truth).
+//
 // BRAND POLICY: Never expose upstream model names. Zen models are our own.
+
+import { subscriptionPlans, blockchainPlans } from '@hanzo/plans'
+export { subscriptionPlans, blockchainPlans }
 
 // ── Hanzo Zen model catalog — metadata only, no prices ──────────────
 export const zenCatalog = [
