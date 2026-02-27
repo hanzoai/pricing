@@ -293,8 +293,12 @@ export async function sync() {
 
     // Pass through optional metadata.
     if (model.endpoint) entry.endpoint = model.endpoint;
+    if (model.contactSales) entry.contactSales = true;
 
-    if (model.staticPricing) {
+    if (model.contactSales) {
+      // Contact-sales models (e.g. zen5) — no pricing exposed.
+      entry.pricing = null;
+    } else if (model.staticPricing) {
       // Non-token models (image, audio) use static per-unit pricing.
       entry.pricingUnit = model.pricingUnit;
       entry.pricing = { perUnit: model.staticPricing.perUnit };

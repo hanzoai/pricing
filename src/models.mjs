@@ -381,6 +381,59 @@ export const zenCatalog = [
     pricingUnit: "1M characters",
     staticPricing: { perUnit: 2.0 },
   },
+  // ── Zen5 Generation — Next-gen frontier models (Early Access) ──────
+  // Contact sales only. Not yet routed in zen-gateway.
+  // Visible in catalog to signal roadmap; no API key grants access.
+  {
+    name: "zen5",
+    fullName: "Zen5 — Next Generation",
+    description: "Next-generation frontier model with breakthrough reasoning and 1M+ token context.",
+    features: ["1M+ context window", "Next-gen reasoning", "Multimodal native"],
+    tier: "ultra max",
+    context: 1048576,
+    specs: { params: "TBA", arch: "MoDE" },
+    contactSales: true,
+  },
+  {
+    name: "zen5-pro",
+    fullName: "Zen5 Pro — Advanced",
+    description: "High-throughput next-gen model for demanding production workloads.",
+    features: ["512K context window", "Production optimized", "Advanced reasoning"],
+    tier: "ultra",
+    context: 524288,
+    specs: { params: "TBA", arch: "MoDE" },
+    contactSales: true,
+  },
+  {
+    name: "zen5-max",
+    fullName: "Zen5 Max — Extended",
+    description: "Maximum context next-gen model for deep analysis and long-form tasks.",
+    features: ["2M context window", "Extended reasoning", "Document-scale"],
+    tier: "ultra max",
+    context: 2097152,
+    specs: { params: "TBA", arch: "MoDE" },
+    contactSales: true,
+  },
+  {
+    name: "zen5-ultra",
+    fullName: "Zen5 Ultra — Reasoning",
+    description: "Deep reasoning next-gen model with advanced chain-of-thought capabilities.",
+    features: ["1M context window", "Deep CoT", "Self-verification"],
+    tier: "ultra max",
+    context: 1048576,
+    specs: { params: "TBA", arch: "MoDE + CoT" },
+    contactSales: true,
+  },
+  {
+    name: "zen5-mini",
+    fullName: "Zen5 Mini — Efficient",
+    description: "Efficient next-gen model delivering zen5-class intelligence at fraction of the cost.",
+    features: ["256K context window", "Cost efficient", "Fast inference"],
+    tier: "pro",
+    context: 262144,
+    specs: { params: "TBA", arch: "MoDE" },
+    contactSales: true,
+  },
 ];
 
 // ── Featured third-party model IDs (pinned to top of third-party list) ──
