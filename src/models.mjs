@@ -58,6 +58,15 @@ export const zenCatalog = [
     specs: { params: "N/A", arch: "Dense" },
   },
   {
+    name: "zen4.6",
+    fullName: "Zen4.6 — Extended Context",
+    description: "High-performance 1M context model for long-document analysis, large codebase reasoning, and agentic workflows. Best balance of intelligence and cost at million-token scale.",
+    features: ["1M context window", "Agentic coding", "Long-document analysis", "Cost efficient"],
+    tier: "ultra",
+    context: 1000000,
+    specs: { params: "N/A", arch: "Dense" },
+  },
+  {
     name: "zen4-mini",
     fullName: "Zen4 Mini — Fast & Efficient",
     description: "Ultra-fast lightweight model optimized for speed and cost efficiency. Ideal for free tier.",
