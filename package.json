@@ -9,7 +9,6 @@
     "dev": "node --watch src/server.mjs"
   },
   "dependencies": {
-    "@hanzo/plans": "file:../plans",
     "express": "^4.21.0"
   }
 }

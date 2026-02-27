@@ -9,8 +9,13 @@
 //
 // BRAND POLICY: Never expose upstream model names. Zen models are our own.
 
-import { subscriptionPlans, blockchainPlans } from '@hanzo/plans'
-export { subscriptionPlans, blockchainPlans }
+// Subscription and blockchain plan definitions.
+// Canonical source: ~/work/hanzo/plans (hanzoai/plans repo).
+// Kept in sync via COPY in Dockerfile.
+import { createRequire } from 'node:module'
+const require = createRequire(import.meta.url)
+export const subscriptionPlans = require('../plans/subscription.json')
+export const blockchainPlans = require('../plans/blockchain.json')
 
 // ── Hanzo Zen model catalog — metadata only, no prices ──────────────
 export const zenCatalog = [

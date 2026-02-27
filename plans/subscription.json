@@ -1,0 +1,85 @@
+[
+  {
+    "id": "developer",
+    "name": "Developer",
+    "description": "Get started for free. Explore the API with generous included credits.",
+    "priceMonthly": 0,
+    "priceAnnual": 0,
+    "category": "personal",
+    "features": [
+      "$5 free credit",
+      "60 requests/min",
+      "100K tokens/min",
+      "Community support",
+      "API access"
+    ],
+    "limits": {
+      "requestsPerMinute": 60,
+      "tokensPerMinute": 100000,
+      "freeCredit": 5
+    }
+  },
+  {
+    "id": "pro",
+    "name": "Pro",
+    "description": "For developers shipping real products. Higher limits and priority support.",
+    "priceMonthly": 49,
+    "priceAnnual": 39,
+    "category": "personal",
+    "popular": true,
+    "features": [
+      "500 requests/min",
+      "1M tokens/min",
+      "Email support",
+      "Analytics dashboard",
+      "Priority inference"
+    ],
+    "limits": {
+      "requestsPerMinute": 500,
+      "tokensPerMinute": 1000000
+    }
+  },
+  {
+    "id": "team",
+    "name": "Team",
+    "description": "For teams building together. SSO, shared billing, and custom training.",
+    "priceMonthly": 199,
+    "priceAnnual": 159,
+    "category": "team",
+    "features": [
+      "Up to 10 members",
+      "SSO / SAML",
+      "Priority support",
+      "Custom model training",
+      "Shared billing",
+      "Usage analytics"
+    ],
+    "limits": {
+      "requestsPerMinute": 2000,
+      "tokensPerMinute": 5000000,
+      "maxMembers": 10
+    }
+  },
+  {
+    "id": "enterprise",
+    "name": "Enterprise",
+    "description": "Custom solutions for large organizations. SLA, dedicated support, and on-prem options.",
+    "priceMonthly": null,
+    "priceAnnual": null,
+    "category": "enterprise",
+    "contactSales": true,
+    "features": [
+      "Unlimited members",
+      "99.99% SLA",
+      "Dedicated account manager",
+      "Custom rate limits",
+      "On-premise deployment",
+      "SOC 2 compliance",
+      "Custom model fine-tuning"
+    ],
+    "limits": {
+      "requestsPerMinute": null,
+      "tokensPerMinute": null
+    }
+  }
+]
