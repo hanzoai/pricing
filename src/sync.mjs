@@ -1,4 +1,7 @@
-// Sync pricing data: Zen prices from zen-gateway, ALL third-party from OpenRouter.
+// Sync pricing data from three sources:
+//   1. Zen Gateway  — internal Zen model pricing (single source of truth)
+//   2. OpenRouter    — 300+ third-party models with pricing
+//   3. HuggingFace Router — free serverless inference models (optional, needs HF_TOKEN)
 //
 // No hardcoded model lists for third-party — everything detected dynamically.
 //
@@ -6,11 +9,13 @@
 //   node src/sync.mjs          # run standalone
 //   import { sync } from './sync.mjs'  # call from server
 
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { homedir } from "node:os";
 import { fileURLToPath } from "node:url";
 import {
   zenCatalog,
+  zenFamilies,
   featuredModelIds,
   toolPricing,
   computePresets,
@@ -42,6 +47,24 @@ async function fetchWithTimeout(url, opts = {}, timeoutMs = 30_000) {
 }
 
 const OPENROUTER_API = "https://openrouter.ai/api/v1/models";
+
+// HuggingFace Router — free serverless inference models.
+const HF_ROUTER_API = "https://router.huggingface.co/v1/models";
+
+/**
+ * Resolve HF_TOKEN from env or cached token file (local dev).
+ */
+function resolveHFToken() {
+  if (process.env.HF_TOKEN) return process.env.HF_TOKEN;
+  const cached = join(homedir(), ".cache", "huggingface", "token");
+  if (existsSync(cached)) {
+    const token = readFileSync(cached, "utf-8").trim();
+    if (token) return token;
+  }
+  return "";
+}
+
+const HF_TOKEN = resolveHFToken();
 
 // Zen gateway internal endpoint — single source of truth for Zen pricing.
 const ZEN_GATEWAY_URL =
@@ -168,6 +191,69 @@ async function fetchOpenRouterModels() {
   const models = body.data || [];
   console.log(`[sync] Received ${models.length} models from OpenRouter.`);
   return models;
+}
+
+/**
+ * Fetch models from HuggingFace Router API.
+ * Returns empty array if no token or on error.
+ */
+async function fetchHuggingFaceModels() {
+  if (!HF_TOKEN) {
+    console.warn("[sync] No HF_TOKEN — skipping HuggingFace Router sync");
+    return [];
+  }
+  console.log("[sync] Fetching models from HuggingFace Router...");
+  try {
+    const res = await fetchWithTimeout(HF_ROUTER_API, {
+      headers: { Authorization: `Bearer ${HF_TOKEN}` },
+    });
+    if (!res.ok) {
+      console.warn(`[sync] HuggingFace Router returned ${res.status} — skipping`);
+      return [];
+    }
+    const body = await res.json();
+    const models = body.data || [];
+    console.log(`[sync] Received ${models.length} models from HuggingFace Router.`);
+    return models;
+  } catch (err) {
+    console.warn(`[sync] HuggingFace Router fetch failed: ${err.message} — skipping`);
+    return [];
+  }
+}
+
+/**
+ * Derive a clean display name from a HuggingFace model ID.
+ * e.g. "meta-llama/Llama-4-Maverick-17B-128E-Instruct" -> "Llama 4 Maverick 17B 128E Instruct"
+ */
+function hfDisplayName(modelId) {
+  const parts = modelId.split("/");
+  const last = parts[parts.length - 1];
+  return last.replace(/[-_]/g, " ");
+}
+
+/**
+ * Normalize a model name for deduplication.
+ * Strips org prefix, lowercases, removes hyphens/underscores/spaces.
+ */
+function normalizeModelName(id) {
+  const parts = id.split("/");
+  const name = parts[parts.length - 1];
+  return name.toLowerCase().replace(/[-_\s.]/g, "");
+}
+
+/**
+ * Process a single HuggingFace Router model into our format.
+ */
+function processHuggingFaceModel(hfModel) {
+  return {
+    id: `huggingface/${hfModel.id}`,
+    name: hfDisplayName(hfModel.id),
+    provider: "HuggingFace",
+    contextWindow: null,
+    features: ["HuggingFace Serverless Inference", "Free tier"],
+    isFree: true,
+    pricing: { input: 0, output: 0, cacheRead: null, cacheWrite: null },
+  };
 }
 
 /**
@@ -323,7 +409,31 @@ export async function sync() {
   const markup = getThirdPartyMarkup();
 
   // Process all OpenRouter models.
-  const allThirdParty = orModels.map((m) => processOpenRouterModel(m, markup));
+  const allOpenRouter = orModels.map((m) => processOpenRouterModel(m, markup));
+
+  // 2b. Fetch HuggingFace Router models (free serverless inference).
+  const hfRawModels = await fetchHuggingFaceModels();
+
+  // Build a set of normalized names from OpenRouter for dedup.
+  const orNormalizedNames = new Set(allOpenRouter.map((m) => normalizeModelName(m.id)));
+
+  // Process HF models, skip duplicates already in OpenRouter.
+  const hfModels = [];
+  let hfSkipped = 0;
+  for (const hfm of hfRawModels) {
+    const norm = normalizeModelName(hfm.id);
+    if (orNormalizedNames.has(norm)) {
+      hfSkipped++;
+      continue;
+    }
+    hfModels.push(processHuggingFaceModel(hfm));
+  }
+  if (hfRawModels.length > 0) {
+    console.log(`[sync] HuggingFace: ${hfModels.length} unique models (${hfSkipped} duplicates skipped).`);
+  }
+
+  // Merge: OpenRouter + HuggingFace = all third-party.
+  const allThirdParty = [...allOpenRouter, ...hfModels];
 
   // Separate into featured (pinned) and others.
   const featuredSet = new Set(featuredModelIds);
@@ -428,6 +538,8 @@ export async function sync() {
     summary: {
       zenModels: pricedHanzo.length,
       thirdPartyModels: thirdPartyModels.length,
+      openRouterModels: allOpenRouter.length,
+      huggingfaceModels: hfModels.length,
       freeModels: free.length,
       featuredModels: featured.length,
       providers: Object.keys(providerCounts).length,
@@ -436,6 +548,7 @@ export async function sync() {
       cloudRegions: cloudRegions.length,
     },
     hanzoModels: pricedHanzo,
+    families: zenFamilies,
     thirdPartyModels,
     freeModels: free.map((m) => m.id),
     providers: providerCounts,
@@ -454,7 +567,7 @@ export async function sync() {
   console.log(`[sync] Wrote pricing data to ${DATA_FILE}`);
   console.log(`[sync] Updated: ${pricingData.updated}`);
   console.log(
-    `[sync] Zen: ${pricedHanzo.length} | Third-party: ${thirdPartyModels.length} (${free.length} free) | Total: ${pricingData.summary.totalModels}`
+    `[sync] Zen: ${pricedHanzo.length} | Third-party: ${thirdPartyModels.length} (OpenRouter: ${allOpenRouter.length}, HuggingFace: ${hfModels.length}) | Free: ${free.length} | Total: ${pricingData.summary.totalModels}`
   );
   console.log(`[sync] Providers: ${Object.keys(providerCounts).length}`);
 

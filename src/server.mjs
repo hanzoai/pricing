@@ -254,28 +254,34 @@ app.get("/v1/pricing/policy", (_req, res) => {
 // Convenience aliases — cleaner top-level access
 // ---------------------------------------------------------------------------
 
-// /v1/models — OpenAI-compatible style listing of all available AI models.
+// /v1/models — Unified model listing. The ONE endpoint all frontends call.
+// Includes Zen models, third-party, families, and summary.
+// CF caches at edge. Frontends never need build-time model data.
 app.get("/v1/models", (_req, res) => {
   const data = loadPricing();
   if (!data) {
     return res.status(503).json({ error: "Model data not yet available" });
   }
-  const models = [
-    ...data.hanzoModels.map((m) => ({
-      id: m.id || m.name,
-      object: "model",
-      owned_by: "hanzo",
-      ...m,
-      provider: "Hanzo",
-    })),
-    ...data.thirdPartyModels.map((m) => ({
-      id: m.id || m.name,
-      object: "model",
-      owned_by: m.provider || "third-party",
-      ...m,
-    })),
-  ];
-  res.json({ object: "list", data: models });
+  const zenModels = data.hanzoModels.map((m) => ({
+    id: m.id || m.name,
+    object: "model",
+    owned_by: "hanzo",
+    ...m,
+    provider: "Hanzo",
+  }));
+  const thirdParty = data.thirdPartyModels.map((m) => ({
+    id: m.id || m.name,
+    object: "model",
+    owned_by: m.provider || "third-party",
+    ...m,
+  }));
+  res.json({
+    object: "list",
+    updated: data.updated,
+    summary: data.summary,
+    families: data.families || [],
+    data: [...zenModels, ...thirdParty],
+  });
 });
 
 // /v1/plans — subscription plans.
