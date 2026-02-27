@@ -18,6 +18,14 @@
 //   GET  /v1/pricing/subscriptions      — subscription plans (from @hanzo/plans)
 //   GET  /v1/pricing/blockchain         — blockchain / RPC plans (from @hanzo/plans)
 //   GET  /v1/pricing/policy             — transparent pricing policy + revenue sharing
+//
+// Convenience aliases:
+//   GET  /v1/models                     — OpenAI-compatible model listing
+//   GET  /v1/plans                      — subscription plans
+//   GET  /v1/cloud                      — cloud VM plans + regions + storage
+//   GET  /v1/tools                      — tool pricing
+//   GET  /v1/gpu                        — GPU tier pricing
+//
 //   POST /v1/sync                       — trigger manual sync (requires PRICING_API_KEY)
 
 import { readFileSync, existsSync } from "node:fs";
@@ -240,6 +248,67 @@ app.get("/v1/pricing/blockchain", (_req, res) => {
 // Transparent pricing policy + revenue sharing (from @hanzo/plans).
 app.get("/v1/pricing/policy", (_req, res) => {
   res.json(pricingPolicy);
+});
+
+// ---------------------------------------------------------------------------
+// Convenience aliases — cleaner top-level access
+// ---------------------------------------------------------------------------
+
+// /v1/models — OpenAI-compatible style listing of all available AI models.
+app.get("/v1/models", (_req, res) => {
+  const data = loadPricing();
+  if (!data) {
+    return res.status(503).json({ error: "Model data not yet available" });
+  }
+  const models = [
+    ...data.hanzoModels.map((m) => ({
+      id: m.id || m.name,
+      object: "model",
+      owned_by: "hanzo",
+      ...m,
+      provider: "Hanzo",
+    })),
+    ...data.thirdPartyModels.map((m) => ({
+      id: m.id || m.name,
+      object: "model",
+      owned_by: m.provider || "third-party",
+      ...m,
+    })),
+  ];
+  res.json({ object: "list", data: models });
+});
+
+// /v1/plans — subscription plans.
+app.get("/v1/plans", (_req, res) => {
+  res.json({ plans: subscriptionPlans });
+});
+
+// /v1/cloud — cloud VM plans + regions + storage.
+app.get("/v1/cloud", (_req, res) => {
+  const data = loadPricing();
+  if (!data?.cloud) {
+    return res.status(503).json({ error: "Cloud pricing not yet available" });
+  }
+  const { _internal, ...publicCloud } = data.cloud;
+  res.json(publicCloud);
+});
+
+// /v1/tools — tool pricing.
+app.get("/v1/tools", (_req, res) => {
+  const data = loadPricing();
+  if (!data?.tools) {
+    return res.status(503).json({ error: "Tool pricing not yet available" });
+  }
+  res.json({ tools: data.tools });
+});
+
+// /v1/gpu — GPU tier pricing.
+app.get("/v1/gpu", (_req, res) => {
+  const data = loadPricing();
+  if (!data?.infrastructure?.gpu) {
+    return res.status(503).json({ error: "GPU pricing not yet available" });
+  }
+  res.json({ tiers: data.infrastructure.gpu });
 });
 
 // Manual sync trigger (always requires API key).
