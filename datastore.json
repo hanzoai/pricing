@@ -168,6 +168,6 @@
   "endpoints": {
     "api": "https://api.hanzo.ai/v1/pricing/datastore",
     "signup": "https://console.hanzo.ai",
-    "sales": "mailto:sales@hanzo.ai?subject=Hanzo Datastore Enterprise"
+    "sales": "https://hanzo.ai/contact/sales"
   }
 }
