@@ -82,6 +82,11 @@ app.use((req, res, next) => {
   next();
 });
 
+// Root.
+app.get("/", (_req, res) => {
+  res.json({ status: "ok", service: "pricing.hanzo.ai", version: "1.0.0" });
+});
+
 // Health check.
 app.get("/health", (_req, res) => {
   const data = loadPricing();
