@@ -1,0 +1,173 @@
+{
+  "$schema": "https://hanzo.ai/schemas/pricing/datastore.json",
+  "version": "1.0.0",
+  "currency": "USD",
+  "unit": "HanzoCredit",
+  "note": "1 HanzoCredit = $1 USD. All prices match Hanzo Datastore hosted service.",
+  "trial": {
+    "days": 30,
+    "requiresCreditCard": false
+  },
+  "tiers": [
+    {
+      "id": "basic",
+      "name": "Basic",
+      "tagline": "For teams getting started with analytics",
+      "replicas": 1,
+      "ramGiB": 8,
+      "vcpu": 2,
+      "storageGB": 1000,
+      "priceMonthly": 66.52,
+      "priceHourly": 0.0922,
+      "billingGranularity": "per_minute",
+      "availabilityZones": 1,
+      "storageLimit": "1TB",
+      "support": {
+        "level": "standard",
+        "responseTime": "next_business_day"
+      },
+      "features": [
+        "async_inserts",
+        "json_each_row",
+        "parquet_ingestion",
+        "http_api",
+        "native_protocol",
+        "automated_backups",
+        "encryption_at_rest"
+      ]
+    },
+    {
+      "id": "scale",
+      "name": "Scale",
+      "tagline": "For production workloads with high availability",
+      "replicas": 2,
+      "ramGiB": 8,
+      "vcpu": 2,
+      "storageGB": null,
+      "priceMonthly": 499.38,
+      "priceHourly": 0.6936,
+      "billingGranularity": "per_minute",
+      "availabilityZones": 2,
+      "storageLimit": "unlimited",
+      "popular": true,
+      "support": {
+        "level": "priority",
+        "responseTime": "1_hour_critical_24x7"
+      },
+      "features": [
+        "async_inserts",
+        "json_each_row",
+        "parquet_ingestion",
+        "http_api",
+        "native_protocol",
+        "automated_backups",
+        "encryption_at_rest",
+        "auto_scaling",
+        "compute_storage_separation",
+        "read_replicas",
+        "private_endpoints"
+      ]
+    },
+    {
+      "id": "enterprise",
+      "name": "Enterprise",
+      "tagline": "For mission-critical deployments at scale",
+      "replicas": 2,
+      "ramGiB": 32,
+      "vcpu": 8,
+      "storageGB": 5000,
+      "priceMonthly": 2669.40,
+      "priceHourly": 3.7075,
+      "billingGranularity": "per_minute",
+      "availabilityZones": 3,
+      "storageLimit": "unlimited",
+      "support": {
+        "level": "enterprise",
+        "responseTime": "30_min_critical",
+        "namedEngineer": true,
+        "sla": true
+      },
+      "features": [
+        "async_inserts",
+        "json_each_row",
+        "parquet_ingestion",
+        "http_api",
+        "native_protocol",
+        "automated_backups",
+        "encryption_at_rest",
+        "auto_scaling",
+        "compute_storage_separation",
+        "read_replicas",
+        "private_endpoints",
+        "private_vpc",
+        "byoc",
+        "hipaa",
+        "pci_dss",
+        "cmek",
+        "sso_saml"
+      ],
+      "contactSales": true
+    }
+  ],
+  "usage": {
+    "storage": {
+      "pricePerGBMonth": 0.0247,
+      "pricePerTBMonth": 25.30,
+      "unit": "compressed_on_disk",
+      "note": "Compressed size of data in tables. Backups billed separately."
+    },
+    "ingestion": {
+      "pricePerGB": 0.04,
+      "label": "Hanzo Pipes",
+      "note": "Kafka, S3, HTTP, Postgres CDC ingestion"
+    },
+    "egress": {
+      "public_internet": {
+        "pricePerGB": 0.1152,
+        "note": "Outbound to public internet"
+      },
+      "cross_region": {
+        "pricePerGB": 0.0312,
+        "note": "Between Hanzo regions"
+      },
+      "intra_region": {
+        "pricePerGB": 0,
+        "note": "Free within same region"
+      }
+    },
+    "compute": {
+      "unit": "8GiB_RAM_increment",
+      "billingGranularity": "per_minute",
+      "note": "Compute billed per minute in 8 GiB RAM increments. Services can scale to zero when idle."
+    }
+  },
+  "discounts": {
+    "annual": {
+      "percent": 17,
+      "note": "Pay annually and save ~17% vs monthly"
+    },
+    "committed_use": {
+      "percent": 25,
+      "note": "1-year committed use discount. Contact sales."
+    }
+  },
+  "included": [
+    "30-day free trial",
+    "Automated backups",
+    "End-to-end encryption",
+    "ClickHouse-compatible HTTP API",
+    "JSONEachRow + Parquet ingestion",
+    "Async inserts",
+    "IAM SSO authentication",
+    "KMS-managed secrets",
+    "OpenTelemetry native",
+    "Real-time query metrics",
+    "DDoS protection",
+    "Hanzo Console UI"
+  ],
+  "endpoints": {
+    "api": "https://api.hanzo.ai/v1/pricing/datastore",
+    "signup": "https://console.hanzo.ai",
+    "sales": "mailto:sales@hanzo.ai?subject=Hanzo Datastore Enterprise"
+  }
+}
