@@ -9,14 +9,18 @@
 //
 // BRAND POLICY: Never expose upstream model names. Zen models are our own.
 
-// Subscription and blockchain plan definitions.
-// Canonical source: ~/work/hanzo/plans (hanzoai/plans repo).
+// All plan and pricing data imported from @hanzo/plans (canonical single source of truth).
 // Kept in sync via COPY in Dockerfile.
 import { createRequire } from 'node:module'
 const require = createRequire(import.meta.url)
 export const subscriptionPlans = require('../plans/subscription.json')
 export const blockchainPlans = require('../plans/blockchain.json')
 export const pricingPolicy = require('../plans/pricing-policy.json')
+export const canonicalCloudPlans = require('../plans/plans.json')
+export const canonicalGpuTiers = require('../plans/gpu.json')
+export const canonicalRegions = require('../plans/regions.json')
+export const canonicalStorage = require('../plans/storage.json')
+export const canonicalTools = require('../plans/tools.json')
 
 // ── Hanzo Zen model catalog — metadata only, no prices ──────────────
 export const zenCatalog = [

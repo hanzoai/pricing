@@ -22,9 +22,11 @@
 // Convenience aliases:
 //   GET  /v1/models                     — OpenAI-compatible model listing
 //   GET  /v1/plans                      — subscription plans
+//   GET  /v1/subscriptions              — subscription plans (alias)
 //   GET  /v1/cloud                      — cloud VM plans + regions + storage
 //   GET  /v1/tools                      — tool pricing
 //   GET  /v1/gpu                        — GPU tier pricing
+//   GET  /v1/pricing-policy             — transparent pricing policy
 //
 //   POST /v1/sync                       — trigger manual sync (requires PRICING_API_KEY)
 
@@ -33,7 +35,11 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import express from "express";
 import { sync } from "./sync.mjs";
-import { subscriptionPlans, blockchainPlans, pricingPolicy } from "./models.mjs";
+import {
+  subscriptionPlans, blockchainPlans, pricingPolicy,
+  canonicalCloudPlans, canonicalGpuTiers, canonicalRegions,
+  canonicalStorage, canonicalTools,
+} from "./models.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_FILE = join(__dirname, "..", "data", "pricing.json");
@@ -304,22 +310,24 @@ app.get("/v1/cloud", (_req, res) => {
   res.json(publicCloud);
 });
 
-// /v1/tools — tool pricing.
-app.get("/v1/tools", (_req, res) => {
-  const data = loadPricing();
-  if (!data?.tools) {
-    return res.status(503).json({ error: "Tool pricing not yet available" });
-  }
-  res.json({ tools: data.tools });
+// /v1/subscriptions — subscription plans (alias).
+app.get("/v1/subscriptions", (_req, res) => {
+  res.json({ plans: subscriptionPlans });
 });
 
-// /v1/gpu — GPU tier pricing.
+// /v1/tools — tool pricing (from @hanzo/plans, fallback to synced data).
+app.get("/v1/tools", (_req, res) => {
+  res.json({ tools: canonicalTools });
+});
+
+// /v1/gpu — GPU tier pricing (from @hanzo/plans, fallback to synced data).
 app.get("/v1/gpu", (_req, res) => {
-  const data = loadPricing();
-  if (!data?.infrastructure?.gpu) {
-    return res.status(503).json({ error: "GPU pricing not yet available" });
-  }
-  res.json({ tiers: data.infrastructure.gpu });
+  res.json({ tiers: canonicalGpuTiers });
+});
+
+// /v1/pricing-policy — transparent pricing policy.
+app.get("/v1/pricing-policy", (_req, res) => {
+  res.json(pricingPolicy);
 });
 
 // Manual sync trigger (always requires API key).
