@@ -17,6 +17,7 @@
 //   GET  /v1/pricing/providers          — provider breakdown with counts
 //   GET  /v1/pricing/subscriptions      — subscription plans (from @hanzo/plans)
 //   GET  /v1/pricing/blockchain         — blockchain / RPC plans (from @hanzo/plans)
+//   GET  /v1/pricing/iam               — IAM / identity plans (from @hanzo/plans)
 //   GET  /v1/pricing/policy             — transparent pricing policy + revenue sharing
 //
 // Convenience aliases:
@@ -27,6 +28,7 @@
 //   GET  /v1/tools                      — tool pricing
 //   GET  /v1/gpu                        — GPU tier pricing
 //   GET  /v1/pricing-policy             — transparent pricing policy
+//   GET  /v1/iam                        — IAM / identity plans
 //
 //   POST /v1/sync                       — trigger manual sync (requires PRICING_API_KEY)
 
@@ -38,7 +40,7 @@ import { sync } from "./sync.mjs";
 import {
   subscriptionPlans, blockchainPlans, pricingPolicy,
   canonicalCloudPlans, canonicalGpuTiers, canonicalRegions,
-  canonicalStorage, canonicalTools,
+  canonicalStorage, canonicalTools, iamPlans,
 } from "./models.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -256,6 +258,11 @@ app.get("/v1/pricing/blockchain", (_req, res) => {
   res.json({ plans: blockchainPlans });
 });
 
+// IAM / identity plans (from @hanzo/plans).
+app.get("/v1/pricing/iam", (_req, res) => {
+  res.json({ plans: iamPlans });
+});
+
 // Transparent pricing policy + revenue sharing (from @hanzo/plans).
 app.get("/v1/pricing/policy", (_req, res) => {
   res.json(pricingPolicy);
@@ -328,6 +335,11 @@ app.get("/v1/gpu", (_req, res) => {
 // /v1/pricing-policy — transparent pricing policy.
 app.get("/v1/pricing-policy", (_req, res) => {
   res.json(pricingPolicy);
+});
+
+// /v1/iam — IAM / identity plans.
+app.get("/v1/iam", (_req, res) => {
+  res.json({ plans: iamPlans });
 });
 
 // Manual sync trigger (always requires API key).

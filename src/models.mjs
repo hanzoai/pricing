@@ -21,6 +21,7 @@ export const canonicalGpuTiers = require('../plans/gpu.json')
 export const canonicalRegions = require('../plans/regions.json')
 export const canonicalStorage = require('../plans/storage.json')
 export const canonicalTools = require('../plans/tools.json')
+export const iamPlans = require('../plans/iam.json')
 
 // ── Hanzo Zen model catalog — metadata only, no prices ──────────────
 export const zenCatalog = [
