@@ -1,0 +1,87 @@
+[
+  {
+    "id": "gateway-free",
+    "name": "Free",
+    "description": "API gateway for development with generous free tier.",
+    "priceMonthly": 0,
+    "priceAnnual": 0,
+    "category": "personal",
+    "features": [
+      "1M API calls/month",
+      "REST and HTTP APIs",
+      "Rate limiting",
+      "API key management",
+      "SSL/TLS",
+      "Community support"
+    ],
+    "limits": {
+      "requestsPerMonth": 1000000,
+      "apis": 10,
+      "rateLimit": 100,
+      "payloadSizeKB": 256
+    }
+  },
+  {
+    "id": "gateway-standard",
+    "name": "Standard",
+    "description": "Production API gateway with usage-based pricing.",
+    "priceMonthly": 0,
+    "priceAnnual": 0,
+    "category": "team",
+    "popular": true,
+    "payAsYouGo": true,
+    "features": [
+      "Pay per use (no base fee)",
+      "$3.50 per 1M REST API calls",
+      "$1.00 per 1M HTTP API calls",
+      "$1.00 per 1M WebSocket messages",
+      "Unlimited APIs",
+      "Custom domains",
+      "OAuth2 / JWT authorization",
+      "Request/response transformation",
+      "Caching ($0.02/hr for 0.5GB)",
+      "CloudWatch-compatible logging",
+      "Email support"
+    ],
+    "limits": {
+      "requestsPerMonth": -1,
+      "apis": -1,
+      "rateLimit": 10000,
+      "payloadSizeKB": 10240
+    },
+    "usage": {
+      "restPerMillion": 3.50,
+      "httpPerMillion": 1.00,
+      "websocketMessagesPerMillion": 1.00,
+      "websocketConnectionMinutesPerMillion": 0.25,
+      "cachePerHour05GB": 0.02,
+      "cachePerHour6GB": 0.20,
+      "cachePerHour118GB": 1.90,
+      "cachePerHour237GB": 3.80
+    }
+  },
+  {
+    "id": "gateway-enterprise",
+    "name": "Enterprise",
+    "description": "Dedicated API gateway with SLA, compliance, and volume discounts.",
+    "priceMonthly": null,
+    "priceAnnual": null,
+    "category": "enterprise",
+    "contactSales": true,
+    "features": [
+      "Volume discounts",
+      "Private API endpoints",
+      "WAF integration",
+      "mTLS",
+      "99.99% SLA",
+      "SOC 2 compliance",
+      "Dedicated support"
+    ],
+    "limits": {
+      "requestsPerMonth": -1,
+      "apis": -1,
+      "rateLimit": -1,
+      "payloadSizeKB": -1
+    }
+  }
+]

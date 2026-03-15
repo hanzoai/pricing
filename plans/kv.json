@@ -1,0 +1,105 @@
+[
+  {
+    "id": "kv-free",
+    "name": "Free",
+    "description": "Get started with key-value storage. Ideal for development and caching.",
+    "priceMonthly": 0,
+    "priceAnnual": 0,
+    "category": "personal",
+    "features": [
+      "30MB storage",
+      "30 connections",
+      "Single availability zone",
+      "Redis/Valkey compatible",
+      "Community support"
+    ],
+    "limits": {
+      "storageMB": 30,
+      "connections": 30,
+      "databases": 1,
+      "bandwidth": "unlimited"
+    }
+  },
+  {
+    "id": "kv-essentials",
+    "name": "Essentials",
+    "description": "Managed key-value for small to medium workloads.",
+    "priceMonthly": 5,
+    "priceAnnual": 4,
+    "category": "personal",
+    "features": [
+      "250MB storage included",
+      "256 connections",
+      "Single availability zone",
+      "Persistence (AOF/RDB)",
+      "Redis/Valkey compatible",
+      "Email support",
+      "$0.02 per additional MB/month"
+    ],
+    "limits": {
+      "storageMB": 250,
+      "connections": 256,
+      "databases": 1,
+      "bandwidth": "unlimited"
+    },
+    "overage": {
+      "additionalMBPerMonth": 0.02
+    }
+  },
+  {
+    "id": "kv-pro",
+    "name": "Pro",
+    "description": "High-performance managed KV with replication and clustering.",
+    "priceMonthly": 0,
+    "priceAnnual": 0,
+    "category": "team",
+    "popular": true,
+    "payAsYouGo": true,
+    "features": [
+      "Pay per use (no base fee)",
+      "$0.881 per vCPU-hour (12.5GB)",
+      "Up to 12TB per database",
+      "Multi-AZ replication",
+      "Active-Active geo-distribution",
+      "Redis Streams, JSON, Search, TimeSeries",
+      "100,000+ ops/second",
+      "99.999% uptime SLA",
+      "Priority support"
+    ],
+    "limits": {
+      "storageMB": -1,
+      "connections": -1,
+      "databases": -1,
+      "bandwidth": "unlimited"
+    },
+    "usage": {
+      "vCPUHour": 0.881,
+      "storagePerGBMonth": 0.185
+    }
+  },
+  {
+    "id": "kv-enterprise",
+    "name": "Enterprise",
+    "description": "Dedicated KV clusters with compliance, custom configurations, and volume discounts.",
+    "priceMonthly": null,
+    "priceAnnual": null,
+    "category": "enterprise",
+    "contactSales": true,
+    "features": [
+      "Dedicated clusters",
+      "Active-Active global replication",
+      "BYOK encryption",
+      "Private link networking",
+      "SOC 2 / HIPAA / PCI compliance",
+      "Custom module support",
+      "Dedicated support engineer",
+      "Volume discounts"
+    ],
+    "limits": {
+      "storageMB": -1,
+      "connections": -1,
+      "databases": -1,
+      "bandwidth": "unlimited"
+    }
+  }
+]
