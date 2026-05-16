@@ -22,6 +22,8 @@ export const canonicalRegions = require('../plans/regions.json')
 export const canonicalStorage = require('../plans/storage.json')
 export const canonicalTools = require('../plans/tools.json')
 export const iamPlans = require('../plans/iam.json')
+export const basePlans = require('../plans/base.json')
+export const paasPlans = require('../plans/paas.json')
 
 // ── Hanzo Zen model catalog — metadata only, no prices ──────────────
 export const zenCatalog = [

@@ -41,6 +41,7 @@ import {
   subscriptionPlans, blockchainPlans, pricingPolicy,
   canonicalCloudPlans, canonicalGpuTiers, canonicalRegions,
   canonicalStorage, canonicalTools, iamPlans,
+  basePlans, paasPlans,
 } from "./models.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -261,6 +262,17 @@ app.get("/v1/pricing/blockchain", (_req, res) => {
 // IAM / identity plans (from @hanzo/plans).
 app.get("/v1/pricing/iam", (_req, res) => {
   res.json({ plans: iamPlans });
+});
+
+// SuperBase / Hanzo Base hosting plans (from @hanzo/plans).
+// One plan per tenant tier; usage.perTenantMonth is the Commerce SKU rate.
+app.get("/v1/pricing/base", (_req, res) => {
+  res.json({ plans: basePlans });
+});
+
+// PaaS / hanzo platform plans (from @hanzo/plans).
+app.get("/v1/pricing/paas", (_req, res) => {
+  res.json({ plans: paasPlans });
 });
 
 // Transparent pricing policy + revenue sharing (from @hanzo/plans).
