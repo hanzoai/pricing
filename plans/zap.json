@@ -1,0 +1,62 @@
+[
+  {
+    "id": "zap-free",
+    "name": "Free",
+    "description": "Get started with Hanzo ZAP. Zero-copy Agent Protocol — 40-50x lower serialization overhead.",
+    "priceMonthly": 0,
+    "priceAnnual": 0,
+    "category": "personal",
+    "features": [
+      "Community support",
+      "Open-source core",
+      "Single-user / single-project",
+      "Generous free tier"
+    ]
+  },
+  {
+    "id": "zap-hobby",
+    "name": "Hobby",
+    "description": "For side projects, prototypes, and personal use.",
+    "priceMonthly": null,
+    "priceAnnual": null,
+    "category": "personal",
+    "features": [
+      "Email support",
+      "Higher quotas",
+      "Custom domain",
+      "TBD — pricing in design"
+    ]
+  },
+  {
+    "id": "zap-pro",
+    "name": "Pro",
+    "description": "Production usage for teams shipping Hanzo ZAP to real users.",
+    "priceMonthly": null,
+    "priceAnnual": null,
+    "category": "team",
+    "popular": true,
+    "features": [
+      "Priority support",
+      "SSO via hanzo.id",
+      "Higher quotas",
+      "SLA-backed",
+      "TBD — pricing in design"
+    ]
+  },
+  {
+    "id": "zap-enterprise",
+    "name": "Enterprise",
+    "description": "Custom deployment, security review, dedicated support.",
+    "priceMonthly": null,
+    "priceAnnual": null,
+    "category": "enterprise",
+    "contactSales": true,
+    "features": [
+      "Volume discounts",
+      "SOC 2 / HIPAA",
+      "On-prem or VPC",
+      "Named support engineer",
+      "Custom SLA"
+    ]
+  }
+]
