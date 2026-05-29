@@ -397,11 +397,22 @@ export const zenCatalog = [
     pricingUnit: "1M characters",
     staticPricing: { perUnit: 2.0 },
   },
-  // ── Zen5 Generation — Next-gen frontier models (Early Access) ──────
-  // Contact sales only. Not yet routed in zen-gateway.
-  // Visible in catalog to signal roadmap; no API key grants access.
-  // All zen5 models trained on the Zen Agentic Dataset (10B+ tokens of
-  // real-world agentic workflows, tool use, and multi-step reasoning).
+  // ── Zen5 Generation — DigitalOcean self-hosted ────────────────────
+  // Two canonical SKUs (zen5-flash + zen5-pro) are live in zen-gateway
+  // and routed to DigitalOcean GenAI inference. The remaining entries
+  // (zen5, zen5-max, zen5-ultra, zen5-mini) are kept as deprecation
+  // aliases until 2026-08; clients should migrate to flash or pro.
+  // All zen5 models are eventually trained on the Zen Agentic Dataset
+  // (10B+ tokens of real-world tool use and multi-step reasoning).
+  {
+    name: "zen5-flash",
+    fullName: "Zen5 Flash — Fast & Cheap",
+    description: "Fast frontier-quality inference on DigitalOcean. The everyday agent model: sub-second latency, $0.60/$1.20 per MTok, OpenAI + Anthropic compatible.",
+    features: ["32K context window", "DigitalOcean-hosted", "OpenAI + Anthropic API", "Sub-second latency", "Agentic-trained"],
+    tier: "pro",
+    context: 32768,
+    specs: { params: "TBA", arch: "MoDE + CoT" },
+  },
   {
     name: "zen5",
     fullName: "Zen5 — Next Generation",
@@ -462,7 +473,7 @@ export const zenFamilies = [
     name: 'Zen 5',
     description: 'Next-generation agentic models with native chain-of-thought.',
     icon: 'Rocket',
-    models: ['zen5', 'zen5-pro', 'zen5-max', 'zen5-ultra', 'zen5-mini'],
+    models: ['zen5-flash', 'zen5-pro', 'zen5', 'zen5-max', 'zen5-ultra', 'zen5-mini'],
   },
   {
     id: 'zen4',
