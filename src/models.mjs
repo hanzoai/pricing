@@ -486,13 +486,12 @@ export const zenCatalog = [
   },
   {
     name: "zen5-mini",
-    fullName: "Zen5 Mini — Efficient",
-    description: "Efficient agentic model delivering zen5-class intelligence at a fraction of the cost. Distilled from the full zen5 with native chain-of-thought preserved.",
-    features: ["256K context window", "Agentic-trained", "Native CoT", "Cost efficient", "Fast inference"],
+    fullName: "Zen5 Mini — MiniMax M2.5",
+    description: "Frontier agentic at the lowest cost in the family. Built on MiniMax-M2.5 (230B MoE / 10B active, released Feb 2026). 80.2% SWE-Bench Verified, 76.3% BrowseComp; trained on 200K+ real-world environments via large-scale RL.",
+    features: ["192K context window", "230B total / 10B active (MoE)", "MiniMax M2.5 base", "Frontier agentic / coding", "Lowest $/token in family"],
     tier: "pro",
-    context: 262144,
-    specs: { params: "TBA", arch: "MoDE + CoT" },
-    contactSales: true,
+    context: 196608,
+    specs: { params: "230B (10B active)", arch: "MiniMax MoE" },
   },
 ];
 
