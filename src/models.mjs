@@ -197,6 +197,27 @@ export const zenCatalog = [
     specs: { params: "N/A", arch: "Embedding" },
     endpoint: "/v1/embeddings",
   },
+  // ── Zen5 Embedding — DigitalOcean self-hosted, two-SKU lineup ─────
+  {
+    name: "zen5-embedding-flash",
+    fullName: "Zen5 Embedding Flash",
+    description: "Fast, cheap embedding model for high-throughput RAG and search. Distilled from the full Zen5 embedding with 1024-dim output preserved.",
+    features: ["32K context window", "0.6B parameters", "1024 dimensions", "DigitalOcean-hosted"],
+    tier: "starter",
+    context: 32000,
+    specs: { params: "0.6B", arch: "Embedding" },
+    endpoint: "/v1/embeddings",
+  },
+  {
+    name: "zen5-embedding-pro",
+    fullName: "Zen5 Embedding Pro",
+    description: "High-quality embedding model for production RAG, semantic search, and classification. Trained on agentic and tool-use corpora.",
+    features: ["32K context window", "8B parameters", "4096 dimensions", "DigitalOcean-hosted"],
+    tier: "pro",
+    context: 32000,
+    specs: { params: "8B", arch: "Embedding" },
+    endpoint: "/v1/embeddings",
+  },
   // Zen3 Reranker — via /v1/rerank
   {
     name: "zen3-reranker",
@@ -502,6 +523,7 @@ export const zenFamilies = [
     description: 'Text embeddings and search reranking via API.',
     icon: 'Search',
     models: [
+      'zen5-embedding-flash', 'zen5-embedding-pro',
       'zen3-embedding', 'zen3-embedding-medium', 'zen3-embedding-small', 'zen3-embedding-openai',
       'zen3-reranker', 'zen3-reranker-medium', 'zen3-reranker-small',
     ],
