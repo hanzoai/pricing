@@ -209,13 +209,23 @@ export const zenCatalog = [
     endpoint: "/v1/embeddings",
   },
   {
+    name: "zen5-embedding-medium",
+    fullName: "Zen5 Embedding Medium",
+    description: "Balanced embedding model. Qwen3-Embedding-4B base; 2560 dimensions, 32K context.",
+    features: ["32K context window", "4B parameters", "2560 dimensions", "DigitalOcean-hosted"],
+    tier: "pro",
+    context: 32000,
+    specs: { params: "4B", arch: "Qwen3 Embedding" },
+    endpoint: "/v1/embeddings",
+  },
+  {
     name: "zen5-embedding-pro",
     fullName: "Zen5 Embedding Pro",
-    description: "High-quality embedding model for production RAG, semantic search, and classification. Trained on agentic and tool-use corpora.",
+    description: "High-quality embedding model for production RAG, semantic search, and classification. Qwen3-Embedding-8B base; 4096 dimensions; trained on agentic and tool-use corpora.",
     features: ["32K context window", "8B parameters", "4096 dimensions", "DigitalOcean-hosted"],
     tier: "pro",
     context: 32000,
-    specs: { params: "8B", arch: "Embedding" },
+    specs: { params: "8B", arch: "Qwen3 Embedding" },
     endpoint: "/v1/embeddings",
   },
   // Zen3 Reranker — via /v1/rerank
@@ -427,12 +437,12 @@ export const zenCatalog = [
   // (10B+ tokens of real-world tool use and multi-step reasoning).
   {
     name: "zen5-flash",
-    fullName: "Zen5 Flash — Fast & Cheap",
-    description: "Fast frontier-quality inference on DigitalOcean. The everyday agent model: sub-second latency, $0.60/$1.20 per MTok, OpenAI + Anthropic compatible.",
-    features: ["32K context window", "DigitalOcean-hosted", "OpenAI + Anthropic API", "Sub-second latency", "Agentic-trained"],
+    fullName: "Zen5 Flash — Qwen3 MoE",
+    description: "Canonical Zen5 default. Built on Qwen3-30B-A3B (30B total / 3B active per token) for sub-second latency at frontier quality. 256K context, agentic-trained, OpenAI + Anthropic API.",
+    features: ["256K context window", "30B total / 3B active (MoE)", "DigitalOcean-hosted", "OpenAI + Anthropic API", "Sub-second latency", "Agentic-trained"],
     tier: "pro",
-    context: 32768,
-    specs: { params: "TBA", arch: "MoDE + CoT" },
+    context: 262144,
+    specs: { params: "30B (3B active)", arch: "Qwen3 MoE" },
   },
   {
     name: "zen5",
@@ -523,7 +533,7 @@ export const zenFamilies = [
     description: 'Text embeddings and search reranking via API.',
     icon: 'Search',
     models: [
-      'zen5-embedding-flash', 'zen5-embedding-pro',
+      'zen5-embedding-flash', 'zen5-embedding-medium', 'zen5-embedding-pro',
       'zen3-embedding', 'zen3-embedding-medium', 'zen3-embedding-small', 'zen3-embedding-openai',
       'zen3-reranker', 'zen3-reranker-medium', 'zen3-reranker-small',
     ],
