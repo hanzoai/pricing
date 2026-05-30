@@ -456,7 +456,7 @@ export const zenCatalog = [
   {
     name: "zen5-pro",
     fullName: "Zen5 Pro — DS4 Flash (IQ2)",
-    description: "DeepSeek V4 Flash IQ2_XXS-imatrix (81 GB GGUF on zenlm/zen-5-flash-gguf). 284B total / 37B active per token, 1M context, asymmetric routed-MoE quant. Fits a single 128 GB Apple Silicon / DGX Spark / H100 80 GB.",
+    description: "DeepSeek V4 Flash IQ2_XXS-imatrix (81 GB GGUF on zenlm/zen-5-pro-gguf). 284B total / 37B active per token, 1M context, asymmetric routed-MoE quant. Fits a single 128 GB Apple Silicon / DGX Spark / H100 80 GB.",
     features: ["1M context window", "284B total / 37B active (MoE)", "DS4-Flash base", "IQ2_XXS-imatrix (81 GB)", "Runs on 128 GB hardware"],
     tier: "ultra",
     context: 1048576,
