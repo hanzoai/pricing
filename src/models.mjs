@@ -26,99 +26,12 @@ export const basePlans = require('../plans/base.json')
 export const paasPlans = require('../plans/paas.json')
 
 // ── Hanzo Zen model catalog — metadata only, no prices ──────────────
+// NOTE: Zen4 generation (zen4, zen4-pro, zen4-max, zen4.1, zen4-mini,
+// zen4-ultra, zen4-thinking, zen4-coder, zen4-coder-pro, zen4-coder-flash)
+// was sunset on 2026-05-30 along with the zenlm/zen4* HF mirrors. Clients
+// should migrate to the zen5 ladder for chat/coder/reasoning, and the
+// zen3-* specialty SKUs (omni, vl, nano, guard) remain unchanged.
 export const zenCatalog = [
-  // Zen4 Generation
-  {
-    name: "zen4",
-    fullName: "Zen4 — Flagship",
-    description: "Flagship MoE model for complex reasoning and multi-domain tasks.",
-    features: ["202K context window", "Flagship intelligence", "100+ languages"],
-    tier: "ultra max",
-    context: 202000,
-    specs: { params: "744B (40B active)", arch: "MoE" },
-  },
-  {
-    name: "zen4-ultra",
-    fullName: "Zen4 Ultra — Maximum Reasoning",
-    description: "Maximum reasoning capability with extended chain-of-thought on MoE architecture.",
-    features: ["262K context window", "Deep reasoning", "Chain-of-thought"],
-    tier: "ultra max",
-    context: 262000,
-    specs: { params: "744B (40B active)", arch: "MoE + CoT" },
-  },
-  {
-    name: "zen4-pro",
-    fullName: "Zen4 Pro — High Capability",
-    description: "Efficient MoE model for demanding workloads with strong reasoning at production-grade cost.",
-    features: ["131K context window", "MoE architecture"],
-    tier: "ultra",
-    context: 131000,
-    specs: { params: "80B (3B active)", arch: "MoE" },
-  },
-  {
-    name: "zen4-max",
-    fullName: "Zen4 Max — Maximum Intelligence",
-    description: "Most capable model for complex reasoning, analysis, and agentic tasks. 1M token context window.",
-    features: ["1M context window", "Maximum intelligence", "Agentic coding"],
-    tier: "ultra max",
-    context: 1000000,
-    specs: { params: "N/A", arch: "Dense" },
-  },
-  {
-    name: "zen4.1",
-    fullName: "Zen4.1 — Extended Context",
-    description: "High-performance 1M context model for long-document analysis, large codebase reasoning, and agentic workflows. Best balance of intelligence and cost at million-token scale.",
-    features: ["1M context window", "Agentic coding", "Long-document analysis", "Cost efficient"],
-    tier: "ultra",
-    context: 1000000,
-    specs: { params: "N/A", arch: "Dense" },
-  },
-  {
-    name: "zen4-mini",
-    fullName: "Zen4 Mini — Fast & Efficient",
-    description: "Ultra-fast lightweight model optimized for speed and cost efficiency. Ideal for free tier.",
-    features: ["128K context window", "Ultra-fast inference", "Free tier"],
-    tier: "starter",
-    context: 128000,
-    specs: { params: "N/A", arch: "Dense" },
-  },
-  {
-    name: "zen4-thinking",
-    fullName: "Zen4 Thinking — Deep Reasoning",
-    description: "Dedicated reasoning model with explicit chain-of-thought capabilities.",
-    features: ["131K context window", "Chain-of-thought"],
-    tier: "pro max",
-    context: 131000,
-    specs: { params: "80B (3B active)", arch: "MoE + CoT" },
-  },
-  // Zen4 Code
-  {
-    name: "zen4-coder",
-    fullName: "Zen4 Coder — Code Generation",
-    description: "Code-specialized MoE model for generation, review, debugging, and agentic programming.",
-    features: ["163K context window", "All major languages"],
-    tier: "ultra",
-    context: 163000,
-    specs: { params: "480B (35B active)", arch: "MoE" },
-  },
-  {
-    name: "zen4-coder-pro",
-    fullName: "Zen4 Coder Pro — Premium Code",
-    description: "Full-precision BF16 code model for maximum accuracy on complex codebases.",
-    features: ["131K context window", "BF16 full precision"],
-    tier: "ultra max",
-    context: 131000,
-    specs: { params: "480B", arch: "Dense BF16" },
-  },
-  {
-    name: "zen4-coder-flash",
-    fullName: "Zen4 Coder Flash — Fast Code",
-    description: "Lightweight code model optimized for speed and inline completions.",
-    features: ["262K context window", "Fast inference"],
-    tier: "pro max",
-    context: 262000,
-    specs: { params: "30B (3B active)", arch: "MoE" },
-  },
   // Zen3 Generation — Chat
   {
     name: "zen3-omni",
@@ -175,73 +88,6 @@ export const zenCatalog = [
     specs: { params: "235B (22B active)", arch: "Zen VL MoE" },
   },
   {
-    name: "zen3-vl-reranker-2B",
-    fullName: "Zen3 VL Reranker 2B",
-    description: "Vision-language reranker for multimodal RAG. Reranks (query, image+text) pairs.",
-    features: ["2B parameters (dense)", "Vision + Language", "RAG reranking"],
-    tier: "starter",
-    context: 32768,
-    specs: { params: "2B", arch: "Zen VL Reranker" },
-    endpoint: "/v1/rerank",
-  },
-  {
-    name: "zen3-vl-reranker-8B",
-    fullName: "Zen3 VL Reranker 8B",
-    description: "Production vision-language reranker — high-quality scoring for multimodal retrieval pipelines.",
-    features: ["9B parameters (dense)", "Vision + Language", "RAG reranking"],
-    tier: "pro",
-    context: 32768,
-    specs: { params: "9B", arch: "Zen VL Reranker" },
-    endpoint: "/v1/rerank",
-  },
-  {
-    name: "zen3-vl-embedding-2B",
-    fullName: "Zen3 VL Embedding 2B",
-    description: "Multimodal embedding (text + image) for vision-aware retrieval and semantic search.",
-    features: ["2B parameters (dense)", "Multimodal embedding", "Sentence similarity"],
-    tier: "starter",
-    context: 32768,
-    specs: { params: "2B", arch: "Zen VL Embedding" },
-    endpoint: "/v1/embeddings",
-  },
-  {
-    name: "zen3-vl-embedding-8B",
-    fullName: "Zen3 VL Embedding 8B",
-    description: "Production multimodal embedding for vision-aware RAG, search, and clustering.",
-    features: ["8B parameters (dense)", "Multimodal embedding", "Sentence similarity"],
-    tier: "pro",
-    context: 32768,
-    specs: { params: "8B", arch: "Zen VL Embedding" },
-    endpoint: "/v1/embeddings",
-  },
-  {
-    name: "zen3-web-8B",
-    fullName: "Zen3 Web 8B",
-    description: "Web-agentic model for browser automation, scraping, and on-page reasoning. Smallest tier.",
-    features: ["32K context", "8B parameters (dense)", "Web agentic / browser tool-use"],
-    tier: "starter",
-    context: 32768,
-    specs: { params: "8B", arch: "Zen Web dense" },
-  },
-  {
-    name: "zen3-web-14B",
-    fullName: "Zen3 Web 14B",
-    description: "Mid web-agentic tier for multi-step browser workflows and form-filling agents.",
-    features: ["32K context", "15B parameters (dense)", "Web agentic / browser tool-use"],
-    tier: "pro",
-    context: 32768,
-    specs: { params: "15B", arch: "Zen Web dense" },
-  },
-  {
-    name: "zen3-web-32B",
-    fullName: "Zen3 Web 32B",
-    description: "Top web-agentic tier — complex browser orchestration, multi-tab reasoning, dynamic page understanding.",
-    features: ["32K context", "32B parameters (dense)", "Web agentic / browser tool-use"],
-    tier: "pro max",
-    context: 32768,
-    specs: { params: "32B", arch: "Zen Web dense" },
-  },
-  {
     name: "zen3-nano",
     fullName: "Zen3 Nano — Edge",
     description: "Ultra-lightweight model for edge deployment and low-latency tasks. Available on free tier.",
@@ -259,47 +105,9 @@ export const zenCatalog = [
     context: 65000,
     specs: { params: "4B", arch: "Dense" },
   },
-  // Zen3 Embedding — via /v1/embeddings
-  {
-    name: "zen3-embedding",
-    fullName: "Zen3 Embedding",
-    description: "High-quality text embeddings for RAG, search, and classification.",
-    features: ["8K context window", "3072 dimensions"],
-    tier: "pro max",
-    context: 8000,
-    specs: { params: "N/A", arch: "Embedding" },
-    endpoint: "/v1/embeddings",
-  },
-  {
-    name: "zen3-embedding-medium",
-    fullName: "Zen3 Embedding Medium",
-    description: "Balanced embedding model for cost-effective retrieval workloads.",
-    features: ["40K context window", "4B parameters"],
-    tier: "pro",
-    context: 40000,
-    specs: { params: "4B", arch: "Embedding" },
-    endpoint: "/v1/embeddings",
-  },
-  {
-    name: "zen3-embedding-small",
-    fullName: "Zen3 Embedding Small",
-    description: "Lightweight embedding model for high-throughput, low-cost applications.",
-    features: ["32K context window", "0.6B parameters"],
-    tier: "starter",
-    context: 32000,
-    specs: { params: "0.6B", arch: "Embedding" },
-    endpoint: "/v1/embeddings",
-  },
-  {
-    name: "zen3-embedding-openai",
-    fullName: "Zen3 Embedding — OpenAI Compatible",
-    description: "OpenAI-compatible embedding endpoint for drop-in migration.",
-    features: ["8K context window", "3072 dimensions"],
-    tier: "pro max",
-    context: 8000,
-    specs: { params: "N/A", arch: "Embedding" },
-    endpoint: "/v1/embeddings",
-  },
+  // NOTE: zen3-embedding (and -small/-medium/-openai aliases) sunset
+  // 2026-05-30 as DUPLICATE-zen3. Use zen5-embedding-{0.6B,4B,8B} below
+  // or the zen-embedding-{0.6B,8B}-GGUF HF repos directly.
   // ── Zen5 Embedding — DigitalOcean self-hosted, two-SKU lineup ─────
   {
     name: "zen5-embedding-0.6B",
@@ -331,37 +139,8 @@ export const zenCatalog = [
     specs: { params: "8B", arch: "Zen Embedding" },
     endpoint: "/v1/embeddings",
   },
-  // Zen3 Reranker — via /v1/rerank
-  {
-    name: "zen3-reranker",
-    fullName: "Zen3 Reranker",
-    description: "High-quality reranker for improving retrieval accuracy in RAG pipelines.",
-    features: ["40K context window", "8B parameters"],
-    tier: "pro max",
-    context: 40000,
-    specs: { params: "8B", arch: "Reranker" },
-    endpoint: "/v1/rerank",
-  },
-  {
-    name: "zen3-reranker-medium",
-    fullName: "Zen3 Reranker Medium",
-    description: "Balanced reranker for cost-effective retrieval quality improvement.",
-    features: ["40K context window", "4B parameters"],
-    tier: "pro",
-    context: 40000,
-    specs: { params: "4B", arch: "Reranker" },
-    endpoint: "/v1/rerank",
-  },
-  {
-    name: "zen3-reranker-small",
-    fullName: "Zen3 Reranker Small",
-    description: "Lightweight reranker for high-throughput reranking at minimal cost.",
-    features: ["40K context window", "0.6B parameters"],
-    tier: "starter",
-    context: 40000,
-    specs: { params: "0.6B", arch: "Reranker" },
-    endpoint: "/v1/rerank",
-  },
+  // NOTE: zen3-reranker family (small/medium/8B) sunset 2026-05-30 as
+  // DUPLICATE-zen3. Use zen-reranker-{0.6B,4B,8B}-GGUF HF repos directly.
   // Zen3 Image — via /v1/images/generations
   {
     name: "zen3-image",
@@ -451,30 +230,9 @@ export const zenCatalog = [
     pricingUnit: "step",
     staticPricing: { perUnit: 0.00013 },
   },
-  // Zen3 Audio — Speech-to-Text via /v1/audio/transcriptions
-  // Backend: Fireworks AI Whisper V3 variants + streaming ASR
-  {
-    name: "zen3-audio",
-    fullName: "Zen3 Audio",
-    description: "Best quality speech-to-text transcription. 100+ languages.",
-    features: ["Multi-language", "Best accuracy", "100+ languages"],
-    tier: "pro max",
-    specs: { params: "1.5B", arch: "ASR" },
-    endpoint: "/v1/audio/transcriptions",
-    pricingUnit: "minute",
-    staticPricing: { perUnit: 0.002 },
-  },
-  {
-    name: "zen3-audio-fast",
-    fullName: "Zen3 Audio Fast",
-    description: "Fastest speech-to-text transcription for high-throughput workloads.",
-    features: ["Multi-language", "Fastest", "Batch optimized"],
-    tier: "pro",
-    specs: { params: "809M", arch: "ASR" },
-    endpoint: "/v1/audio/transcriptions",
-    pricingUnit: "minute",
-    staticPricing: { perUnit: 0.0012 },
-  },
+  // NOTE: zen3-audio / zen3-audio-fast aliases sunset 2026-05-30 as
+  // DUPLICATE-zen3. Use the canonical zen3-asr / zen3-asr-0.6B entries below.
+  // Zen3 ASR — Speech-to-Text via /v1/audio/transcriptions
   {
     name: "zen3-asr",
     fullName: "Zen3 ASR",
@@ -508,17 +266,8 @@ export const zenCatalog = [
     pricingUnit: "minute",
     staticPricing: { perUnit: 0.002 },
   },
-  {
-    name: "zen3-asr-v1",
-    fullName: "Zen3 ASR v1",
-    description: "First-generation streaming ASR for legacy compatibility.",
-    features: ["Streaming", "Legacy"],
-    tier: "pro",
-    specs: { params: "N/A", arch: "Streaming ASR" },
-    endpoint: "/v1/audio/transcriptions",
-    pricingUnit: "minute",
-    staticPricing: { perUnit: 0.0035 },
-  },
+  // NOTE: zen3-asr-v1 alias sunset 2026-05-30 as DUPLICATE-zen3. Use
+  // zen3-asr (1.7B) or zen3-asr-0.6B above.
   // Zen3 TTS — Text-to-Speech via /v1/audio/speech
   {
     name: "zen3-tts",
@@ -531,28 +280,10 @@ export const zenCatalog = [
     pricingUnit: "1M characters",
     staticPricing: { perUnit: 5.0 },
   },
-  {
-    name: "zen3-tts-hd",
-    fullName: "Zen3 TTS HD",
-    description: "Maximum fidelity text-to-speech for broadcast-quality audio production.",
-    features: ["HD quality", "Broadcast-grade", "48kHz output"],
-    tier: "ultra max",
-    specs: { params: "N/A", arch: "TTS HD" },
-    endpoint: "/v1/audio/speech",
-    pricingUnit: "1M characters",
-    staticPricing: { perUnit: 15.0 },
-  },
-  {
-    name: "zen3-tts-fast",
-    fullName: "Zen3 TTS Fast",
-    description: "Low-latency text-to-speech for real-time voice agents and interactive applications.",
-    features: ["Low latency", "Real-time", "Voice agents"],
-    tier: "pro",
-    specs: { params: "82M", arch: "TTS" },
-    endpoint: "/v1/audio/speech",
-    pricingUnit: "1M characters",
-    staticPricing: { perUnit: 2.0 },
-  },
+  // NOTE: zen3-tts-hd / zen3-tts-fast were virtual aliases never backed by
+  // weights; removed 2026-05-30. The real Zen3 TTS family is the four
+  // entries below: zen3-tts (1.7B), zen3-tts-0.6B, zen3-tts-voice-design,
+  // zen3-tts-custom-voice.
   {
     name: "zen3-tts-0.6B",
     fullName: "Zen3 TTS 0.6B",
@@ -696,25 +427,11 @@ export const zenFamilies = [
     models: ['zen5-nano-0.8B', 'zen5-nano-2B', 'zen5-nano-4B', 'zen5-nano-9B', 'zen5-flash', 'zen5-mini', 'zen5', 'zen5-coder', 'zen5-pro', 'zen5-max'],
   },
   {
-    id: 'zen4',
-    name: 'Zen 4',
-    description: 'Latest generation production models with MoDE architecture.',
-    icon: 'Sparkles',
-    models: ['zen4-max', 'zen4.1', 'zen4', 'zen4-ultra', 'zen4-pro', 'zen4-thinking', 'zen4-mini'],
-  },
-  {
-    id: 'code',
-    name: 'Code',
-    description: 'Specialized models for code generation, review, and debugging.',
-    icon: 'Code',
-    models: ['zen4-coder', 'zen4-coder-flash', 'zen4-coder-pro'],
-  },
-  {
     id: 'zen3',
     name: 'Zen 3 Multimodal',
     description: 'Vision, safety, and multimodal chat models.',
     icon: 'Eye',
-    models: ['zen3-omni', 'zen3-vl', 'zen3-vl-2B', 'zen3-vl-8B', 'zen3-vl-32B', 'zen3-vl-235B-A22B', 'zen3-vl-reranker-2B', 'zen3-vl-reranker-8B', 'zen3-vl-embedding-2B', 'zen3-vl-embedding-8B', 'zen3-web-8B', 'zen3-web-14B', 'zen3-web-32B', 'zen3-nano', 'zen3-guard'],
+    models: ['zen3-omni', 'zen3-vl', 'zen3-vl-2B', 'zen3-vl-8B', 'zen3-vl-32B', 'zen3-vl-235B-A22B', 'zen3-nano', 'zen3-guard'],
   },
   {
     id: 'embedding',
@@ -723,8 +440,6 @@ export const zenFamilies = [
     icon: 'Search',
     models: [
       'zen5-embedding-0.6B', 'zen5-embedding-4B', 'zen5-embedding-8B',
-      'zen3-embedding', 'zen3-embedding-medium', 'zen3-embedding-small', 'zen3-embedding-openai',
-      'zen3-reranker', 'zen3-reranker-medium', 'zen3-reranker-small',
     ],
   },
   {
@@ -743,8 +458,8 @@ export const zenFamilies = [
     description: 'Speech-to-text, text-to-speech, and streaming ASR.',
     icon: 'Mic',
     models: [
-      'zen3-audio', 'zen3-audio-fast', 'zen3-asr', 'zen3-asr-v1',
-      'zen3-tts', 'zen3-tts-hd', 'zen3-tts-fast',
+      'zen3-asr', 'zen3-asr-0.6B', 'zen3-asr-aligner',
+      'zen3-tts', 'zen3-tts-0.6B', 'zen3-tts-voice-design', 'zen3-tts-custom-voice',
     ],
   },
 ];
