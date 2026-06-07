@@ -1,0 +1,123 @@
+[
+  {
+    "id": "pubsub-free",
+    "name": "Free",
+    "description": "Get started with pub/sub messaging. Ideal for development and prototyping.",
+    "priceMonthly": 0,
+    "priceAnnual": 0,
+    "category": "personal",
+    "features": [
+      "100GB throughput/month",
+      "10 subjects",
+      "1 stream (JetStream)",
+      "5 consumers",
+      "Single zone",
+      "Community support"
+    ],
+    "limits": {
+      "throughputGBPerMonth": 100,
+      "subjects": 10,
+      "streams": 1,
+      "consumers": 5,
+      "retentionDays": 7,
+      "replicaFactor": 1
+    }
+  },
+  {
+    "id": "pubsub-standard",
+    "name": "Standard",
+    "description": "Production pub/sub with persistent streaming and multi-zone replication.",
+    "priceMonthly": 0,
+    "priceAnnual": 0,
+    "category": "team",
+    "popular": true,
+    "payAsYouGo": true,
+    "features": [
+      "Pay per use (no base fee)",
+      "$0.13 per GB ingress",
+      "$0.043 per GB egress",
+      "$0.05 per partition-hour",
+      "Unlimited subjects",
+      "Unlimited streams",
+      "Multi-zone replication (R3)",
+      "JetStream KV & Object Store",
+      "WebSocket support",
+      "OTEL tracing",
+      "Email support"
+    ],
+    "limits": {
+      "throughputGBPerMonth": -1,
+      "subjects": -1,
+      "streams": -1,
+      "consumers": -1,
+      "retentionDays": 30,
+      "replicaFactor": 3
+    },
+    "usage": {
+      "ingressPerGB": 0.13,
+      "egressPerGB": 0.043,
+      "partitionHour": 0.05,
+      "storagePerGBMonth": 0.10
+    }
+  },
+  {
+    "id": "pubsub-dedicated",
+    "name": "Dedicated",
+    "description": "Dedicated PubSub cluster with guaranteed throughput and isolation.",
+    "priceMonthly": 2400,
+    "priceAnnual": 2160,
+    "category": "enterprise",
+    "features": [
+      "$2,400/mo per compute unit (CKU)",
+      "Dedicated cluster resources",
+      "Up to 12 CKUs per cluster",
+      "Unlimited throughput per CKU",
+      "Private networking",
+      "Custom retention (up to 1 year)",
+      "BYOK encryption",
+      "99.99% SLA",
+      "Priority support"
+    ],
+    "limits": {
+      "throughputGBPerMonth": -1,
+      "subjects": -1,
+      "streams": -1,
+      "consumers": -1,
+      "retentionDays": 365,
+      "replicaFactor": 3
+    },
+    "perUnit": {
+      "name": "CKU",
+      "pricePerHour": 3.33,
+      "pricePerMonth": 2400,
+      "maxUnits": 12
+    }
+  },
+  {
+    "id": "pubsub-enterprise",
+    "name": "Enterprise",
+    "description": "Multi-region super-clusters with enterprise compliance and custom SLAs.",
+    "priceMonthly": null,
+    "priceAnnual": null,
+    "category": "enterprise",
+    "contactSales": true,
+    "features": [
+      "Multi-region super-clusters",
+      "Gateway (cross-region replication)",
+      "Leaf nodes (edge connectivity)",
+      "Custom retention policies",
+      "SOC 2 / HIPAA compliance",
+      "99.999% SLA available",
+      "Dedicated support engineer",
+      "Volume discounts"
+    ],
+    "limits": {
+      "throughputGBPerMonth": -1,
+      "subjects": -1,
+      "streams": -1,
+      "consumers": -1,
+      "retentionDays": -1,
+      "replicaFactor": 5
+    }
+  }
+]

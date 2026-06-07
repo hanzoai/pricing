@@ -1,0 +1,78 @@
+[
+  {
+    "id": "registry-free",
+    "name": "Free",
+    "description": "Container registry for personal projects.",
+    "priceMonthly": 0,
+    "priceAnnual": 0,
+    "category": "personal",
+    "features": [
+      "500MB storage",
+      "Unlimited pulls",
+      "Unlimited pushes",
+      "Public and private repos",
+      "Community support"
+    ],
+    "limits": {
+      "storageMB": 500,
+      "repos": 5,
+      "pullsPerDay": -1,
+      "pushesPerDay": 100
+    }
+  },
+  {
+    "id": "registry-standard",
+    "name": "Standard",
+    "description": "Production container registry with usage-based storage.",
+    "priceMonthly": 0,
+    "priceAnnual": 0,
+    "category": "team",
+    "popular": true,
+    "payAsYouGo": true,
+    "features": [
+      "Pay per use (no base fee)",
+      "$0.10 per GB/month storage",
+      "$0.09 per GB data transfer out",
+      "Unlimited repos",
+      "Vulnerability scanning",
+      "Image signing",
+      "Tag immutability",
+      "Lifecycle policies",
+      "Email support"
+    ],
+    "limits": {
+      "storageMB": -1,
+      "repos": -1,
+      "pullsPerDay": -1,
+      "pushesPerDay": -1
+    },
+    "usage": {
+      "storagePerGBMonth": 0.10,
+      "transferOutPerGB": 0.09
+    }
+  },
+  {
+    "id": "registry-enterprise",
+    "name": "Enterprise",
+    "description": "Dedicated registry with compliance and replication.",
+    "priceMonthly": null,
+    "priceAnnual": null,
+    "category": "enterprise",
+    "contactSales": true,
+    "features": [
+      "Cross-region replication",
+      "BYOK encryption",
+      "Private Link",
+      "SOC 2 compliance",
+      "99.99% SLA",
+      "Volume discounts",
+      "Dedicated support"
+    ],
+    "limits": {
+      "storageMB": -1,
+      "repos": -1,
+      "pullsPerDay": -1,
+      "pushesPerDay": -1
+    }
+  }
+]

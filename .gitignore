@@ -1,5 +1,2 @@
 node_modules/
 
-# Decomplected: hanzoai/plans is the SOT, fetched at Docker build time.
-# Local dev: keep a working copy (sometimes synced manually) but never commit.
-plans/

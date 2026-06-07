@@ -1,0 +1,25 @@
+{
+  "transparentPricing": true,
+  "revenueSharing": {
+    "idleResale": {
+      "percent": 20,
+      "description": "Earn up to 20% on any resold compute or LLM usage when your logged-in account is idle",
+      "eligibility": "All plans (Developer, Pro, Team, Enterprise)",
+      "payoutMethod": "Account credit or direct payout"
+    },
+    "openSource": {
+      "percent": 25,
+      "description": "25% of all revenue goes directly to open source developers whose work powers our infrastructure",
+      "program": "Hanzo Open Source Fund",
+      "distribution": "Proportional to usage of OSS dependencies across the platform"
+    }
+  },
+  "principles": [
+    "No hidden fees",
+    "No egress charges",
+    "No surprise bills",
+    "Transparent cost breakdown on every invoice",
+    "20% idle resource revenue sharing for all accounts",
+    "25% of revenue funds open source developers"
+  ]
+}

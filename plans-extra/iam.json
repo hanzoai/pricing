@@ -1,0 +1,106 @@
+[
+  {
+    "id": "iam-starter",
+    "name": "Starter",
+    "description": "Free authentication for side projects and MVPs.",
+    "priceMonthly": 0,
+    "priceAnnual": 0,
+    "category": "personal",
+    "features": [
+      "1,000 MAU",
+      "3 OAuth applications",
+      "Basic SSO via hanzo.id",
+      "Email/password + social login",
+      "TOTP MFA",
+      "Community support"
+    ],
+    "limits": {
+      "mau": 1000,
+      "applications": 3,
+      "organizations": 1,
+      "customDomains": 0,
+      "mfaSms": false,
+      "saml": false,
+      "scim": false,
+      "ldap": false,
+      "whiteLabel": false,
+      "sla": null
+    }
+  },
+  {
+    "id": "iam-pro",
+    "name": "Pro",
+    "description": "Production-grade identity for growing products.",
+    "priceMonthly": 99,
+    "priceAnnual": 990,
+    "category": "team",
+    "popular": true,
+    "features": [
+      "50,000 MAU included",
+      "Unlimited applications",
+      "Full SSO + SAML",
+      "MFA (TOTP free, SMS $0.05/msg)",
+      "Custom domain (auth.yourdomain.com)",
+      "Passwordless / magic link",
+      "User management API",
+      "Audit log (30 day retention)",
+      "Email support",
+      "$0.01 per MAU beyond 50K"
+    ],
+    "limits": {
+      "mau": 50000,
+      "applications": -1,
+      "organizations": 10,
+      "customDomains": 1,
+      "mfaSms": true,
+      "saml": true,
+      "scim": false,
+      "ldap": false,
+      "whiteLabel": false,
+      "auditRetentionDays": 30,
+      "sla": "99.9%"
+    },
+    "overage": {
+      "perMau": 0.01,
+      "smsPerMessage": 0.05
+    }
+  },
+  {
+    "id": "iam-enterprise",
+    "name": "Enterprise",
+    "description": "White-label identity infrastructure for your platform.",
+    "priceMonthly": null,
+    "priceAnnual": null,
+    "category": "enterprise",
+    "contactSales": true,
+    "features": [
+      "Unlimited MAU",
+      "Unlimited applications",
+      "White-label (custom logo, colors, domain)",
+      "SCIM provisioning",
+      "LDAP / Active Directory federation",
+      "SAML + OIDC",
+      "Advanced MFA (TOTP, SMS, WebAuthn, passkeys)",
+      "Multi-org management",
+      "Audit log (1 year retention)",
+      "Custom session policies",
+      "Dedicated support + named engineer",
+      "SLA 99.99%",
+      "SOC 2 / HIPAA compliance",
+      "On-premise deployment option"
+    ],
+    "limits": {
+      "mau": -1,
+      "applications": -1,
+      "organizations": -1,
+      "customDomains": -1,
+      "mfaSms": true,
+      "saml": true,
+      "scim": true,
+      "ldap": true,
+      "whiteLabel": true,
+      "auditRetentionDays": 365,
+      "sla": "99.99%"
+    }
+  }
+]

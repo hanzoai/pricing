@@ -1,11 +1,9 @@
 # syntax=docker/dockerfile:1
 # Hanzo Pricing — Express server over the canonical @hanzo/plans catalog.
 #
-# Decomplected: the plans data is NOT vendored into this repo. It lives
-# in hanzoai/plans (private). The CI pre-build step clones it into
-# ./plans/ before `docker build` runs (see .github/workflows/deploy.yml
-# pre-build-command). Local dev mirrors via `scripts/fetch-plans.sh`.
-# Plans is gitignored — there is one and only one source.
+# Decomplected: plans data is the @hanzo/plans npm package. Zero git
+# clones, zero vendored copies, zero manual sync. Bump the @hanzo/plans
+# dep in package.json to roll the catalog forward.
 
 FROM node:20-alpine
 WORKDIR /app
@@ -14,6 +12,6 @@ RUN npm ci --production --ignore-scripts
 COPY src ./src
 COPY data ./data
 COPY datastore.json ./datastore.json
-COPY plans ./plans
+COPY plans-extra ./plans-extra
 EXPOSE 8080
 CMD ["node", "src/server.mjs"]

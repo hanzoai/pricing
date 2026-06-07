@@ -1,0 +1,112 @@
+[
+  {
+    "id": "paas-free",
+    "name": "Hobby",
+    "description": "Deploy and host small projects for free.",
+    "priceMonthly": 0,
+    "priceAnnual": 0,
+    "category": "personal",
+    "features": [
+      "1 app",
+      "512MB RAM",
+      "Shared CPU",
+      "Custom domains",
+      "Auto-deploy from Git",
+      "SSL certificates",
+      "Community support"
+    ],
+    "limits": {
+      "apps": 1,
+      "memoryMB": 512,
+      "cpuShared": true,
+      "bandwidth": "100GB/mo",
+      "buildMinutes": 100
+    }
+  },
+  {
+    "id": "paas-pro",
+    "name": "Pro",
+    "description": "Production hosting with dedicated resources.",
+    "priceMonthly": 20,
+    "priceAnnual": 17,
+    "perUnit": "service",
+    "category": "team",
+    "popular": true,
+    "features": [
+      "$20 per service/month",
+      "1GB RAM per service",
+      "Dedicated CPU",
+      "Horizontal scaling",
+      "Zero-downtime deploys",
+      "Preview environments",
+      "Metrics & logging",
+      "Email support"
+    ],
+    "limits": {
+      "apps": -1,
+      "memoryMB": 1024,
+      "cpuShared": false,
+      "bandwidth": "1TB/mo",
+      "buildMinutes": 500
+    },
+    "usage": {
+      "perServiceMonth": 20,
+      "additionalRAMPerGBMonth": 10
+    }
+  },
+  {
+    "id": "paas-team",
+    "name": "Team",
+    "description": "Team platform with collaboration and access control.",
+    "priceMonthly": 25,
+    "priceAnnual": 21,
+    "perUnit": "user",
+    "category": "team",
+    "features": [
+      "$25 per user/month + $20 per service",
+      "Team collaboration",
+      "Role-based access control",
+      "Shared environments",
+      "CI/CD pipelines",
+      "Managed databases",
+      "Priority support"
+    ],
+    "limits": {
+      "apps": -1,
+      "memoryMB": 2048,
+      "cpuShared": false,
+      "bandwidth": "5TB/mo",
+      "buildMinutes": -1
+    },
+    "usage": {
+      "perUserMonth": 25,
+      "perServiceMonth": 20,
+      "additionalRAMPerGBMonth": 10
+    }
+  },
+  {
+    "id": "paas-enterprise",
+    "name": "Enterprise",
+    "description": "Enterprise platform with compliance, SLA, and dedicated support.",
+    "priceMonthly": null,
+    "priceAnnual": null,
+    "category": "enterprise",
+    "contactSales": true,
+    "features": [
+      "Dedicated clusters",
+      "Private networking",
+      "SOC 2 / HIPAA compliance",
+      "99.99% SLA",
+      "Custom domains & branding",
+      "Dedicated support engineer",
+      "Volume discounts"
+    ],
+    "limits": {
+      "apps": -1,
+      "memoryMB": -1,
+      "cpuShared": false,
+      "bandwidth": "unlimited",
+      "buildMinutes": -1
+    }
+  }
+]

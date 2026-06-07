@@ -1,0 +1,29 @@
+[
+  {
+    "id": "gpu-h100x1-80gb",
+    "name": "GPU Basic",
+    "gpus": "1x H100",
+    "vram": "80 GB",
+    "vcpus": 16,
+    "memoryGB": 240,
+    "priceHourly": 3.48
+  },
+  {
+    "id": "gpu-h100x2-160gb",
+    "name": "GPU Pro",
+    "gpus": "2x H100",
+    "vram": "160 GB",
+    "vcpus": 32,
+    "memoryGB": 480,
+    "priceHourly": 6.96
+  },
+  {
+    "id": "gpu-h100x4-320gb",
+    "name": "GPU Max",
+    "gpus": "4x H100",
+    "vram": "320 GB",
+    "vcpus": 64,
+    "memoryGB": 960,
+    "priceHourly": 13.92
+  }
+]

@@ -1,0 +1,97 @@
+[
+  {
+    "id": "rpc-free",
+    "name": "Free",
+    "type": "rpc",
+    "description": "Get started with blockchain access.",
+    "priceMonthly": 0,
+    "features": [
+      "300M compute units/month",
+      "Community support"
+    ],
+    "limits": {
+      "computeUnitsMonthly": 300000000,
+      "overage": null
+    }
+  },
+  {
+    "id": "rpc-growth",
+    "name": "Growth",
+    "type": "rpc",
+    "description": "For growing projects that need reliable RPC access.",
+    "priceMonthly": 49,
+    "features": [
+      "400M compute units/month",
+      "$0.45/M overage",
+      "Priority support"
+    ],
+    "limits": {
+      "computeUnitsMonthly": 400000000,
+      "overagePerMillion": 0.45
+    }
+  },
+  {
+    "id": "rpc-scale",
+    "name": "Scale",
+    "type": "rpc",
+    "description": "High-throughput access for production infrastructure.",
+    "priceMonthly": 199,
+    "features": [
+      "1.5B compute units/month",
+      "$0.45/M overage",
+      "Dedicated support"
+    ],
+    "limits": {
+      "computeUnitsMonthly": 1500000000,
+      "overagePerMillion": 0.45
+    }
+  },
+  {
+    "id": "rpc-enterprise",
+    "name": "Enterprise",
+    "type": "rpc",
+    "description": "Custom blockchain infrastructure for large-scale operations.",
+    "priceMonthly": null,
+    "contactSales": true,
+    "features": [
+      "Custom compute units",
+      "Dedicated nodes",
+      "99.99% SLA",
+      "Dedicated support"
+    ],
+    "limits": {
+      "computeUnitsMonthly": null,
+      "overagePerMillion": null
+    }
+  },
+  {
+    "id": "data-token",
+    "name": "Token API",
+    "type": "data",
+    "tiers": [
+      { "name": "Free", "priceMonthly": 0, "requestsMonthly": 10000 },
+      { "name": "Growth", "priceMonthly": 29, "requestsMonthly": 500000 },
+      { "name": "Scale", "priceMonthly": 149, "requestsMonthly": 5000000 }
+    ]
+  },
+  {
+    "id": "data-nft",
+    "name": "NFT API",
+    "type": "data",
+    "tiers": [
+      { "name": "Free", "priceMonthly": 0, "requestsMonthly": 10000 },
+      { "name": "Growth", "priceMonthly": 39, "requestsMonthly": 500000 },
+      { "name": "Scale", "priceMonthly": 199, "requestsMonthly": 5000000 }
+    ]
+  },
+  {
+    "id": "data-wallet",
+    "name": "Wallet API",
+    "type": "data",
+    "tiers": [
+      { "name": "Free", "priceMonthly": 0, "requestsMonthly": 10000 },
+      { "name": "Growth", "priceMonthly": 39, "requestsMonthly": 500000 },
+      { "name": "Scale", "priceMonthly": 199, "requestsMonthly": 5000000 }
+    ]
+  }
+]

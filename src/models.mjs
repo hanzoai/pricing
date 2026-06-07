@@ -9,21 +9,33 @@
 //
 // BRAND POLICY: Never expose upstream model names. Zen models are our own.
 
-// All plan and pricing data imported from @hanzo/plans (canonical single source of truth).
-// Kept in sync via COPY in Dockerfile.
+// All plan + pricing data lives in @hanzo/plans on npm — single source
+// of truth. No vendored copies, no git clones, no submodules. Bump
+// the @hanzo/plans dep in package.json to roll forward the catalog;
+// nothing else moves.
+//
+// IAM / Base / PaaS plans are NOT (yet) in @hanzo/plans — they
+// remain commerce-local fragments hosted in this repo's plans-extra/
+// dir until they migrate into the SOT.
 import { createRequire } from 'node:module'
 const require = createRequire(import.meta.url)
-export const subscriptionPlans = require('../plans/subscription.json')
-export const blockchainPlans = require('../plans/blockchain.json')
-export const pricingPolicy = require('../plans/pricing-policy.json')
-export const canonicalCloudPlans = require('../plans/plans.json')
-export const canonicalGpuTiers = require('../plans/gpu.json')
-export const canonicalRegions = require('../plans/regions.json')
-export const canonicalStorage = require('../plans/storage.json')
-export const canonicalTools = require('../plans/tools.json')
-export const iamPlans = require('../plans/iam.json')
-export const basePlans = require('../plans/base.json')
-export const paasPlans = require('../plans/paas.json')
+
+export {
+  subscriptionPlans,
+  blockchainPlans,
+  pricingPolicy,
+  cloudPlans as canonicalCloudPlans,
+  gpuTiers as canonicalGpuTiers,
+  regions as canonicalRegions,
+  storage as canonicalStorage,
+  tools as canonicalTools,
+  dnsPlans,
+} from '@hanzo/plans'
+
+// Plan fragments not yet in @hanzo/plans — keep local until migrated.
+export const iamPlans = require('../plans-extra/iam.json')
+export const basePlans = require('../plans-extra/base.json')
+export const paasPlans = require('../plans-extra/paas.json')
 
 // ── Hanzo Zen model catalog — metadata only, no prices ──────────────
 // NOTE: Zen4 generation (zen4, zen4-pro, zen4-max, zen4.1, zen4-mini,

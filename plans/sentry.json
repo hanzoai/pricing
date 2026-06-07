@@ -1,0 +1,118 @@
+[
+  {
+    "id": "sentry-developer",
+    "name": "Developer",
+    "description": "Free error tracking for individual developers.",
+    "priceMonthly": 0,
+    "priceAnnual": 0,
+    "category": "personal",
+    "features": [
+      "5K errors/month",
+      "1 project",
+      "7 day retention",
+      "Email alerts",
+      "Source maps",
+      "Stack traces",
+      "Community support"
+    ],
+    "limits": {
+      "errorsPerMonth": 5000,
+      "projects": 1,
+      "retentionDays": 7,
+      "users": 1
+    }
+  },
+  {
+    "id": "sentry-team",
+    "name": "Team",
+    "description": "Error tracking and performance monitoring for teams.",
+    "priceMonthly": 26,
+    "priceAnnual": 260,
+    "category": "team",
+    "popular": true,
+    "features": [
+      "50K errors/month",
+      "Unlimited projects",
+      "30 day retention",
+      "Performance monitoring",
+      "Release tracking",
+      "Slack/PagerDuty/Webhook alerts",
+      "SSO via hanzo.id",
+      "5 team members included",
+      "Session replay (1K sessions)",
+      "$0.000290 per additional error"
+    ],
+    "limits": {
+      "errorsPerMonth": 50000,
+      "projects": -1,
+      "retentionDays": 30,
+      "users": 5,
+      "replaySessions": 1000
+    },
+    "overage": {
+      "perError": 0.000290,
+      "additionalUser": 10
+    }
+  },
+  {
+    "id": "sentry-business",
+    "name": "Business",
+    "description": "Advanced error intelligence with extended retention.",
+    "priceMonthly": 80,
+    "priceAnnual": 800,
+    "category": "business",
+    "features": [
+      "500K errors/month",
+      "Unlimited projects",
+      "90 day retention",
+      "Performance monitoring",
+      "Release tracking + deploy tracking",
+      "All alert channels",
+      "SSO + SAML",
+      "20 team members included",
+      "Session replay (10K sessions)",
+      "Custom dashboards",
+      "Cross-project search",
+      "$0.000230 per additional error"
+    ],
+    "limits": {
+      "errorsPerMonth": 500000,
+      "projects": -1,
+      "retentionDays": 90,
+      "users": 20,
+      "replaySessions": 10000
+    },
+    "overage": {
+      "perError": 0.000230,
+      "additionalUser": 8
+    }
+  },
+  {
+    "id": "sentry-enterprise",
+    "name": "Enterprise",
+    "description": "White-label error tracking for your platform.",
+    "priceMonthly": 399,
+    "priceAnnual": 3990,
+    "category": "enterprise",
+    "features": [
+      "Unlimited errors",
+      "Unlimited projects",
+      "1 year retention",
+      "White-label branding",
+      "Custom domain (sentry.yourdomain.com)",
+      "Dedicated support",
+      "Multi-org management",
+      "RBAC + SAML + OIDC",
+      "Session replay unlimited",
+      "SLA guarantee 99.9%",
+      "Volume discounts available"
+    ],
+    "limits": {
+      "errorsPerMonth": -1,
+      "projects": -1,
+      "retentionDays": 365,
+      "users": -1,
+      "replaySessions": -1
+    }
+  }
+]

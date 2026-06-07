@@ -9,6 +9,7 @@
     "dev": "node --watch src/server.mjs"
   },
   "dependencies": {
+    "@hanzo/plans": "https://registry.npmjs.org/@hanzo/plans/-/plans-1.1.1.tgz",
     "express": "^4.21.0"
   }
 }

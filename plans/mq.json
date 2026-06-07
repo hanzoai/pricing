@@ -1,0 +1,107 @@
+[
+  {
+    "id": "mq-free",
+    "name": "Free",
+    "description": "Get started with message queues. Generous free tier.",
+    "priceMonthly": 0,
+    "priceAnnual": 0,
+    "category": "personal",
+    "features": [
+      "1M requests/month",
+      "Standard queues",
+      "Unlimited message size up to 256KB",
+      "14-day message retention",
+      "Community support"
+    ],
+    "limits": {
+      "requestsPerMonth": 1000000,
+      "queues": 10,
+      "maxMessageSizeKB": 256,
+      "retentionDays": 14
+    }
+  },
+  {
+    "id": "mq-standard",
+    "name": "Standard",
+    "description": "Production message queues with at-least-once delivery.",
+    "priceMonthly": 0,
+    "priceAnnual": 0,
+    "category": "team",
+    "popular": true,
+    "payAsYouGo": true,
+    "features": [
+      "Pay per use (no base fee)",
+      "First 1M requests/month free",
+      "$0.40 per 1M requests thereafter",
+      "Standard queues (best-effort ordering)",
+      "At-least-once delivery",
+      "Unlimited queues",
+      "Dead letter queues",
+      "Delay queues (up to 15 min)",
+      "Long polling",
+      "Email support"
+    ],
+    "limits": {
+      "requestsPerMonth": -1,
+      "queues": -1,
+      "maxMessageSizeKB": 256,
+      "retentionDays": 14
+    },
+    "usage": {
+      "standardRequestsPerMillion": 0.40,
+      "freeRequestsPerMonth": 1000000
+    }
+  },
+  {
+    "id": "mq-fifo",
+    "name": "FIFO",
+    "description": "Exactly-once processing with strict ordering guarantees.",
+    "priceMonthly": 0,
+    "priceAnnual": 0,
+    "category": "team",
+    "payAsYouGo": true,
+    "features": [
+      "Pay per use (no base fee)",
+      "$0.50 per 1M requests",
+      "FIFO queues (strict ordering)",
+      "Exactly-once processing",
+      "Message deduplication",
+      "Message group IDs",
+      "Dead letter queues",
+      "Priority support"
+    ],
+    "limits": {
+      "requestsPerMonth": -1,
+      "queues": -1,
+      "maxMessageSizeKB": 256,
+      "retentionDays": 14,
+      "throughputPerQueue": 3000
+    },
+    "usage": {
+      "fifoRequestsPerMillion": 0.50
+    }
+  },
+  {
+    "id": "mq-enterprise",
+    "name": "Enterprise",
+    "description": "Dedicated queue infrastructure with compliance and SLA.",
+    "priceMonthly": null,
+    "priceAnnual": null,
+    "category": "enterprise",
+    "contactSales": true,
+    "features": [
+      "Volume discounts",
+      "Dedicated queue infrastructure",
+      "Private Link",
+      "99.99% SLA",
+      "SOC 2 compliance",
+      "Dedicated support engineer"
+    ],
+    "limits": {
+      "requestsPerMonth": -1,
+      "queues": -1,
+      "maxMessageSizeKB": 256,
+      "retentionDays": -1
+    }
+  }
+]
