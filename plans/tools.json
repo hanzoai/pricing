@@ -1,8 +1,0 @@
-[
-  { "name": "Web Search", "unit": "per query", "price": 0.005 },
-  { "name": "Code Interpreter", "unit": "per session minute", "price": 0.03 },
-  { "name": "File Storage", "unit": "per GB/month", "price": 0.20 },
-  { "name": "Image Generation", "unit": "per image", "price": 0.04 },
-  { "name": "Speech-to-Text", "unit": "per minute", "price": 0.006 },
-  { "name": "Text-to-Speech", "unit": "per 1M characters", "price": 15.0 }
-]

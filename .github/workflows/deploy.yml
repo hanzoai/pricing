@@ -36,5 +36,13 @@ jobs:
     uses: hanzoai/.github/.github/workflows/docker-build.yml@main
     with:
       image: ghcr.io/hanzoai/pricing
-      platforms: linux/amd64
+      # Build both arches natively on Hanzo's runner pool. amd64
+      # → hanzo-build-linux-amd64 (DOKS ARC). arm64 → spark
+      # (Ampere bare metal arcd). No QEMU.
+      platforms: linux/amd64,linux/arm64
+      # hanzoai/plans is the data SOT; clone it into the build
+      # context before docker build so the Dockerfile's `COPY plans`
+      # picks up the latest. GITHUB_TOKEN has read on the private
+      # plans repo in-org.
+      pre-build-command: "GITHUB_TOKEN=$GITHUB_TOKEN sh scripts/fetch-plans.sh"
     secrets: inherit

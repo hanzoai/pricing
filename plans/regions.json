@@ -1,6 +1,0 @@
-[
-  { "id": "us-east", "name": "US East", "location": "Ashburn, VA", "flag": "us" },
-  { "id": "us-west", "name": "US West", "location": "Hillsboro, OR", "flag": "us" },
-  { "id": "eu-central", "name": "Europe", "location": "Frankfurt, DE", "flag": "de" },
-  { "id": "ap-southeast", "name": "Asia Pacific", "location": "Singapore", "flag": "sg" }
-]
