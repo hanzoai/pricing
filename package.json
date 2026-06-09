@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/server.mjs",
     "sync": "node src/sync.mjs",
-    "dev": "node --watch src/server.mjs"
+    "dev": "node --watch src/server.mjs",
+    "test": "node test/bundle.test.mjs"
   },
   "dependencies": {
     "@hanzo/plans": "^1.1.1",
