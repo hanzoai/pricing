@@ -1,2 +1,2 @@
-# pricing — AI Assistant Context
+# pricing
 
