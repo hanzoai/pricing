@@ -1,0 +1,28 @@
+# Platform-native CI/CD — hanzoai/pricing
+#
+# Build + deploy + test are owned by platform.hanzo.ai (NOT GitHub Actions).
+# On a build (webhook or POST /v1/arcd/enqueue), platform builds the image with
+# an in-cluster Kaniko Job, rolls it onto the hanzo operator's `pricing` Service
+# CR (on main), then runs the pricing e2e against the live service. Schema:
+# platform docs/PLATFORM_CI.md.
+build:
+  matrix:
+    - { os: linux, arch: amd64 }
+  dockerfile: ./Dockerfile
+  context: .
+  image: ghcr.io/hanzoai/pricing
+  tag-pattern: "{{git.sha}}"
+  push: true
+deploy:
+  on:
+    - main
+  target:
+    cluster: hanzo-k8s
+    namespace: hanzo
+    operator: hanzo-operator
+    crd: Service
+    name: pricing
+e2e:
+  spec: tests/16-pricing.spec.ts
+  baseDomain: pricing.hanzo.ai
+  ref: main
