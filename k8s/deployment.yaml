@@ -33,6 +33,13 @@ spec:
           env:
             - name: ZEN_GATEWAY_URL
               value: "http://zen-gateway.zen.svc.cluster.local:4100"
+            # do-ai first-party specialty catalog (embeddings, image, routers, …).
+            # Same upstream + key the in-cluster model-sync CronJob uses.
+            - name: DO_AI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cloud-api-llm-keys
+                  key: DO_AI_API_KEY
           livenessProbe:
             httpGet:
               path: /health
