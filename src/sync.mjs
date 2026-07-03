@@ -51,6 +51,21 @@ const OPENROUTER_API = "https://openrouter.ai/api/v1/models";
 // HuggingFace Router — free serverless inference models.
 const HF_ROUTER_API = "https://router.huggingface.co/v1/models";
 
+// ── DigitalOcean-first mode ────────────────────────────────────────────
+// The catalog is DO-first: it surfaces ONLY DO-backed inference — Zen
+// (which wraps do-ai upstreams) + do-ai's own utility models. The
+// third-party OpenRouter/HuggingFace mirror is gated OFF by default so we
+// run on DO credits and don't advertise ~340 paid third-party models.
+//
+// Flip ENABLE_OPENROUTER=true (env or provider-admin UI) to re-include the
+// third-party mirror. This is a pure source toggle — dedup, featured,
+// provider-summary, and totals all fold correctly over the empty set when
+// off. HuggingFace rides the same switch (it is a third-party mirror too;
+// it is additionally gated on HF_TOKEN).
+const ENABLE_OPENROUTER = /^(1|true|yes|on)$/i.test(
+  process.env.ENABLE_OPENROUTER || ""
+);
+
 /**
  * Resolve HF_TOKEN from env or cached token file (local dev).
  */
@@ -264,8 +279,14 @@ async function fetchZenPricing() {
 
 /**
  * Fetch ALL models from OpenRouter API.
+ * DO-first: returns [] when ENABLE_OPENROUTER is off (default) so the catalog
+ * stays DO-only (Zen + do-ai). Never blocks the sync.
  */
 async function fetchOpenRouterModels() {
+  if (!ENABLE_OPENROUTER) {
+    console.log("[sync] DO-first: OpenRouter disabled (ENABLE_OPENROUTER off) — skipping third-party mirror.");
+    return [];
+  }
   console.log("[sync] Fetching ALL models from OpenRouter...");
   const res = await fetchWithTimeout(OPENROUTER_API);
   if (!res.ok) {
@@ -284,6 +305,10 @@ async function fetchOpenRouterModels() {
  * Returns empty array if no token or on error.
  */
 async function fetchHuggingFaceModels() {
+  if (!ENABLE_OPENROUTER) {
+    // DO-first: HuggingFace is a third-party mirror too — off with OpenRouter.
+    return [];
+  }
   if (!HF_TOKEN) {
     console.warn("[sync] No HF_TOKEN — skipping HuggingFace Router sync");
     return [];
@@ -727,6 +752,7 @@ export async function sync() {
   const pricingData = {
     updated: new Date().toISOString(),
     summary: {
+      catalogMode: ENABLE_OPENROUTER ? "all-providers" : "do-first",
       zenModels: zenModelCount,
       doAiModels: doAiModelCount,
       thirdPartyModels: thirdPartyModels.length,
@@ -759,7 +785,7 @@ export async function sync() {
   console.log(`[sync] Wrote pricing data to ${DATA_FILE}`);
   console.log(`[sync] Updated: ${pricingData.updated}`);
   console.log(
-    `[sync] Zen: ${zenModelCount} | do-ai: ${doAiModelCount} | Third-party: ${thirdPartyModels.length} (OpenRouter: ${allOpenRouter.length}, HuggingFace: ${hfModels.length}) | Free: ${free.length} | Total: ${pricingData.summary.totalModels}`
+    `[sync] Mode: ${ENABLE_OPENROUTER ? "all-providers" : "DO-first"} | Zen: ${zenModelCount} | do-ai: ${doAiModelCount} | Third-party: ${thirdPartyModels.length} (OpenRouter: ${allOpenRouter.length}, HuggingFace: ${hfModels.length}) | Free: ${free.length} | Total: ${pricingData.summary.totalModels}`
   );
   console.log(`[sync] Providers: ${Object.keys(providerCounts).length}`);
 
