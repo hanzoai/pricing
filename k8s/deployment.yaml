@@ -33,6 +33,13 @@ spec:
           env:
             - name: ZEN_GATEWAY_URL
               value: "http://zen-gateway.zen.svc.cluster.local:4100"
+            # DO-first catalog: surface ONLY DO-backed inference (Zen wraps
+            # do-ai + do-ai utility models). The third-party OpenRouter/HF
+            # mirror (~340 paid models) is gated OFF so we run on DO credits.
+            # Flip to "true" (here or via the provider-admin UI) to re-include
+            # the third-party mirror.
+            - name: ENABLE_OPENROUTER
+              value: "false"
             # do-ai first-party specialty catalog (embeddings, image, routers, …).
             # Same upstream + key the in-cluster model-sync CronJob uses.
             - name: DO_AI_API_KEY

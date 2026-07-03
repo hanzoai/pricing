@@ -18,7 +18,7 @@ permissions:
 jobs:
   validate:
     if: github.event_name == 'pull_request'
-    runs-on: [self-hosted, linux, amd64]
+    runs-on: hanzo-build-linux-amd64
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -38,7 +38,14 @@ jobs:
       image: ghcr.io/hanzoai/pricing
       # Build both arches natively on Hanzo's runner pool. amd64
       # → hanzo-build-linux-amd64 (DOKS ARC). arm64 → spark
-      # (Ampere bare metal arcd). No QEMU.
+      # (Ampere bare metal arcd, canonical triplet default). No QEMU.
+      #
+      # amd64 override: the reusable's runner-amd64 default is the
+      # canonical [self-hosted, linux, amd64] triplet, which matches the
+      # OFFLINE physical 'evo' host — jobs queue forever. The DOKS ARC
+      # scale-set advertises ONLY its set-name, so override per-caller
+      # (never edit the shared reusable's default — org-wide blast radius).
+      runner-amd64: '["hanzo-build-linux-amd64"]'
       platforms: linux/amd64,linux/arm64
       # hanzoai/plans is the data SOT; clone it into the build
       # context before docker build so the Dockerfile's `COPY plans`
