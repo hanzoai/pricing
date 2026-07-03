@@ -47,9 +47,9 @@ jobs:
       # (never edit the shared reusable's default — org-wide blast radius).
       runner-amd64: '["hanzo-build-linux-amd64"]'
       platforms: linux/amd64,linux/arm64
-      # hanzoai/plans is the data SOT; clone it into the build
-      # context before docker build so the Dockerfile's `COPY plans`
-      # picks up the latest. GITHUB_TOKEN has read on the private
-      # plans repo in-org.
-      pre-build-command: "GITHUB_TOKEN=$GITHUB_TOKEN sh scripts/fetch-plans.sh"
+      # No pre-build: plans data is the @hanzo/plans npm dep (pulled by
+      # `npm ci` in the Dockerfile) — one source. The Dockerfile does NOT
+      # `COPY plans`; it COPYs the committed plans-extra. The old
+      # `scripts/fetch-plans.sh` hook was removed in the plans-decomplect
+      # and the script no longer exists, so invoking it hard-failed the build.
     secrets: inherit
