@@ -66,6 +66,29 @@ function resolveHFToken() {
 
 const HF_TOKEN = resolveHFToken();
 
+// ── DigitalOcean AI (do-ai) — Hanzo's first-party specialty inference upstream ──
+// The SAME upstream the in-cluster model-sync CronJob reads. We surface do-ai's
+// UTILITY models (embeddings, rerankers, image, routers, speech, video) to the
+// public catalog under their upstream ids. do-ai CHAT/completion models are
+// deliberately EXCLUDED: those are wrapped by the Zen brand (zenCatalog in
+// models.mjs) and already mirrored via OpenRouter, so exposing them raw would
+// both duplicate the third-party list and break the "Zen models are our own"
+// brand policy. Detected dynamically — no hardcoded model list.
+const DO_AI_URL = process.env.DO_AI_URL || "https://inference.do-ai.run";
+const DO_AI_KEY = process.env.DO_AI_API_KEY || "";
+
+// Public do-ai utility kinds → serving endpoint + default catalog pricing. A
+// do-ai model whose id matches none of these is a chat/completion model and is
+// NOT surfaced. Adding a kind here is the ONE place to widen public exposure.
+const DO_AI_KINDS = [
+  { kind: "embedding", endpoint: "/v1/embeddings",         match: (s) => /embedding|bge-m3|e5-large|gte-large|multi-qa|mpnet|mini-?lm/.test(s), pricing: { input: 0.02, output: 0 }, feature: "Text embeddings" },
+  { kind: "rerank",    endpoint: "/v1/rerank",             match: (s) => /rerank/.test(s),                                              pricing: { input: 0.02, output: 0 }, feature: "Reranking" },
+  { kind: "image",     endpoint: "/v1/images/generations", match: (s) => /diffusion|sdxl|gpt-image|flux|(^|[-_])image([-_]|$)/.test(s), pricing: { perUnit: 0.04 }, unit: "image", feature: "Text-to-image" },
+  { kind: "speech",    endpoint: "/v1/audio/speech",       match: (s) => /(^|[-_])tts([-_]|$)|voicedesign|voice-design|text-to-speech/.test(s), pricing: { perUnit: 5.0 }, unit: "1M characters", feature: "Text-to-speech" },
+  { kind: "video",     endpoint: "/v1/videos/generations", match: (s) => /(^|[-_])t2v([-_]|$)|(^|[-_])video([-_]|$)|wan2/.test(s),       pricing: { perUnit: 0.5 }, unit: "video", feature: "Text-to-video" },
+  { kind: "router",    endpoint: "/v1/chat/completions",   match: (s) => s.startsWith("router:"),                                       pricing: null, feature: "Automatic model routing" },
+];
+
 // LLM gateway internal endpoint — single source of truth for Zen pricing.
 // The gateway is a LiteLLM proxy; /model/info returns per-model cost data.
 const ZEN_GATEWAY_URL =
@@ -320,6 +343,80 @@ function processHuggingFaceModel(hfModel) {
 }
 
 /**
+ * Classify a do-ai model id into a public utility kind, or null for chat/completion.
+ */
+function doAiKind(id) {
+  const s = id.toLowerCase();
+  return DO_AI_KINDS.find((k) => k.match(s)) || null; // null → chat, not surfaced
+}
+
+/**
+ * Fetch do-ai's model catalog (needs DO_AI_API_KEY). Returns [] gracefully when
+ * unconfigured or on error — never blocks the sync (mirrors HuggingFace).
+ */
+async function fetchDoAiModels() {
+  if (!DO_AI_KEY) {
+    console.warn("[sync] No DO_AI_API_KEY — skipping do-ai first-party sync");
+    return [];
+  }
+  try {
+    const res = await fetchWithTimeout(`${DO_AI_URL}/v1/models`, {
+      headers: { Authorization: `Bearer ${DO_AI_KEY}` },
+    });
+    if (!res.ok) {
+      console.warn(`[sync] do-ai /v1/models returned ${res.status} — skipping`);
+      return [];
+    }
+    const body = await res.json();
+    const models = body.data || [];
+    console.log(`[sync] Received ${models.length} models from do-ai.`);
+    return models;
+  } catch (err) {
+    console.warn(`[sync] do-ai fetch failed: ${err.message} — skipping`);
+    return [];
+  }
+}
+
+/**
+ * Prettify a do-ai id for display:
+ *   "stable-diffusion-3.5-large" -> "Stable Diffusion 3.5 Large"
+ *   "router:general"             -> "Router General"
+ */
+function doAiDisplayName(id) {
+  return id
+    .replace(/[:_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/**
+ * Process a do-ai utility model into a first-party (Hanzo-hosted) catalog entry,
+ * shaped like a zenCatalog entry so server.mjs renders it as owned_by:"hanzo".
+ */
+function processDoAiModel(m, k) {
+  const entry = {
+    name: m.id,
+    fullName: doAiDisplayName(m.id),
+    description: `${k.feature} — hosted by Hanzo.`,
+    features: [k.feature, formatContext(m.context_length)].filter(Boolean),
+    tier: "pro",
+    context: m.context_length || null,
+    specs: { arch: k.kind },
+    endpoint: k.endpoint,
+    category: "specialty",
+    generation: "do-ai",
+  };
+  if (k.unit) {
+    entry.pricingUnit = k.unit;
+    entry.pricing = { perUnit: k.pricing.perUnit };
+  } else {
+    entry.pricing = k.pricing; // token pricing {input,output} or null (router)
+  }
+  return entry;
+}
+
+/**
  * Markup for OpenRouter pass-through prices.
  * Default: 1.0 (no markup). Zen models use zen-gateway pricing directly.
  */
@@ -476,6 +573,28 @@ export async function sync() {
     pricedHanzo.push(entry);
   }
 
+  // Zen catalog size, captured before we append do-ai specialty models.
+  const zenModelCount = pricedHanzo.length;
+
+  // 1b. Fetch do-ai first-party SPECIALTY models (embeddings, rerankers, image,
+  // routers, speech, video) and surface them as Hanzo-hosted, deduped against the
+  // Zen catalog. do-ai chat models are excluded (Zen-branded + OpenRouter-mirrored).
+  // Graceful: no key / unreachable => zero surfaced, sync continues.
+  const doAiRaw = await fetchDoAiModels();
+  const zenNames = new Set(zenCatalog.map((m) => normalizeModelName(m.name)));
+  let doAiChatSkipped = 0;
+  let doAiDupSkipped = 0;
+  for (const m of doAiRaw) {
+    const k = doAiKind(m.id);
+    if (!k) { doAiChatSkipped++; continue; }
+    if (zenNames.has(normalizeModelName(m.id))) { doAiDupSkipped++; continue; }
+    pricedHanzo.push(processDoAiModel(m, k));
+  }
+  const doAiModelCount = pricedHanzo.length - zenModelCount;
+  if (doAiRaw.length > 0) {
+    console.log(`[sync] do-ai: ${doAiModelCount} specialty models surfaced (${doAiChatSkipped} chat excluded, ${doAiDupSkipped} dup).`);
+  }
+
   // 2. Fetch ALL third-party models from OpenRouter (dynamic detection).
   const orModels = await fetchOpenRouterModels();
   const markup = getThirdPartyMarkup();
@@ -608,7 +727,8 @@ export async function sync() {
   const pricingData = {
     updated: new Date().toISOString(),
     summary: {
-      zenModels: pricedHanzo.length,
+      zenModels: zenModelCount,
+      doAiModels: doAiModelCount,
       thirdPartyModels: thirdPartyModels.length,
       openRouterModels: allOpenRouter.length,
       huggingfaceModels: hfModels.length,
@@ -639,7 +759,7 @@ export async function sync() {
   console.log(`[sync] Wrote pricing data to ${DATA_FILE}`);
   console.log(`[sync] Updated: ${pricingData.updated}`);
   console.log(
-    `[sync] Zen: ${pricedHanzo.length} | Third-party: ${thirdPartyModels.length} (OpenRouter: ${allOpenRouter.length}, HuggingFace: ${hfModels.length}) | Free: ${free.length} | Total: ${pricingData.summary.totalModels}`
+    `[sync] Zen: ${zenModelCount} | do-ai: ${doAiModelCount} | Third-party: ${thirdPartyModels.length} (OpenRouter: ${allOpenRouter.length}, HuggingFace: ${hfModels.length}) | Free: ${free.length} | Total: ${pricingData.summary.totalModels}`
   );
   console.log(`[sync] Providers: ${Object.keys(providerCounts).length}`);
 
