@@ -5,7 +5,7 @@
 # clones, zero vendored copies, zero manual sync. Bump the @hanzo/plans
 # dep in package.json to roll the catalog forward.
 
-FROM node:20-alpine
+FROM ghcr.io/hanzoai/nodejs:v24.18.0
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --production --ignore-scripts
