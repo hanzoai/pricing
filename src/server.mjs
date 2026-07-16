@@ -38,6 +38,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import express from "express";
 import { sync } from "./sync.mjs";
+import { publicView } from "./view.mjs";
 import {
   subscriptionPlans, blockchainPlans, pricingPolicy,
   canonicalCloudPlans, canonicalGpuTiers, canonicalRegions,
@@ -128,18 +129,13 @@ app.get("/health", (_req, res) => {
   });
 });
 
-// Full pricing data (strips internal cost/routing data).
+// Full pricing data.
 app.get("/v1/pricing", (_req, res) => {
   const data = loadPricing();
   if (!data) {
     return res.status(503).json({ error: "Pricing data not yet available" });
   }
-  // Strip internal provider routing from cloud section.
-  if (data.cloud) {
-    const { _internal, ...publicCloud } = data.cloud;
-    return res.json({ ...data, cloud: publicCloud });
-  }
-  res.json(data);
+  res.json(publicView(data));
 });
 
 // All models with pricing (flat list).
@@ -212,7 +208,7 @@ app.get("/v1/pricing/compute", (_req, res) => {
   if (!data?.infrastructure?.compute) {
     return res.status(503).json({ error: "Compute pricing not yet available" });
   }
-  res.json(data.infrastructure.compute);
+  res.json(publicView(data.infrastructure.compute));
 });
 
 // Compute presets (for LaunchPage).
@@ -230,9 +226,7 @@ app.get("/v1/pricing/cloud", (_req, res) => {
   if (!data?.cloud) {
     return res.status(503).json({ error: "Cloud pricing not yet available" });
   }
-  // Strip internal routing/cost data from public response.
-  const { _internal, ...publicCloud } = data.cloud;
-  res.json(publicCloud);
+  res.json(publicView(data.cloud));
 });
 
 // Cloud plans only (for pricing page).
@@ -259,7 +253,7 @@ app.get("/v1/pricing/cloud/storage", (_req, res) => {
   if (!data?.cloud?.blockStorage) {
     return res.status(503).json({ error: "Storage pricing not yet available" });
   }
-  res.json(data.cloud.blockStorage);
+  res.json(publicView(data.cloud.blockStorage));
 });
 
 // Provider breakdown.
@@ -356,8 +350,7 @@ app.get("/v1/cloud", (_req, res) => {
   if (!data?.cloud) {
     return res.status(503).json({ error: "Cloud pricing not yet available" });
   }
-  const { _internal, ...publicCloud } = data.cloud;
-  res.json(publicCloud);
+  res.json(publicView(data.cloud));
 });
 
 // /v1/subscriptions — subscription plans (alias).

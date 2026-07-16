@@ -683,20 +683,30 @@ export async function sync() {
   const doPricing = await fetchDOPricing();
 
   // Build compute tiers with markup.
+  //
+  // Which supplier serves a tier, what they charge us, and what we add on top are
+  // internal facts: they ride under `_internal`, the one key every public view
+  // strips (see `publicView` in server.mjs). A customer sees the tier and its
+  // price — never our supplier, our cost, or our margin. The same rule the cloud
+  // plans below already follow ("customer-facing — no provider details").
   const compute = {
-    provider: "digitalocean",
-    region: "sfo3",
-    markupMonthly: COMPUTE_MARKUP_MONTHLY,
+    _internal: {
+      provider: "digitalocean",
+      region: "sfo3",
+      markupMonthly: COMPUTE_MARKUP_MONTHLY,
+    },
     tiers: Object.entries(doPricing).map(([slug, info]) => ({
       slug,
       vcpus: info.vcpus,
       memoryMB: info.memoryMB,
       diskGB: info.diskGB,
-      basePriceMonthly: info.priceMonthly,
-      basePriceHourly: info.priceHourly,
       priceMonthly: roundPrice(info.priceMonthly + COMPUTE_MARKUP_MONTHLY),
       priceHourly: roundPrice((info.priceMonthly + COMPUTE_MARKUP_MONTHLY) / 720),
       centsPerHour: Math.ceil(((info.priceMonthly + COMPUTE_MARKUP_MONTHLY) / 720) * 100),
+      _internal: {
+        basePriceMonthly: info.priceMonthly,
+        basePriceHourly: info.priceHourly,
+      },
     })),
     presets: computePresets.map((p) => {
       const info = doPricing[p.slug] || doFallbackPrices[p.slug];

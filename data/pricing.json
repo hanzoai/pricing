@@ -15,7 +15,7 @@
   "hanzoModels": [
     {
       "name": "zen4",
-      "fullName": "Zen4 — Flagship",
+      "fullName": "Zen4 \u2014 Flagship",
       "description": "Flagship MoE model for complex reasoning and multi-domain tasks.",
       "features": [
         "202K context window",
@@ -37,7 +37,7 @@
     },
     {
       "name": "zen4-ultra",
-      "fullName": "Zen4 Ultra — Maximum Reasoning",
+      "fullName": "Zen4 Ultra \u2014 Maximum Reasoning",
       "description": "Maximum reasoning capability with extended chain-of-thought on MoE architecture.",
       "features": [
         "262K context window",
@@ -59,7 +59,7 @@
     },
     {
       "name": "zen4-pro",
-      "fullName": "Zen4 Pro — High Capability",
+      "fullName": "Zen4 Pro \u2014 High Capability",
       "description": "Efficient MoE model for demanding workloads with strong reasoning at production-grade cost.",
       "features": [
         "131K context window",
@@ -80,7 +80,7 @@
     },
     {
       "name": "zen4-max",
-      "fullName": "Zen4 Max — Maximum Intelligence",
+      "fullName": "Zen4 Max \u2014 Maximum Intelligence",
       "description": "Most capable model for complex reasoning, analysis, and agentic tasks. 1M token context window.",
       "features": [
         "1M context window",
@@ -102,7 +102,7 @@
     },
     {
       "name": "zen4.1",
-      "fullName": "Zen4.1 — Extended Context",
+      "fullName": "Zen4.1 \u2014 Extended Context",
       "description": "High-performance 1M context model for long-document analysis, large codebase reasoning, and agentic workflows. Best balance of intelligence and cost at million-token scale.",
       "features": [
         "1M context window",
@@ -125,7 +125,7 @@
     },
     {
       "name": "zen4-mini",
-      "fullName": "Zen4 Mini — Fast & Efficient",
+      "fullName": "Zen4 Mini \u2014 Fast & Efficient",
       "description": "Ultra-fast lightweight model optimized for speed and cost efficiency. Ideal for free tier.",
       "features": [
         "128K context window",
@@ -147,7 +147,7 @@
     },
     {
       "name": "zen4-thinking",
-      "fullName": "Zen4 Thinking — Deep Reasoning",
+      "fullName": "Zen4 Thinking \u2014 Deep Reasoning",
       "description": "Dedicated reasoning model with explicit chain-of-thought capabilities.",
       "features": [
         "131K context window",
@@ -168,7 +168,7 @@
     },
     {
       "name": "zen4-coder",
-      "fullName": "Zen4 Coder — Code Generation",
+      "fullName": "Zen4 Coder \u2014 Code Generation",
       "description": "Code-specialized MoE model for generation, review, debugging, and agentic programming.",
       "features": [
         "163K context window",
@@ -189,7 +189,7 @@
     },
     {
       "name": "zen4-coder-pro",
-      "fullName": "Zen4 Coder Pro — Premium Code",
+      "fullName": "Zen4 Coder Pro \u2014 Premium Code",
       "description": "Full-precision BF16 code model for maximum accuracy on complex codebases.",
       "features": [
         "131K context window",
@@ -210,7 +210,7 @@
     },
     {
       "name": "zen4-coder-flash",
-      "fullName": "Zen4 Coder Flash — Fast Code",
+      "fullName": "Zen4 Coder Flash \u2014 Fast Code",
       "description": "Lightweight code model optimized for speed and inline completions.",
       "features": [
         "262K context window",
@@ -231,7 +231,7 @@
     },
     {
       "name": "zen3-omni",
-      "fullName": "Zen3 Omni — Hypermodal",
+      "fullName": "Zen3 Omni \u2014 Hypermodal",
       "description": "Multimodal model supporting text, vision, audio, and structured output.",
       "features": [
         "202K context window",
@@ -252,7 +252,7 @@
     },
     {
       "name": "zen3-vl",
-      "fullName": "Zen3 VL — Vision-Language",
+      "fullName": "Zen3 VL \u2014 Vision-Language",
       "description": "Vision-language model for image understanding and visual reasoning.",
       "features": [
         "262K context window",
@@ -273,7 +273,7 @@
     },
     {
       "name": "zen3-nano",
-      "fullName": "Zen3 Nano — Edge",
+      "fullName": "Zen3 Nano \u2014 Edge",
       "description": "Ultra-lightweight model for edge deployment and low-latency tasks. Available on free tier.",
       "features": [
         "128K context window",
@@ -295,7 +295,7 @@
     },
     {
       "name": "zen3-guard",
-      "fullName": "Zen3 Guard — Content Safety",
+      "fullName": "Zen3 Guard \u2014 Content Safety",
       "description": "Content safety classifier for moderation and guardrails. 9 safety categories, 119 languages.",
       "features": [
         "65K context window",
@@ -382,7 +382,7 @@
     },
     {
       "name": "zen3-embedding-openai",
-      "fullName": "Zen3 Embedding — OpenAI Compatible",
+      "fullName": "Zen3 Embedding \u2014 OpenAI Compatible",
       "description": "OpenAI-compatible embedding endpoint for drop-in migration.",
       "features": [
         "8K context window",
@@ -776,7 +776,7 @@
     },
     {
       "name": "zen5",
-      "fullName": "Zen5 — Next Generation",
+      "fullName": "Zen5 \u2014 Next Generation",
       "description": "Next-generation agentic frontier model trained on 10B+ tokens of real-world tool use, multi-step reasoning, and production workflows. 1M+ token context with native chain-of-thought.",
       "features": [
         "1M+ context window",
@@ -796,7 +796,7 @@
     },
     {
       "name": "zen5-pro",
-      "fullName": "Zen5 Pro — Advanced",
+      "fullName": "Zen5 Pro \u2014 Advanced",
       "description": "High-throughput agentic model for demanding production workloads. Trained on real-world development patterns with deep chain-of-thought reasoning.",
       "features": [
         "512K context window",
@@ -815,7 +815,7 @@
     },
     {
       "name": "zen5-max",
-      "fullName": "Zen5 Max — Extended",
+      "fullName": "Zen5 Max \u2014 Extended",
       "description": "Maximum context agentic model for document-scale analysis. Trained on 10B+ tokens of real-world workflows with extended chain-of-thought for deep multi-step reasoning.",
       "features": [
         "2M context window",
@@ -834,7 +834,7 @@
     },
     {
       "name": "zen5-ultra",
-      "fullName": "Zen5 Ultra — Deep Reasoning",
+      "fullName": "Zen5 Ultra \u2014 Deep Reasoning",
       "description": "Deepest reasoning model in the Zen family. Multi-pass chain-of-thought with self-verification, trained on 10B+ tokens of real-world agentic problem-solving and error recovery.",
       "features": [
         "1M context window",
@@ -854,7 +854,7 @@
     },
     {
       "name": "zen5-mini",
-      "fullName": "Zen5 Mini — Efficient",
+      "fullName": "Zen5 Mini \u2014 Efficient",
       "description": "Efficient agentic model delivering zen5-class intelligence at a fraction of the cost. Distilled from the full zen5 with native chain-of-thought preserved.",
       "features": [
         "256K context window",
@@ -8242,130 +8242,149 @@
   ],
   "infrastructure": {
     "compute": {
-      "provider": "digitalocean",
-      "region": "sfo3",
-      "markupMonthly": 1,
       "tiers": [
         {
           "slug": "s-1vcpu-1gb",
           "vcpus": 1,
           "memoryMB": 1024,
           "diskGB": 25,
-          "basePriceMonthly": 6,
-          "basePriceHourly": 0.00893,
           "priceMonthly": 7,
           "priceHourly": 0.0097,
-          "centsPerHour": 1
+          "centsPerHour": 1,
+          "_internal": {
+            "basePriceMonthly": 6,
+            "basePriceHourly": 0.00893
+          }
         },
         {
           "slug": "s-1vcpu-2gb",
           "vcpus": 1,
           "memoryMB": 2048,
           "diskGB": 50,
-          "basePriceMonthly": 12,
-          "basePriceHourly": 0.01786,
           "priceMonthly": 13,
           "priceHourly": 0.018,
-          "centsPerHour": 2
+          "centsPerHour": 2,
+          "_internal": {
+            "basePriceMonthly": 12,
+            "basePriceHourly": 0.01786
+          }
         },
         {
           "slug": "s-2vcpu-2gb",
           "vcpus": 2,
           "memoryMB": 2048,
           "diskGB": 60,
-          "basePriceMonthly": 18,
-          "basePriceHourly": 0.02679,
           "priceMonthly": 19,
           "priceHourly": 0.026,
-          "centsPerHour": 3
+          "centsPerHour": 3,
+          "_internal": {
+            "basePriceMonthly": 18,
+            "basePriceHourly": 0.02679
+          }
         },
         {
           "slug": "s-2vcpu-4gb",
           "vcpus": 2,
           "memoryMB": 4096,
           "diskGB": 80,
-          "basePriceMonthly": 24,
-          "basePriceHourly": 0.03571,
           "priceMonthly": 25,
           "priceHourly": 0.035,
-          "centsPerHour": 4
+          "centsPerHour": 4,
+          "_internal": {
+            "basePriceMonthly": 24,
+            "basePriceHourly": 0.03571
+          }
         },
         {
           "slug": "s-4vcpu-8gb",
           "vcpus": 4,
           "memoryMB": 8192,
           "diskGB": 160,
-          "basePriceMonthly": 48,
-          "basePriceHourly": 0.07143,
           "priceMonthly": 49,
           "priceHourly": 0.068,
-          "centsPerHour": 7
+          "centsPerHour": 7,
+          "_internal": {
+            "basePriceMonthly": 48,
+            "basePriceHourly": 0.07143
+          }
         },
         {
           "slug": "s-8vcpu-16gb",
           "vcpus": 8,
           "memoryMB": 16384,
           "diskGB": 320,
-          "basePriceMonthly": 96,
-          "basePriceHourly": 0.14286,
           "priceMonthly": 97,
           "priceHourly": 0.135,
-          "centsPerHour": 14
+          "centsPerHour": 14,
+          "_internal": {
+            "basePriceMonthly": 96,
+            "basePriceHourly": 0.14286
+          }
         },
         {
           "slug": "s-16vcpu-32gb",
           "vcpus": 16,
           "memoryMB": 32768,
           "diskGB": 640,
-          "basePriceMonthly": 192,
-          "basePriceHourly": 0.28571,
           "priceMonthly": 193,
           "priceHourly": 0.268,
-          "centsPerHour": 27
+          "centsPerHour": 27,
+          "_internal": {
+            "basePriceMonthly": 192,
+            "basePriceHourly": 0.28571
+          }
         },
         {
           "slug": "g-2vcpu-8gb",
           "vcpus": 2,
           "memoryMB": 8192,
           "diskGB": 25,
-          "basePriceMonthly": 48,
-          "basePriceHourly": 0.07143,
           "priceMonthly": 49,
           "priceHourly": 0.068,
-          "centsPerHour": 7
+          "centsPerHour": 7,
+          "_internal": {
+            "basePriceMonthly": 48,
+            "basePriceHourly": 0.07143
+          }
         },
         {
           "slug": "g-4vcpu-16gb",
           "vcpus": 4,
           "memoryMB": 16384,
           "diskGB": 50,
-          "basePriceMonthly": 96,
-          "basePriceHourly": 0.14286,
           "priceMonthly": 97,
           "priceHourly": 0.135,
-          "centsPerHour": 14
+          "centsPerHour": 14,
+          "_internal": {
+            "basePriceMonthly": 96,
+            "basePriceHourly": 0.14286
+          }
         },
         {
           "slug": "c-2vcpu-4gb",
           "vcpus": 2,
           "memoryMB": 4096,
           "diskGB": 25,
-          "basePriceMonthly": 40,
-          "basePriceHourly": 0.05952,
           "priceMonthly": 41,
           "priceHourly": 0.057,
-          "centsPerHour": 6
+          "centsPerHour": 6,
+          "_internal": {
+            "basePriceMonthly": 40,
+            "basePriceHourly": 0.05952
+          }
         },
         {
           "slug": "c-4vcpu-8gb",
           "vcpus": 4,
           "memoryMB": 8192,
           "diskGB": 50,
-          "basePriceMonthly": 80,
-          "basePriceHourly": 0.11905,
           "priceMonthly": 81,
           "priceHourly": 0.113,
-          "centsPerHour": 12
+          "centsPerHour": 12,
+          "_internal": {
+            "basePriceMonthly": 80,
+            "basePriceHourly": 0.11905
+          }
         }
       ],
       "presets": [
@@ -8417,7 +8436,12 @@
           "priceHourly": 0.068,
           "centsPerHour": 7
         }
-      ]
+      ],
+      "_internal": {
+        "provider": "digitalocean",
+        "region": "sfo3",
+        "markupMonthly": 1
+      }
     },
     "gpu": [
       {
