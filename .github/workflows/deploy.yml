@@ -36,17 +36,19 @@ jobs:
     uses: hanzoai/.github/.github/workflows/docker-build.yml@main
     with:
       image: ghcr.io/hanzoai/pricing
-      # Build both arches natively on Hanzo's runner pool. amd64
-      # → hanzo-build-linux-amd64 (DOKS ARC). arm64 → spark
-      # (Ampere bare metal arcd, canonical triplet default). No QEMU.
+      # amd64 only: prod (do-sfo3-hanzo-k8s) is amd64, and pricing is a Node
+      # marketing service with no arm64 consumer. The arm64 leg targeted spark
+      # (Ampere bare metal arcd), which queues indefinitely when spark is not
+      # advertising the arm64 label — that stalled the multi-arch manifest and
+      # blocked every pricing release. Build the one arch prod actually runs.
       #
-      # amd64 override: the reusable's runner-amd64 default is the
-      # canonical [self-hosted, linux, amd64] triplet, which matches the
-      # OFFLINE physical 'evo' host — jobs queue forever. The DOKS ARC
-      # scale-set advertises ONLY its set-name, so override per-caller
-      # (never edit the shared reusable's default — org-wide blast radius).
+      # amd64 override: the reusable's runner-amd64 default is the canonical
+      # [self-hosted, linux, amd64] triplet, which matches the OFFLINE physical
+      # 'evo' host — jobs queue forever. The DOKS ARC scale-set advertises ONLY
+      # its set-name, so override per-caller (never edit the shared reusable's
+      # default — org-wide blast radius).
       runner-amd64: '["hanzo-build-linux-amd64"]'
-      platforms: linux/amd64,linux/arm64
+      platforms: linux/amd64
       # No pre-build: plans data is the @hanzo/plans npm dep (pulled by
       # `npm ci` in the Dockerfile) — one source. The Dockerfile does NOT
       # `COPY plans`; it COPYs the committed plans-extra. The old
