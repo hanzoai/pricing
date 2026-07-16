@@ -104,12 +104,12 @@ const DO_AI_KINDS = [
   { kind: "router",    endpoint: "/v1/chat/completions",   match: (s) => s.startsWith("router:"),                                       pricing: null, feature: "Automatic model routing" },
 ];
 
-// LLM gateway internal endpoint — single source of truth for Zen pricing.
-// The gateway is a LiteLLM proxy; /model/info returns per-model cost data.
-const ZEN_GATEWAY_URL =
-  process.env.ZEN_GATEWAY_URL ||
-  "http://gateway.hanzo.svc:8080";
-const ZEN_MASTER_KEY = process.env.ZEN_MASTER_KEY || "";
+// zen serves the Zen family and owns its prices: GET /v1/models carries `pricing`
+// (the in-window rate) and `pricing_tiers` (what each context tier bills), as exact
+// decimal strings. It is the same service `ai` discovers, under the same env name —
+// a price has one home, and admin.hanzo.ai edits it there at runtime.
+const ZEN_URL = process.env.ZEN_URL || "http://zen.zen.svc.cluster.local:8080";
+const ZEN_KEY = process.env.ZEN_API_KEY || "";
 
 // DigitalOcean API for real droplet pricing.
 const DO_API = "https://api.digitalocean.com/v2/sizes";
@@ -179,101 +179,43 @@ function providerFromId(id) {
   return names[slug] || slug;
 }
 
-// ── Static fallback pricing ($/MTok) for Zen token-based models ──────
-// Used when the LLM gateway /model/info is unreachable.
-// Prices aligned with competitive LLM market rates by tier.
-const ZEN_FALLBACK_PRICING = {
-  // Zen4 Generation
-  "zen4":              { input: 1.50,  output: 4.50,  cacheRead: 0.38,  cacheWrite: 1.88 },
-  "zen4-ultra":        { input: 2.00,  output: 6.00,  cacheRead: 0.50,  cacheWrite: 2.50 },
-  "zen4-pro":          { input: 0.80,  output: 2.40,  cacheRead: 0.20,  cacheWrite: 1.00 },
-  "zen4-max":          { input: 3.00,  output: 12.00, cacheRead: 0.75,  cacheWrite: 3.75 },
-  "zen4.1":            { input: 2.00,  output: 8.00,  cacheRead: 0.50,  cacheWrite: 2.50 },
-  "zen4-mini":         { input: 0.10,  output: 0.40,  cacheRead: 0.03,  cacheWrite: 0.13 },
-  "zen4-thinking":     { input: 1.50,  output: 6.00,  cacheRead: 0.38,  cacheWrite: 1.88 },
-  // Zen4 Code
-  "zen4-coder":        { input: 1.00,  output: 3.00,  cacheRead: 0.25,  cacheWrite: 1.25 },
-  "zen4-coder-pro":    { input: 2.00,  output: 6.00,  cacheRead: 0.50,  cacheWrite: 2.50 },
-  "zen4-coder-flash":  { input: 0.30,  output: 0.90,  cacheRead: 0.08,  cacheWrite: 0.38 },
-  // Zen3 Chat
-  "zen3-omni":         { input: 1.50,  output: 4.50,  cacheRead: null,  cacheWrite: null },
-  "zen3-vl":           { input: 0.60,  output: 1.80,  cacheRead: null,  cacheWrite: null },
-  "zen3-nano":         { input: 0.05,  output: 0.15,  cacheRead: null,  cacheWrite: null },
-  "zen3-guard":        { input: 0.10,  output: 0.10,  cacheRead: null,  cacheWrite: null },
-  // Zen3 Embedding (per MTok, not per image/minute)
-  "zen3-embedding":          { input: 0.10,  output: null, cacheRead: null, cacheWrite: null },
-  "zen3-embedding-medium":   { input: 0.05,  output: null, cacheRead: null, cacheWrite: null },
-  "zen3-embedding-small":    { input: 0.02,  output: null, cacheRead: null, cacheWrite: null },
-  "zen3-embedding-openai":   { input: 0.10,  output: null, cacheRead: null, cacheWrite: null },
-  // Zen3 Reranker (per MTok)
-  "zen3-reranker":           { input: 0.10,  output: null, cacheRead: null, cacheWrite: null },
-  "zen3-reranker-medium":    { input: 0.05,  output: null, cacheRead: null, cacheWrite: null },
-  "zen3-reranker-small":     { input: 0.02,  output: null, cacheRead: null, cacheWrite: null },
-};
-
 /**
- * Fetch Zen model pricing from LLM gateway.
- * Tries /model/info (LiteLLM) first, then /v1/models.
- * Falls back to static pricing if gateway is unreachable.
- * Returns a Map of model_name → { input, output, cacheRead, cacheWrite } in $/MTok.
+ * Read the Zen family's prices from zen — the service that serves those models
+ * and bills for them, so the price it quotes is the price we charge.
+ *
+ * There is no fallback table. There used to be: /model/info (an endpoint from a
+ * proxy we do not run) always failed, /v1/models was assumed to carry no pricing,
+ * and the sync silently landed on hardcoded numbers "aligned with competitive
+ * market rates" — i.e. invented, and stale enough to price no zen5 SKU at all.
+ * A fallback that is always taken is not a fallback, it is the implementation.
+ * If zen cannot be reached we publish no Zen price rather than a fiction.
+ *
+ * Returns Map of model id → { input, output } in $/MTok.
  */
 async function fetchZenPricing() {
-  const headers = {};
-  if (ZEN_MASTER_KEY) {
-    headers["Authorization"] = `Bearer ${ZEN_MASTER_KEY}`;
+  const headers = ZEN_KEY ? { Authorization: `Bearer ${ZEN_KEY}` } : {};
+  const url = `${ZEN_URL}/v1/models`;
+  console.log(`[sync] Fetching Zen pricing from ${url}...`);
+
+  const res = await fetchWithTimeout(url, { headers }, 15_000);
+  if (!res.ok) {
+    throw new Error(`zen /v1/models returned ${res.status}`);
   }
 
-  // Try /model/info first (LiteLLM endpoint with full pricing data).
-  try {
-    const url = `${ZEN_GATEWAY_URL}/model/info`;
-    console.log(`[sync] Fetching Zen pricing from ${url}...`);
-    const res = await fetchWithTimeout(url, { headers }, 15_000);
-    if (res.ok) {
-      const body = await res.json();
-      const models = body.data || [];
-      const pricing = new Map();
-      for (const m of models) {
-        const name = m.model_name;
-        const info = m.model_info || {};
-        pricing.set(name, {
-          input: perTokenToMTok(info.input_cost_per_token),
-          output: perTokenToMTok(info.output_cost_per_token),
-          cacheRead: perTokenToMTok(info.input_cost_per_token_cache_read),
-          cacheWrite: perTokenToMTok(info.input_cost_per_token_cache_write),
-        });
-      }
-      if (pricing.size > 0) {
-        console.log(`[sync] Got live pricing for ${pricing.size} Zen models.`);
-        return pricing;
-      }
-    } else {
-      console.warn(`[sync] /model/info returned ${res.status} — trying /v1/models`);
-    }
-  } catch (err) {
-    console.warn(`[sync] /model/info failed: ${err.message} — trying /v1/models`);
-  }
-
-  // Try /v1/models (OpenAI-compatible, may not have pricing).
-  try {
-    const url = `${ZEN_GATEWAY_URL}/v1/models`;
-    console.log(`[sync] Fetching Zen models from ${url}...`);
-    const res = await fetchWithTimeout(url, { headers }, 15_000);
-    if (res.ok) {
-      const body = await res.json();
-      const models = body.data || [];
-      console.log(`[sync] Found ${models.length} models on gateway (no per-token pricing in /v1/models — using static fallback).`);
-      // /v1/models doesn't include pricing, so fall through to static
-    }
-  } catch (err) {
-    console.warn(`[sync] /v1/models failed: ${err.message}`);
-  }
-
-  // Fall back to static pricing.
-  console.log(`[sync] Using static fallback pricing for ${Object.keys(ZEN_FALLBACK_PRICING).length} Zen models.`);
   const pricing = new Map();
-  for (const [name, prices] of Object.entries(ZEN_FALLBACK_PRICING)) {
-    pricing.set(name, { ...prices });
+  for (const m of (await res.json()).data || []) {
+    // zen marshals prices as exact decimal strings ("3.00") so a reader sees the
+    // same value zen billed; Number() is this catalog's $/MTok representation.
+    if (!m.id || !m.pricing) continue;
+    pricing.set(m.id, {
+      input: Number(m.pricing.input),
+      output: Number(m.pricing.output),
+    });
   }
+  if (pricing.size === 0) {
+    throw new Error("zen /v1/models carried no priced model");
+  }
+  console.log(`[sync] Got live pricing for ${pricing.size} Zen models.`);
   return pricing;
 }
 
