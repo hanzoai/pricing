@@ -180,43 +180,85 @@ function providerFromId(id) {
 }
 
 /**
- * Read the Zen family's prices from zen — the service that serves those models
- * and bills for them, so the price it quotes is the price we charge.
+ * Read the whole Zen family from zen — the service that serves those models and
+ * bills for them, so the list it returns IS the family and the price it quotes IS
+ * the price we charge. zen's /v1/models carries each SKU's id, context window,
+ * mode, pricing (exact decimal strings), and vision capability.
  *
- * There is no fallback table. There used to be: /model/info (an endpoint from a
- * proxy we do not run) always failed, /v1/models was assumed to carry no pricing,
- * and the sync silently landed on hardcoded numbers "aligned with competitive
- * market rates" — i.e. invented, and stale enough to price no zen5 SKU at all.
- * A fallback that is always taken is not a fallback, it is the implementation.
- * If zen cannot be reached we publish no Zen price rather than a fiction.
- *
- * Returns Map of model id → { input, output } in $/MTok.
+ * The list is authoritative: zen is the one place a Zen SKU is born (its
+ * catalog.yaml), so a model exists here iff zen serves it. There is no local
+ * hand-maintained roster to drift — the old one listed phantom SKUs (zen5-nano-*,
+ * zen5-embedding-0.6B) zen never served, whose price lookups always missed and
+ * rendered null. If zen cannot be reached we surface no Zen model this cycle
+ * rather than a stale fiction.
  */
-async function fetchZenPricing() {
+async function fetchZenFamily() {
   const headers = ZEN_KEY ? { Authorization: `Bearer ${ZEN_KEY}` } : {};
   const url = `${ZEN_URL}/v1/models`;
-  console.log(`[sync] Fetching Zen pricing from ${url}...`);
+  console.log(`[sync] Fetching Zen family from ${url}...`);
 
   const res = await fetchWithTimeout(url, { headers }, 15_000);
   if (!res.ok) {
     throw new Error(`zen /v1/models returned ${res.status}`);
   }
+  const models = (await res.json()).data || [];
+  if (models.length === 0) {
+    throw new Error("zen /v1/models carried no model");
+  }
+  console.log(`[sync] Zen serves ${models.length} models.`);
+  return models;
+}
 
-  const pricing = new Map();
-  for (const m of (await res.json()).data || []) {
-    // zen marshals prices as exact decimal strings ("3.00") so a reader sees the
-    // same value zen billed; Number() is this catalog's $/MTok representation.
-    if (!m.id || !m.pricing) continue;
-    pricing.set(m.id, {
-      input: Number(m.pricing.input),
-      output: Number(m.pricing.output),
-    });
-  }
-  if (pricing.size === 0) {
-    throw new Error("zen /v1/models carried no priced model");
-  }
-  console.log(`[sync] Got live pricing for ${pricing.size} Zen models.`);
-  return pricing;
+// The per-unit label for a media SKU's price (zen prices these per call/image/clip).
+const MEDIA_UNIT = { image: "image", audio: "call", video: "clip", rerank: "call" };
+
+// Title-case a zen id into a display name when no branded copy exists in the
+// catalog metadata — "zen5-flash" → "Zen5 Flash".
+function brandName(id) {
+  return id.split(/[-_]/).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+}
+
+const numOrNull = (v) => (v == null || v === "" ? null : Number(v));
+
+/**
+ * The Zen family as this catalog renders it: every SKU zen serves, at zen's price,
+ * with branded copy grafted on where the catalog has it. Pure — the whole reason
+ * it is separable from the sync's IO — so it is unit-testable against a captured
+ * zen /v1/models body.
+ *
+ * `zenModels` is zen's /v1/models `data` array; `metaCatalog` is the branded-copy
+ * roster (fullName/description/features/tier/specs) keyed by SKU name. Family
+ * membership and pricing come from zen; metaCatalog is presentation only, so an
+ * entry that names a SKU zen does not serve simply never matches.
+ */
+export function buildZenModels(zenModels, metaCatalog = []) {
+  const meta = new Map(metaCatalog.map((m) => [normalizeModelName(m.name), m]));
+  return zenModels.map((zm) => {
+    const m = meta.get(normalizeModelName(zm.id)) || {};
+    const mode = zm.mode || "";
+    const entry = {
+      name: zm.id,
+      fullName: m.fullName || brandName(zm.id),
+      description: m.description || "",
+      features: m.features || [],
+      tier: m.tier || "",
+      context: zm.context_window || m.context || null,
+      specs: m.specs,
+    };
+    if (zm.capabilities?.vision) entry.vision = true;
+    if (MEDIA_UNIT[mode]) {
+      entry.pricingUnit = MEDIA_UNIT[mode];
+      entry.pricing = { perUnit: numOrNull(zm.pricing?.input) };
+    } else {
+      entry.pricing = {
+        input: numOrNull(zm.pricing?.input),
+        output: numOrNull(zm.pricing?.output),
+        cacheRead: numOrNull(zm.pricing?.cache_read),
+        cacheWrite: null,
+      };
+    }
+    return entry;
+  });
 }
 
 /**
@@ -488,55 +530,50 @@ async function fetchDOPricing() {
  */
 export async function sync() {
   // 1. Fetch Zen pricing from gateway (graceful — never blocks sync).
-  let zenPricing;
+  let zenFamily;
   try {
-    zenPricing = await fetchZenPricing();
+    zenFamily = await fetchZenFamily();
   } catch (err) {
-    console.error(`[sync] Zen pricing fetch failed entirely: ${err.message} — using static fallback`);
-    zenPricing = new Map();
-    for (const [name, prices] of Object.entries(ZEN_FALLBACK_PRICING)) {
-      zenPricing.set(name, { ...prices });
-    }
+    console.error(`[sync] Zen family fetch failed: ${err.message} — no Zen models this cycle`);
+    zenFamily = [];
   }
 
-  // Build priced Zen models by merging catalog metadata with live pricing.
+  // The catalog's branded copy (fullName/description/features/tier/specs), keyed by
+  // zen id, enriches the live list where we have it. It is presentation only — the
+  // family membership and pricing come from zen, so copy that names a phantom SKU
+  // simply never matches and is ignored.
+  const zenMeta = new Map(zenCatalog.map((m) => [normalizeModelName(m.name), m]));
+
+  // Build the Zen family from zen's live list: every SKU zen serves, at zen's price.
   const pricedHanzo = [];
-  for (const model of zenCatalog) {
-    const prices = zenPricing.get(model.name);
+  for (const zm of zenFamily) {
+    const meta = zenMeta.get(normalizeModelName(zm.id)) || {};
+    const mode = zm.mode || "";
     const entry = {
-      name: model.name,
-      fullName: model.fullName,
-      description: model.description,
-      features: model.features,
-      tier: model.tier,
-      context: model.context || null,
-      specs: model.specs,
+      name: zm.id,
+      fullName: meta.fullName || brandName(zm.id),
+      description: meta.description || "",
+      features: meta.features || [],
+      tier: meta.tier || "",
+      context: zm.context_window || meta.context || null,
+      specs: meta.specs,
     };
+    if (zm.capabilities?.vision) entry.vision = true;
 
-    // Pass through optional metadata.
-    if (model.endpoint) entry.endpoint = model.endpoint;
-    if (model.contactSales) entry.contactSales = true;
-
-    if (model.contactSales) {
-      // Contact-sales models (e.g. zen5) — no pricing exposed.
-      entry.pricing = null;
-    } else if (model.staticPricing) {
-      // Non-token models (image, audio) use static per-unit pricing.
-      entry.pricingUnit = model.pricingUnit;
-      entry.pricing = { perUnit: model.staticPricing.perUnit };
+    if (MEDIA_UNIT[mode]) {
+      // Media SKUs are priced per unit; zen quotes that unit price in pricing.input.
+      entry.pricingUnit = MEDIA_UNIT[mode];
+      entry.pricing = { perUnit: numOrNull(zm.pricing?.input) };
     } else {
-      // Token-based models: merge live gateway pricing.
+      // Token SKUs: zen's exact $/MTok retail (cache_read where the upstream caches;
+      // zen does not model a separate cache-write rate).
       entry.pricing = {
-        input: prices?.input ?? null,
-        output: prices?.output ?? null,
-        cacheRead: prices?.cacheRead ?? null,
-        cacheWrite: prices?.cacheWrite ?? null,
+        input: numOrNull(zm.pricing?.input),
+        output: numOrNull(zm.pricing?.output),
+        cacheRead: numOrNull(zm.pricing?.cache_read),
+        cacheWrite: null,
       };
-      if (!prices) {
-        console.warn(`[sync] WARN: No pricing from zen-gateway for ${model.name}`);
-      }
     }
-
     pricedHanzo.push(entry);
   }
 
@@ -548,7 +585,7 @@ export async function sync() {
   // Zen catalog. do-ai chat models are excluded (Zen-branded + OpenRouter-mirrored).
   // Graceful: no key / unreachable => zero surfaced, sync continues.
   const doAiRaw = await fetchDoAiModels();
-  const zenNames = new Set(zenCatalog.map((m) => normalizeModelName(m.name)));
+  const zenNames = new Set(zenFamily.map((m) => normalizeModelName(m.id)));
   let doAiChatSkipped = 0;
   let doAiDupSkipped = 0;
   for (const m of doAiRaw) {
