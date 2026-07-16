@@ -27,6 +27,7 @@
 //   GET  /v1/cloud                      — cloud VM plans + regions + storage
 //   GET  /v1/tools                      — tool pricing
 //   GET  /v1/gpu                        — GPU tier pricing
+//   GET  /v1/pricing/datastore          — managed datastore tiers + usage rates
 //   GET  /v1/pricing-policy             — transparent pricing policy
 //   GET  /v1/iam                        — IAM / identity plans
 //
@@ -46,6 +47,7 @@ import {
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_FILE = join(__dirname, "..", "data", "pricing.json");
+const DATASTORE_FILE = join(__dirname, "..", "datastore.json");
 
 const PORT = parseInt(process.env.PORT || "8080", 10);
 const API_KEY = process.env.PRICING_API_KEY || "";
@@ -75,6 +77,26 @@ function loadPricing() {
     return null;
   }
   return _cache;
+}
+
+// In-memory cache for the datastore price list.
+let _datastoreCache = null;
+
+/**
+ * Load datastore pricing from disk (cached).
+ */
+function loadDatastore() {
+  if (_datastoreCache) return _datastoreCache;
+  if (!existsSync(DATASTORE_FILE)) {
+    return null;
+  }
+  try {
+    _datastoreCache = JSON.parse(readFileSync(DATASTORE_FILE, "utf-8"));
+  } catch (err) {
+    console.error("[server] Failed to parse datastore pricing:", err.message);
+    return null;
+  }
+  return _datastoreCache;
 }
 
 const app = express();
@@ -241,6 +263,15 @@ app.get("/v1/pricing/cloud/storage", (_req, res) => {
 });
 
 // Provider breakdown.
+// /v1/pricing/datastore — managed datastore tiers + usage rates.
+app.get("/v1/pricing/datastore", (_req, res) => {
+  const data = loadDatastore();
+  if (!data?.tiers?.length) {
+    return res.status(503).json({ error: "Datastore pricing not yet available" });
+  }
+  res.json(data);
+});
+
 app.get("/v1/pricing/providers", (_req, res) => {
   const data = loadPricing();
   if (!data) {
