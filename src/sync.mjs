@@ -16,6 +16,8 @@ import { fileURLToPath } from "node:url";
 import {
   zenCatalog,
   zenFamilies,
+  ensoCatalog,
+  ensoFamily,
   featuredModelIds,
   toolPricing,
   computePresets,
@@ -110,6 +112,15 @@ const DO_AI_KINDS = [
 // a price has one home, and admin.hanzo.ai edits it there at runtime.
 const ZEN_URL = process.env.ZEN_URL || "http://zen.zen.svc.cluster.local:8080";
 const ZEN_KEY = process.env.ZEN_API_KEY || "";
+
+// enso serves the proprietary Enso family on its OWN gateway (ENSO_URL) — the same
+// binary as zen run with ZEN_FAMILY=enso (hanzoai/enso). Its /v1/models has the SAME
+// wire shape as zen's (id, context_window, mode, pricing, pricing_tiers) plus an
+// `access:"waitlist"` flag on every SKU (a closed, limited preview). We surface it with
+// the same fetch + builder; the access flag rides through so the catalog LISTS Enso for
+// discovery while ai enforces the grant at call time.
+const ENSO_URL = process.env.ENSO_URL || "http://enso.enso.svc.cluster.local:8080";
+const ENSO_KEY = process.env.ENSO_API_KEY || "";
 
 // DigitalOcean API for real droplet pricing.
 const DO_API = "https://api.digitalocean.com/v2/sizes";
@@ -209,6 +220,32 @@ async function fetchZenFamily() {
   return models;
 }
 
+/**
+ * Read the whole Enso family from enso — its OWN gateway (ENSO_URL), the service that
+ * serves + bills these SKUs. Mirrors fetchZenFamily exactly (identical /v1/models wire
+ * shape): the list it returns IS the family and the price it quotes IS the price we
+ * charge. Enso is a closed, limited-preview family — each SKU advertises
+ * `access:"waitlist"`, LISTED for discovery but callable only with a grant (ai enforces).
+ * If enso cannot be reached the caller surfaces no Enso model this cycle rather than a
+ * stale fiction (the sync's try/catch keeps the rest of the catalog flowing).
+ */
+async function fetchEnsoFamily() {
+  const headers = ENSO_KEY ? { Authorization: `Bearer ${ENSO_KEY}` } : {};
+  const url = `${ENSO_URL}/v1/models`;
+  console.log(`[sync] Fetching Enso family from ${url}...`);
+
+  const res = await fetchWithTimeout(url, { headers }, 15_000);
+  if (!res.ok) {
+    throw new Error(`enso /v1/models returned ${res.status}`);
+  }
+  const models = (await res.json()).data || [];
+  if (models.length === 0) {
+    throw new Error("enso /v1/models carried no model");
+  }
+  console.log(`[sync] Enso serves ${models.length} models.`);
+  return models;
+}
+
 // The per-unit label for a media SKU's price (zen prices these per call/image/clip).
 const MEDIA_UNIT = { image: "image", audio: "call", video: "clip", rerank: "call" };
 
@@ -246,6 +283,10 @@ export function buildZenModels(zenModels, metaCatalog = []) {
       specs: m.specs,
     };
     if (zm.capabilities?.vision) entry.vision = true;
+    // Gated SKUs (Enso is a limited preview) advertise access:"waitlist" — carry it onto
+    // the card so the catalog LISTS the model for discovery; ai enforces the grant. A
+    // generally-available SKU (every Zen model) omits the field, so this is a no-op there.
+    if (zm.access) entry.access = zm.access;
     if (MEDIA_UNIT[mode]) {
       entry.pricingUnit = MEDIA_UNIT[mode];
       entry.pricing = { perUnit: numOrNull(zm.pricing?.input) };
@@ -538,47 +579,31 @@ export async function sync() {
     zenFamily = [];
   }
 
-  // The catalog's branded copy (fullName/description/features/tier/specs), keyed by
-  // zen id, enriches the live list where we have it. It is presentation only — the
-  // family membership and pricing come from zen, so copy that names a phantom SKU
-  // simply never matches and is ignored.
-  const zenMeta = new Map(zenCatalog.map((m) => [normalizeModelName(m.name), m]));
+  // Build the Zen family from zen's live list: every SKU zen serves, at zen's price,
+  // with the catalog's branded copy (fullName/description/features/tier/specs) grafted on
+  // by name where present. buildZenModels is the ONE builder — pure, unit-tested against
+  // a captured /v1/models body, and shared with Enso below. The branded copy is
+  // presentation only; family membership and pricing come from zen (a phantom SKU in the
+  // copy simply never matches).
+  const pricedHanzo = buildZenModels(zenFamily, zenCatalog);
 
-  // Build the Zen family from zen's live list: every SKU zen serves, at zen's price.
-  const pricedHanzo = [];
-  for (const zm of zenFamily) {
-    const meta = zenMeta.get(normalizeModelName(zm.id)) || {};
-    const mode = zm.mode || "";
-    const entry = {
-      name: zm.id,
-      fullName: meta.fullName || brandName(zm.id),
-      description: meta.description || "",
-      features: meta.features || [],
-      tier: meta.tier || "",
-      context: zm.context_window || meta.context || null,
-      specs: meta.specs,
-    };
-    if (zm.capabilities?.vision) entry.vision = true;
-
-    if (MEDIA_UNIT[mode]) {
-      // Media SKUs are priced per unit; zen quotes that unit price in pricing.input.
-      entry.pricingUnit = MEDIA_UNIT[mode];
-      entry.pricing = { perUnit: numOrNull(zm.pricing?.input) };
-    } else {
-      // Token SKUs: zen's exact $/MTok retail (cache_read where the upstream caches;
-      // zen does not model a separate cache-write rate).
-      entry.pricing = {
-        input: numOrNull(zm.pricing?.input),
-        output: numOrNull(zm.pricing?.output),
-        cacheRead: numOrNull(zm.pricing?.cache_read),
-        cacheWrite: null,
-      };
-    }
-    pricedHanzo.push(entry);
-  }
-
-  // Zen catalog size, captured before we append do-ai specialty models.
+  // Zen catalog size, captured before we append Enso + do-ai specialty models.
   const zenModelCount = pricedHanzo.length;
+
+  // 1a. Enso — the proprietary, limited-preview family on its OWN gateway (ENSO_URL),
+  // discovered + built EXACTLY like Zen (same binary, same /v1/models wire shape) via the
+  // shared buildZenModels. Every Enso SKU carries access:"waitlist", so it is LISTED for
+  // discovery while ai enforces the grant at call time. Graceful: unreachable ⇒ zero
+  // surfaced, sync continues (never a stale fiction).
+  let ensoLive = [];
+  try {
+    ensoLive = await fetchEnsoFamily();
+  } catch (err) {
+    console.error(`[sync] Enso family fetch failed: ${err.message} — no Enso models this cycle`);
+  }
+  const ensoEntries = buildZenModels(ensoLive, ensoCatalog);
+  pricedHanzo.push(...ensoEntries);
+  const ensoModelCount = ensoEntries.length;
 
   // 1b. Fetch do-ai first-party SPECIALTY models (embeddings, rerankers, image,
   // routers, speech, video) and surface them as Hanzo-hosted, deduped against the
@@ -594,7 +619,7 @@ export async function sync() {
     if (zenNames.has(normalizeModelName(m.id))) { doAiDupSkipped++; continue; }
     pricedHanzo.push(processDoAiModel(m, k));
   }
-  const doAiModelCount = pricedHanzo.length - zenModelCount;
+  const doAiModelCount = pricedHanzo.length - zenModelCount - ensoModelCount;
   if (doAiRaw.length > 0) {
     console.log(`[sync] do-ai: ${doAiModelCount} specialty models surfaced (${doAiChatSkipped} chat excluded, ${doAiDupSkipped} dup).`);
   }
@@ -743,6 +768,7 @@ export async function sync() {
     summary: {
       catalogMode: ENABLE_OPENROUTER ? "all-providers" : "do-first",
       zenModels: zenModelCount,
+      ensoModels: ensoModelCount,
       doAiModels: doAiModelCount,
       thirdPartyModels: thirdPartyModels.length,
       openRouterModels: allOpenRouter.length,
@@ -755,7 +781,9 @@ export async function sync() {
       cloudRegions: cloudRegions.length,
     },
     hanzoModels: pricedHanzo,
-    families: zenFamilies,
+    // Enso's grouping is appended only when Enso actually served this cycle, so a down
+    // preview never renders an empty family card (Zen's groupings are always present).
+    families: ensoModelCount > 0 ? [...zenFamilies, ensoFamily] : zenFamilies,
     thirdPartyModels,
     freeModels: free.map((m) => m.id),
     providers: providerCounts,
@@ -774,7 +802,7 @@ export async function sync() {
   console.log(`[sync] Wrote pricing data to ${DATA_FILE}`);
   console.log(`[sync] Updated: ${pricingData.updated}`);
   console.log(
-    `[sync] Mode: ${ENABLE_OPENROUTER ? "all-providers" : "DO-first"} | Zen: ${zenModelCount} | do-ai: ${doAiModelCount} | Third-party: ${thirdPartyModels.length} (OpenRouter: ${allOpenRouter.length}, HuggingFace: ${hfModels.length}) | Free: ${free.length} | Total: ${pricingData.summary.totalModels}`
+    `[sync] Mode: ${ENABLE_OPENROUTER ? "all-providers" : "DO-first"} | Zen: ${zenModelCount} | Enso: ${ensoModelCount} | do-ai: ${doAiModelCount} | Third-party: ${thirdPartyModels.length} (OpenRouter: ${allOpenRouter.length}, HuggingFace: ${hfModels.length}) | Free: ${free.length} | Total: ${pricingData.summary.totalModels}`
   );
   console.log(`[sync] Providers: ${Object.keys(providerCounts).length}`);
 

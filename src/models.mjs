@@ -476,6 +476,54 @@ export const zenFamilies = [
   },
 ];
 
+// ── Enso — Hanzo's proprietary, limited-preview frontier family ─────────
+// LISTED for discovery in the catalog; every SKU is GATED (access:"waitlist"),
+// callable only with a granted preview — ai enforces the grant at call time. The live
+// cards + prices are discovered from enso's OWN gateway (ENSO_URL) exactly like Zen;
+// this is the branded copy (fullName/description/features/tier) grafted on by name.
+// Marketing tiers: Flash / Pro / Ultra (the bare `enso` id is the "Pro" flagship). No
+// upstreams named — a closed family (identity injection hides them).
+export const ensoCatalog = [
+  {
+    name: "enso-flash",
+    fullName: "Enso Flash",
+    description: "The fast, economical Enso — low-latency everyday reasoning with a 1M-context overflow. Limited preview.",
+    features: ["1M context window", "Fast / economical tier", "Limited preview"],
+    tier: "pro",
+    context: 1000000,
+    specs: { arch: "Enso" },
+  },
+  {
+    name: "enso",
+    fullName: "Enso Pro",
+    description: "The flagship Enso — opus-class reasoning by default, overflowing to a 1M-context long-context tier. Limited preview.",
+    features: ["1M context window", "Flagship quality", "Limited preview"],
+    tier: "ultra max",
+    context: 1000000,
+    specs: { arch: "Enso" },
+  },
+  {
+    name: "enso-ultra",
+    fullName: "Enso Ultra",
+    description: "Adaptive fan-out Enso — probes one task-appropriate arm, escalating to a verified panel for the hardest prompts. Limited preview.",
+    features: ["200K context window", "Adaptive fan-out + verify", "Limited preview"],
+    tier: "ultra max",
+    context: 200000,
+    specs: { arch: "Enso Ultra" },
+  },
+];
+
+// The Enso family grouping (catalog UI). `gated: true` marks the whole family as a
+// limited preview; the three SKUs render in marketing order Flash → Pro → Ultra.
+export const ensoFamily = {
+  id: "enso",
+  name: "Enso",
+  description: "Hanzo's proprietary frontier family — adaptive, long-context reasoning. Limited preview (request access).",
+  icon: "Sparkles",
+  gated: true,
+  models: ["enso-flash", "enso", "enso-ultra"],
+};
+
 // ── Featured third-party model IDs (pinned to top of third-party list) ──
 // These are detected from OpenRouter — IDs must match OpenRouter model IDs.
 export const featuredModelIds = [
