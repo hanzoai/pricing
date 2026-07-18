@@ -430,7 +430,53 @@ export const zenCatalog = [
 
 // ── Model families — groupings for catalog UI ──────────────────────────
 // Every frontend renders from this canonical list. No hardcoding elsewhere.
+// ── Enso — Hanzo's proprietary frontier family ──────────────────────
+// Enso is Hanzo's closed frontier family (unlike the open Zen family). It is
+// GENERALLY AVAILABLE (no waitlist). Full entries (metadata + retail pricing +
+// owned_by) since there is no live Enso pricing gateway wired here; prices mirror
+// the authoritative source (~/work/hanzo/enso/catalog.yaml). Upstreams are never
+// revealed — a caller only ever sees "Enso".
+export const ensoCatalog = [
+  {
+    name: "enso",
+    fullName: "Enso",
+    description: "Hanzo's proprietary frontier model — Opus-class reasoning by default with 1M-context overflow.",
+    features: ["1M context window", "Frontier reasoning"],
+    tier: "ultra max",
+    context: 1000000,
+    owned_by: "hanzo",
+    pricing: { input: 20, output: 60, cacheRead: null, cacheWrite: null },
+  },
+  {
+    name: "enso-flash",
+    fullName: "Enso Flash",
+    description: "Fast, economical Enso tier for high-volume, low-latency everyday work, with 1M-context overflow.",
+    features: ["1M context window", "Low latency"],
+    tier: "pro",
+    context: 1000000,
+    owned_by: "hanzo",
+    pricing: { input: 2, output: 6, cacheRead: null, cacheWrite: null },
+  },
+  {
+    name: "enso-ultra",
+    fullName: "Enso Ultra",
+    description: "Adaptive fan-out — probes a task-appropriate model, escalates to a top-K panel only when needed, then verifies-then-selects the best answer.",
+    features: ["200K context window", "Adaptive fan-out"],
+    tier: "ultra max",
+    context: 200000,
+    owned_by: "hanzo",
+    pricing: { input: 40, output: 120, cacheRead: null, cacheWrite: null },
+  },
+];
+
 export const zenFamilies = [
+  {
+    id: 'enso',
+    name: 'Enso',
+    description: "Hanzo's proprietary frontier family — flagship reasoning, a fast tier, and adaptive fan-out.",
+    icon: 'Sparkles',
+    models: ['enso', 'enso-flash', 'enso-ultra'],
+  },
   {
     id: 'zen5',
     name: 'Zen 5',

@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import { buildZenModels } from "../src/sync.mjs";
+import { ensoCatalog } from "../src/models.mjs";
 
 // A faithful slice of what zen's GET /v1/models actually returns (captured live):
 // exact-decimal price strings, context_window, mode, and the vision capability.
@@ -56,4 +57,19 @@ test("media SKUs are priced per unit, not per MTok", () => {
 test("a SKU zen does not serve is never invented from catalog copy", () => {
   const fam = buildZenModels(ZEN_MODELS, META);
   assert.equal(fam.find((m) => m.name === "zen5-phantom"), undefined);
+});
+
+test("the Zen family is branded owned_by zenlm (open Zen LM, not hanzo)", () => {
+  const fam = buildZenModels(ZEN_MODELS, META);
+  assert.ok(fam.length > 0);
+  for (const m of fam) assert.equal(m.owned_by, "zenlm", `${m.name} should be owned_by zenlm`);
+});
+
+test("Enso is a three-SKU family, generally available (owned_by hanzo, no waitlist)", () => {
+  assert.deepEqual(ensoCatalog.map((m) => m.name), ["enso", "enso-flash", "enso-ultra"]);
+  for (const m of ensoCatalog) {
+    assert.equal(m.owned_by, "hanzo", `${m.name} should be owned_by hanzo`);
+    assert.ok(!m.gated && !m.access, `${m.name} must not be gated/waitlisted`);
+    assert.ok(m.pricing.input > 0 && m.pricing.output > 0, `${m.name} must carry retail pricing`);
+  }
 });

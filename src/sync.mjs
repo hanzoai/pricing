@@ -15,6 +15,7 @@ import { homedir } from "node:os";
 import { fileURLToPath } from "node:url";
 import {
   zenCatalog,
+  ensoCatalog,
   zenFamilies,
   featuredModelIds,
   toolPricing,
@@ -238,6 +239,9 @@ export function buildZenModels(zenModels, metaCatalog = []) {
     const mode = zm.mode || "";
     const entry = {
       name: zm.id,
+      // The open Zen family is Zen LM (open weights, co-designed with Zoo Labs
+      // Foundation) — public owned_by "zenlm", not "hanzo".
+      owned_by: "zenlm",
       fullName: m.fullName || brandName(zm.id),
       description: m.description || "",
       features: m.features || [],
@@ -542,40 +546,10 @@ export async function sync() {
   // zen id, enriches the live list where we have it. It is presentation only — the
   // family membership and pricing come from zen, so copy that names a phantom SKU
   // simply never matches and is ignored.
-  const zenMeta = new Map(zenCatalog.map((m) => [normalizeModelName(m.name), m]));
-
-  // Build the Zen family from zen's live list: every SKU zen serves, at zen's price.
-  const pricedHanzo = [];
-  for (const zm of zenFamily) {
-    const meta = zenMeta.get(normalizeModelName(zm.id)) || {};
-    const mode = zm.mode || "";
-    const entry = {
-      name: zm.id,
-      fullName: meta.fullName || brandName(zm.id),
-      description: meta.description || "",
-      features: meta.features || [],
-      tier: meta.tier || "",
-      context: zm.context_window || meta.context || null,
-      specs: meta.specs,
-    };
-    if (zm.capabilities?.vision) entry.vision = true;
-
-    if (MEDIA_UNIT[mode]) {
-      // Media SKUs are priced per unit; zen quotes that unit price in pricing.input.
-      entry.pricingUnit = MEDIA_UNIT[mode];
-      entry.pricing = { perUnit: numOrNull(zm.pricing?.input) };
-    } else {
-      // Token SKUs: zen's exact $/MTok retail (cache_read where the upstream caches;
-      // zen does not model a separate cache-write rate).
-      entry.pricing = {
-        input: numOrNull(zm.pricing?.input),
-        output: numOrNull(zm.pricing?.output),
-        cacheRead: numOrNull(zm.pricing?.cache_read),
-        cacheWrite: null,
-      };
-    }
-    pricedHanzo.push(entry);
-  }
+  // Build the Zen family from zen's live list: every SKU zen serves, at zen's price,
+  // branded owned_by "zenlm". buildZenModels is the ONE builder (also unit-tested), so
+  // the live path and the tests share it and branding can never drift between them.
+  const pricedHanzo = buildZenModels(zenFamily, zenCatalog);
 
   // Zen catalog size, captured before we append do-ai specialty models.
   const zenModelCount = pricedHanzo.length;
@@ -598,6 +572,12 @@ export async function sync() {
   if (doAiRaw.length > 0) {
     console.log(`[sync] do-ai: ${doAiModelCount} specialty models surfaced (${doAiChatSkipped} chat excluded, ${doAiDupSkipped} dup).`);
   }
+
+  // 1c. Enso — Hanzo's proprietary frontier family, generally available (owned_by
+  // "hanzo"). A small fixed-price lineup (no live gateway discovery); the 3 SKUs
+  // carry their own owned_by + retail pricing (see ensoCatalog).
+  for (const em of ensoCatalog) pricedHanzo.push({ ...em });
+  const ensoModelCount = ensoCatalog.length;
 
   // 2. Fetch ALL third-party models from OpenRouter (dynamic detection).
   const orModels = await fetchOpenRouterModels();
@@ -744,6 +724,7 @@ export async function sync() {
       catalogMode: ENABLE_OPENROUTER ? "all-providers" : "do-first",
       zenModels: zenModelCount,
       doAiModels: doAiModelCount,
+      ensoModels: ensoModelCount,
       thirdPartyModels: thirdPartyModels.length,
       openRouterModels: allOpenRouter.length,
       huggingfaceModels: hfModels.length,
