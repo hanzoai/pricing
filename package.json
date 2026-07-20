@@ -1,6 +1,6 @@
 {
   "name": "@hanzo/pricing",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "type": "module",
   "private": true,
   "scripts": {
@@ -10,7 +10,7 @@
     "test": "node --test test/*.test.mjs"
   },
   "dependencies": {
-    "@hanzo/plans": "^1.1.1",
+    "@hanzo/plans": "1.4.1",
     "express": "^4.21.0"
   }
 }
