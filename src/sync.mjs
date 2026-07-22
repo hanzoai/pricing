@@ -33,6 +33,25 @@ import {
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(__dirname, "..", "data");
 const DATA_FILE = join(DATA_DIR, "pricing.json");
+const DATASTORE_FILE = join(__dirname, "..", "datastore.json");
+
+// ── Commerce catalog — the product/pricing source of truth ──────────────
+// The infra tiers (cloud VM plans, GPU tiers, managed-datastore tiers) live in
+// commerce's catalog and are READ from GET /v1/commerce/catalog?brand=infra, so
+// there is exactly ONE place a price or spec is edited. If commerce is
+// unreachable we FALL BACK to the hardcoded models.mjs/datastore.json copy so
+// pricing never goes empty — the cutover is safe and reversible. In-cluster set
+// COMMERCE_CATALOG_URL=http://commerce.hanzo.svc:8001/v1/commerce/catalog.
+const COMMERCE_CATALOG_URL =
+  process.env.COMMERCE_CATALOG_URL || "https://api.hanzo.ai/v1/commerce/catalog";
+
+// loadDatastoreFallback reads the hardcoded managed-datastore price list. It is
+// the offline copy behind the commerce read: the static envelope
+// (schema/trial/discounts/included/endpoints) always comes from here, and the
+// whole thing serves when commerce is unreachable.
+function loadDatastoreFallback() {
+  return JSON.parse(readFileSync(DATASTORE_FILE, "utf-8"));
+}
 
 /**
  * fetch() with an AbortController timeout.
@@ -529,6 +548,121 @@ async function fetchDOPricing() {
 }
 
 /**
+ * Infra catalog rows of one category, ordered by the catalog `order` field.
+ */
+function pickInfra(catalog, category) {
+  return (catalog.products || [])
+    .filter((p) => p.category === category)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+}
+
+/**
+ * Map commerce `cloud` catalog rows back into the cloudPlans[] shape sync builds
+ * `data.cloud.plans` from — byte-for-byte the local models.mjs cloudPlans entry
+ * (id/name/description/vcpus/memoryGB/diskGB/cpuType/maxVMs/priceMonthly/features
+ * + optional freeTier/popular). The existing builder then derives priceHourly.
+ */
+function mapCommerceCloudPlans(catalog) {
+  return pickInfra(catalog, "cloud").map((p) => {
+    const m = p.metadata || {};
+    const plan = {
+      id: m.id,
+      name: p.name,
+      description: p.description,
+      vcpus: m.vcpus,
+      memoryGB: m.memoryGB,
+      diskGB: m.diskGB,
+      cpuType: m.cpuType,
+      maxVMs: m.maxVMs,
+      priceMonthly: m.priceMonthly,
+      features: m.features,
+    };
+    if (m.freeTier) plan.freeTier = m.freeTier;
+    if (m.popular) plan.popular = m.popular;
+    return plan;
+  });
+}
+
+/**
+ * Map commerce `gpu` catalog rows back into the gpuTiers[] shape (name/gpu/vram/
+ * price) sync exposes as `infrastructure.gpu`.
+ */
+function mapCommerceGpuTiers(catalog) {
+  return pickInfra(catalog, "gpu").map((p) => {
+    const m = p.metadata || {};
+    return { name: p.name, gpu: m.gpu, vram: m.vram, price: m.price };
+  });
+}
+
+/**
+ * Map commerce `datastore` catalog rows back into the datastore.json shape the
+ * /v1/pricing/datastore endpoint emits. Commerce owns the TIERS (prices/specs)
+ * and the usage RATES (carried on the tier metadata); the static envelope
+ * (schema/currency/unit/note/trial/discounts/included/endpoints) is product
+ * policy, not per-tier pricing, so it stays in the local datastore.json.
+ */
+function mapCommerceDatastore(catalog, fallback) {
+  const rows = pickInfra(catalog, "datastore");
+  const tiers = rows.map((p) => {
+    const m = p.metadata || {};
+    const tier = {
+      id: m.id,
+      name: p.name,
+      tagline: m.tagline,
+      replicas: m.replicas,
+      ramGiB: m.ramGiB,
+      vcpu: m.vcpu,
+      storageGB: m.storageGB ?? null,
+      priceMonthly: m.priceMonthly,
+      priceHourly: m.priceHourly,
+      billingGranularity: m.billingGranularity,
+      availabilityZones: m.availabilityZones,
+      storageLimit: m.storageLimit,
+    };
+    if (m.popular) tier.popular = m.popular;
+    tier.support = m.support;
+    tier.features = m.features;
+    if (m.contactSales) tier.contactSales = m.contactSales;
+    return tier;
+  });
+  const usage = rows[0]?.metadata?.usage || fallback.usage;
+  return { ...fallback, tiers, usage };
+}
+
+/**
+ * Fetch the infra tiers from commerce (the product/pricing SOT). Returns
+ * { cloud, gpu, datastore } mapped into the shapes the pricing endpoints emit,
+ * or null on any failure/timeout/empty so the caller falls back to the hardcoded
+ * copy. Never throws — pricing must never go empty because commerce is down.
+ */
+async function fetchCommerceInfra() {
+  const url = `${COMMERCE_CATALOG_URL}?brand=infra`;
+  try {
+    const res = await fetchWithTimeout(url, {}, 10_000);
+    if (!res.ok) {
+      console.warn(`[sync] commerce catalog ${url} returned ${res.status} — using hardcoded infra fallback`);
+      return null;
+    }
+    const body = await res.json();
+    if (!Array.isArray(body.products) || body.products.length === 0) {
+      console.warn("[sync] commerce catalog carried no infra products — using hardcoded fallback");
+      return null;
+    }
+    const cloud = mapCommerceCloudPlans(body);
+    const gpu = mapCommerceGpuTiers(body);
+    const datastore = mapCommerceDatastore(body, loadDatastoreFallback());
+    if (cloud.length === 0 || gpu.length === 0 || datastore.tiers.length === 0) {
+      console.warn("[sync] commerce catalog missing an infra section — using hardcoded fallback");
+      return null;
+    }
+    return { cloud, gpu, datastore };
+  } catch (err) {
+    console.warn(`[sync] commerce catalog fetch failed: ${err.message} — using hardcoded infra fallback`);
+    return null;
+  }
+}
+
+/**
  * Run the full sync: fetch from zen-gateway + OpenRouter + DO, write to disk.
  * Returns the pricing object.
  */
@@ -693,9 +827,23 @@ export async function sync() {
     else providerCounts[m.provider].paid++;
   }
 
+  // 4b. Resolve the infra tiers (cloud VM plans, GPU tiers, datastore tiers)
+  // from commerce — the product/pricing source of truth — and fall back to the
+  // hardcoded models.mjs/datastore.json copy if commerce is unreachable, so
+  // pricing never goes empty. Only these three sections switch source; the live
+  // model aggregation (Zen/do-ai/OpenRouter/HF) is untouched.
+  const commerceInfra = await fetchCommerceInfra();
+  const infraSource = commerceInfra ? "commerce" : "fallback(models.mjs+datastore.json)";
+  const cloudPlansSource = commerceInfra ? commerceInfra.cloud : cloudPlans;
+  const gpuTiersSource = commerceInfra ? commerceInfra.gpu : gpuTiers;
+  const datastoreSource = commerceInfra ? commerceInfra.datastore : loadDatastoreFallback();
+  console.log(
+    `[sync] Infra tiers source: ${infraSource} (cloud:${cloudPlansSource.length} gpu:${gpuTiersSource.length} datastore:${datastoreSource.tiers.length})`
+  );
+
   // 5. Build Hanzo Cloud plans (customer-facing — no provider details).
   const cloud = {
-    plans: cloudPlans.map((plan) => {
+    plans: cloudPlansSource.map((plan) => {
       const hourly = Math.round((plan.priceMonthly / 720) * 10000) / 10000;
       // Strip internal fields before exposing
       const { freeTier, popular, ...rest } = plan;
@@ -732,7 +880,7 @@ export async function sync() {
       featuredModels: featured.length,
       providers: Object.keys(providerCounts).length,
       totalModels: pricedHanzo.length + thirdPartyModels.length,
-      cloudPlans: cloudPlans.length,
+      cloudPlans: cloudPlansSource.length,
       cloudRegions: cloudRegions.length,
     },
     hanzoModels: pricedHanzo,
@@ -743,9 +891,12 @@ export async function sync() {
     tools: toolPricing,
     infrastructure: {
       compute,
-      gpu: gpuTiers,
+      gpu: gpuTiersSource,
     },
     cloud,
+    // Managed-datastore tiers + usage rates (from commerce, or the datastore.json
+    // fallback). Served by GET /v1/pricing/datastore.
+    datastore: datastoreSource,
   };
 
   // Ensure data directory exists.

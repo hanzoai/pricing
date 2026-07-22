@@ -10,6 +10,7 @@
 //   GET  /v1/pricing/featured           — featured third-party models only
 //   GET  /v1/pricing/compute            — DO-backed compute tiers with markup
 //   GET  /v1/pricing/compute/presets    — curated compute presets for LaunchPage
+//   GET  /v1/pricing/gpu                — GPU tiers (from commerce, fallback models.mjs)
 //   GET  /v1/pricing/cloud              — cloud VM resale plans (multi-provider)
 //   GET  /v1/pricing/cloud/plans        — cloud plans only (for pricing page)
 //   GET  /v1/pricing/cloud/regions      — available cloud regions
@@ -220,6 +221,15 @@ app.get("/v1/pricing/compute/presets", (_req, res) => {
   res.json({ presets: data.infrastructure.compute.presets });
 });
 
+// GPU tiers (sourced from commerce, or the models.mjs gpuTiers fallback).
+app.get("/v1/pricing/gpu", (_req, res) => {
+  const data = loadPricing();
+  if (!data?.infrastructure?.gpu?.length) {
+    return res.status(503).json({ error: "GPU pricing not yet available" });
+  }
+  res.json({ tiers: publicView(data.infrastructure.gpu) });
+});
+
 // Hanzo Cloud plans.
 app.get("/v1/pricing/cloud", (_req, res) => {
   const data = loadPricing();
@@ -257,9 +267,11 @@ app.get("/v1/pricing/cloud/storage", (_req, res) => {
 });
 
 // Provider breakdown.
-// /v1/pricing/datastore — managed datastore tiers + usage rates.
+// /v1/pricing/datastore — managed datastore tiers + usage rates. Prefer the
+// commerce-sourced copy from the last sync (data.datastore); fall back to the
+// hardcoded datastore.json so it serves even before the first sync completes.
 app.get("/v1/pricing/datastore", (_req, res) => {
-  const data = loadDatastore();
+  const data = loadPricing()?.datastore || loadDatastore();
   if (!data?.tiers?.length) {
     return res.status(503).json({ error: "Datastore pricing not yet available" });
   }
