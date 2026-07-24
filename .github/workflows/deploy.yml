@@ -1,57 +1,16 @@
 name: Docker
 
+# The canonical deploy pipeline is native: .hanzo/workflows/deploy.yml
+# (Hanzo Git push -> in-cluster act_runner -> BuildKit -> ghcr.io ->
+#  kubectl patch app -> operator reconcile -> hanzocd).
+# GitHub is a mirror. This workflow no longer builds or publishes anything.
+
 on:
-  push:
-    branches: [main]
-    tags: ['v*']
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
-# Caller permissions are a CEILING for the reusable workflow. Without
-# id-token: write at this top level the dispatch dies as startup_failure.
-permissions:
-  contents: read
-  id-token: write
-  packages: write
-
 jobs:
-  validate:
-    if: github.event_name == 'pull_request'
-    runs-on: hanzo-build-linux-amd64
+  notice:
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-      - run: npm ci
-      - name: Validate startup
-        run: timeout 5 node src/server.mjs || true
-        env:
-          PORT: 8080
-
-  docker:
-    if: github.event_name != 'pull_request'
-    uses: hanzoai/.github/.github/workflows/docker-build.yml@main
-    with:
-      image: ghcr.io/hanzoai/pricing
-      # amd64 only: prod (do-sfo3-hanzo-k8s) is amd64, and pricing is a Node
-      # marketing service with no arm64 consumer. The arm64 leg targeted spark
-      # (Ampere bare metal arcd), which queues indefinitely when spark is not
-      # advertising the arm64 label — that stalled the multi-arch manifest and
-      # blocked every pricing release. Build the one arch prod actually runs.
-      #
-      # amd64 override: the reusable's runner-amd64 default is the canonical
-      # [self-hosted, linux, amd64] triplet, which matches the OFFLINE physical
-      # 'evo' host — jobs queue forever. The DOKS ARC scale-set advertises ONLY
-      # its set-name, so override per-caller (never edit the shared reusable's
-      # default — org-wide blast radius).
-      runner-amd64: '["hanzo-build-linux-amd64"]'
-      platforms: linux/amd64
-      # No pre-build: plans data is the @hanzo/plans npm dep (pulled by
-      # `npm ci` in the Dockerfile) — one source. The Dockerfile does NOT
-      # `COPY plans`; it COPYs the committed plans-extra. The old
-      # `scripts/fetch-plans.sh` hook was removed in the plans-decomplect
-      # and the script no longer exists, so invoking it hard-failed the build.
-    secrets: inherit
+      - name: Native pipeline notice
+        run: echo "native pipeline is .hanzo/workflows/deploy.yml; GitHub is a mirror"
