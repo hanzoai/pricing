@@ -44,6 +44,80 @@ export const paasPlans = require('../plans-extra/paas.json')
 // should migrate to the zen5 ladder for chat/coder/reasoning, and the
 // zen3-* specialty SKUs (omni, vl, nano, guard) remain unchanged.
 export const zenCatalog = [
+  // ── Served SKUs (CLEAN names) ────────────────────────────────────────────
+  // These names match EXACTLY what the zen relay serves today
+  // (hanzoai/zen catalog.yaml → GET zen.zen.svc:8080/v1/models). buildZenModels
+  // grafts this description/features/tier onto the served SKU by name match, so
+  // the name MUST be the clean served id (zen-image, not zen3-image) or the
+  // model renders with an auto-title and empty description. The zen3-* entries
+  // further below are retired-generation metadata kept for reference; they no
+  // longer match anything the relay serves.
+  {
+    name: "zen-vl",
+    fullName: "Zen VL — Vision-Language",
+    description: "Reads images and reasons over them — visual Q&A, document and chart understanding, grounded captioning.",
+    features: ["128K context", "Vision + Language"],
+    tier: "pro",
+    context: 128000,
+  },
+  {
+    name: "zen-embedding",
+    fullName: "Zen Embedding",
+    description: "Dense text embeddings for semantic search, retrieval, and clustering.",
+    features: ["8K context", "Embeddings"],
+    tier: "starter",
+    context: 8192,
+  },
+  {
+    name: "zen-rerank",
+    fullName: "Zen Rerank",
+    description: "Cross-encoder reranker — scores (query, document) pairs to reorder retrieval results.",
+    features: ["Reranking", "Retrieval"],
+    tier: "starter",
+  },
+  {
+    name: "zen-guard",
+    fullName: "Zen Guard — Content Safety",
+    description: "Safety classifier for moderation and guardrails across a broad category and language set.",
+    features: ["128K context", "Safety classifier"],
+    tier: "starter",
+    context: 128000,
+  },
+  {
+    name: "zen-image",
+    fullName: "Zen Image",
+    description: "Text-to-image generation.",
+    features: ["Text → Image"],
+    tier: "pro",
+  },
+  {
+    name: "zen-video",
+    fullName: "Zen Video",
+    description: "Text-to-video — generates short clips from a prompt (async).",
+    features: ["Text → Video", "Async"],
+    tier: "pro max",
+  },
+  {
+    name: "zen-voice",
+    fullName: "Zen Voice",
+    description: "Text-to-speech — natural voice synthesis.",
+    features: ["Text → Speech"],
+    tier: "pro",
+  },
+  {
+    name: "zen-music",
+    fullName: "Zen Music",
+    description: "Text-to-music generation.",
+    features: ["Text → Music"],
+    tier: "pro",
+  },
+  {
+    name: "zen-foley",
+    fullName: "Zen Foley",
+    description: "Text-to-sound-effects — generates Foley and ambient audio from a prompt.",
+    features: ["Text → Sound FX"],
+    tier: "pro",
+  },
   // Zen3 Generation — Chat
   {
     name: "zen3-omni",
