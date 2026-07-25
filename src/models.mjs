@@ -738,13 +738,19 @@ export const cloudPlans = [
 
 // ── Hanzo Cloud — Block Storage ───────────────────────────────────
 export const blockStoragePricing = {
-  pricePerGBMonthly: 0.08,  // $/GB/month
+  pricePerGBMonthly: 0.08,  // $/GB/month — customer-facing, UNCHANGED
   minSizeGB: 1,
   maxSizeGB: 16384,
-  // Internal cost basis (not exposed to API)
+  // Internal cost basis + backend routing (never exposed to API).
+  // Block storage provisions on the PROFITABLE backend by default: tier1 costs
+  // $0.048/GB (40% margin at the $0.08 price); tier2 costs $0.10/GB and is a
+  // LOSS at $0.08 (−25%), so it is NEVER the default — reserve tier2 for
+  // separately-priced premium volumes only. defaultBackend pins the choice so a
+  // provisioner can never silently route a $0.08 volume onto the loss-making tier.
   _internalCosts: {
-    tier1: { costPerGBMonthly: 0.048 },  // primary backend
-    tier2: { costPerGBMonthly: 0.10 },   // premium backend
+    defaultBackend: "tier1",             // margin-positive at $0.08 — the only default
+    tier1: { costPerGBMonthly: 0.048 },  // primary backend — profitable
+    tier2: { costPerGBMonthly: 0.10 },   // premium backend — LOSS at $0.08, opt-in only
   },
 };
 
@@ -910,9 +916,17 @@ export const doFallbackPrices = {
   "c-4vcpu-8gb":   { vcpus: 4,  memoryMB: 8192,  diskGB: 50,  priceMonthly: 80,  priceHourly: 0.11905 },
 };
 
-// GPU tiers (H100s not on DO standard API — kept static).
+// GPU tiers. H100s aren't on DO's standard API, so the wholesale hourly cost is
+// pinned here — but the customer price DERIVES from the ONE canonical GPU markup
+// (visor service/pricing.go `resellMarkupGPU`, ×1.25 over wholesale), never an
+// independent hardcoded number. The prior static prices ($3.48/$6.96/$13.92)
+// were the near-cost wholesale and billed at near-zero margin; ×1.25 restores the
+// canonical GPU margin. This is the offline fallback only — when commerce is
+// reachable, GPU pricing comes from that single source (sync.mjs fetchCommerceInfra).
+const GPU_MARKUP = 1.25; // canonical: visor resellMarkupGPU (service/pricing.go)
+const gpuPrice = (wholesaleHourly) => Math.round(wholesaleHourly * GPU_MARKUP * 1e5) / 1e5;
 export const gpuTiers = [
-  { name: "GPU Standard", gpu: "1x H100", vram: "80 GB", price: 3.48 },
-  { name: "GPU Pro", gpu: "2x H100", vram: "160 GB", price: 6.96 },
-  { name: "GPU Ultra", gpu: "4x H100", vram: "320 GB", price: 13.92 },
+  { name: "GPU Standard", gpu: "1x H100", vram: "80 GB", price: gpuPrice(3.48) },
+  { name: "GPU Pro", gpu: "2x H100", vram: "160 GB", price: gpuPrice(6.96) },
+  { name: "GPU Ultra", gpu: "4x H100", vram: "320 GB", price: gpuPrice(13.92) },
 ];

@@ -134,7 +134,13 @@ const ZEN_KEY = process.env.ZEN_API_KEY || "";
 // DigitalOcean API for real droplet pricing.
 const DO_API = "https://api.digitalocean.com/v2/sizes";
 const DO_TOKEN = process.env.DO_API_TOKEN || "";
-const COMPUTE_MARKUP_MONTHLY = parseFloat(process.env.COMPUTE_MARKUP_MONTHLY || "1.0");
+// Compute resale markup. The ONE canonical knob is visor's HanzoPrice
+// (service/pricing.go: base ×1.40 over the DigitalOcean list price; GPU ×1.25).
+// This mirrors that base multiplier so the pricing catalog and the visor /v1
+// resell surface never diverge. The prior flat additive markup (+$1/mo) billed
+// compute at near-zero margin — a $48/mo droplet sold for $49 (2%) — so it is
+// retired in favour of the canonical multiplier.
+const COMPUTE_MARKUP = parseFloat(process.env.COMPUTE_MARKUP || "1.40");
 
 /**
  * Round pricing nicely:
@@ -775,7 +781,8 @@ export async function sync() {
   // 3. Fetch DO droplet pricing.
   const doPricing = await fetchDOPricing();
 
-  // Build compute tiers with markup.
+  // Build compute tiers with the canonical resale markup (base ×1.40 over the DO
+  // list price — visor service/pricing.go HanzoPrice, the single source of truth).
   //
   // Which supplier serves a tier, what they charge us, and what we add on top are
   // internal facts: they ride under `_internal`, the one key every public view
@@ -786,16 +793,16 @@ export async function sync() {
     _internal: {
       provider: "digitalocean",
       region: "sfo3",
-      markupMonthly: COMPUTE_MARKUP_MONTHLY,
+      markup: COMPUTE_MARKUP,
     },
     tiers: Object.entries(doPricing).map(([slug, info]) => ({
       slug,
       vcpus: info.vcpus,
       memoryMB: info.memoryMB,
       diskGB: info.diskGB,
-      priceMonthly: roundPrice(info.priceMonthly + COMPUTE_MARKUP_MONTHLY),
-      priceHourly: roundPrice((info.priceMonthly + COMPUTE_MARKUP_MONTHLY) / 720),
-      centsPerHour: Math.ceil(((info.priceMonthly + COMPUTE_MARKUP_MONTHLY) / 720) * 100),
+      priceMonthly: roundPrice(info.priceMonthly * COMPUTE_MARKUP),
+      priceHourly: roundPrice((info.priceMonthly * COMPUTE_MARKUP) / 720),
+      centsPerHour: Math.ceil(((info.priceMonthly * COMPUTE_MARKUP) / 720) * 100),
       _internal: {
         basePriceMonthly: info.priceMonthly,
         basePriceHourly: info.priceHourly,
@@ -803,7 +810,7 @@ export async function sync() {
     })),
     presets: computePresets.map((p) => {
       const info = doPricing[p.slug] || doFallbackPrices[p.slug];
-      const monthly = info.priceMonthly + COMPUTE_MARKUP_MONTHLY;
+      const monthly = info.priceMonthly * COMPUTE_MARKUP;
       return {
         ...p,
         vcpus: info.vcpus,
