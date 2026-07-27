@@ -38,7 +38,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import express from "express";
-import { sync } from "./sync.mjs";
+import { sync, hanzoModelView } from "./sync.mjs";
 import { publicView } from "./view.mjs";
 import {
   subscriptionPlans, blockchainPlans, pricingPolicy,
@@ -146,7 +146,7 @@ app.get("/v1/pricing/models", (_req, res) => {
     return res.status(503).json({ error: "Pricing data not yet available" });
   }
   const models = [
-    ...data.hanzoModels.map((m) => ({ ...m, provider: "Hanzo", category: "zen" })),
+    ...data.hanzoModels.map(hanzoModelView),
     ...data.thirdPartyModels.map((m) => ({ ...m, category: m.featured ? "featured" : "third-party" })),
   ];
   res.json({ updated: data.updated, total: models.length, models });
@@ -333,8 +333,7 @@ app.get("/v1/models", (_req, res) => {
     id: m.id || m.name,
     object: "model",
     owned_by: "hanzo",
-    ...m,
-    provider: "Hanzo",
+    ...hanzoModelView(m),
   }));
   const thirdParty = data.thirdPartyModels.map((m) => ({
     id: m.id || m.name,

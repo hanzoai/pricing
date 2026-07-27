@@ -167,36 +167,96 @@ function toMTok(perTokenStr, markup) {
   return roundPrice(perToken * 1_000_000 * markup);
 }
 
+// BRANDS holds only the vendor names that CANNOT be derived from their slug:
+// acronyms and camelCase (xAI, NVIDIA, OpenAI), a vendor whose org slug names a
+// PRODUCT rather than the company (meta-llama is Meta, ibm-granite is IBM), and a
+// vendor whose slug is not its name at all (z-ai is Zhipu).
+//
+// It is deliberately NOT a roster of every vendor. Every slug absent from it still
+// renders as a presentable name via vendorName() below, so a vendor we have never
+// seen arrives correctly named with no edit here. The previous map WAS the roster —
+// its `names[slug] || slug` fallback leaked raw slugs (ai21, anthracite-org,
+// bytedance-seed, ~anthropic) into the public catalog for every vendor nobody had
+// hand-added yet, which is the same rot as a hardcoded model list.
+const BRANDS = {
+  ai21: "AI21",
+  aisingapore: "AI Singapore",
+  allenai: "Allen AI",
+  "arcee-ai": "Arcee",
+  bytedance: "ByteDance",
+  "bytedance-seed": "ByteDance",
+  coherelabs: "Cohere",
+  "deepreinforce-ai": "DeepReinforce",
+  deepcogito: "DeepCogito",
+  deepseek: "DeepSeek",
+  "deepseek-ai": "DeepSeek",
+  "ibm-granite": "IBM",
+  inclusionai: "InclusionAI",
+  "meta-llama": "Meta",
+  minimax: "MiniMax",
+  mistralai: "Mistral",
+  moonshotai: "Moonshot",
+  nousresearch: "Nous Research",
+  nvidia: "NVIDIA",
+  openai: "OpenAI",
+  openrouter: "OpenRouter",
+  rekaai: "Reka",
+  sao10k: "Sao10K",
+  stepfun: "StepFun",
+  thedrummer: "TheDrummer",
+  thinkingmachines: "Thinking Machines",
+  undi95: "Undi95",
+  "x-ai": "xAI",
+  "z-ai": "Zhipu",
+  "zai-org": "Zhipu",
+};
+
+// Registry artifacts — part of an org's SLUG but never part of its name, because a
+// registry needed the handle to be unique. "anthracite-org" is Anthracite.
+//
+// "ai" and "labs" are deliberately NOT here: Swiss AI, Liquid AI and Arcee AI are
+// what those companies are actually called, so dropping the token would rename the
+// vendor rather than tidy it. TOKENS below just renders them correctly.
+const SUFFIXES = new Set(["org", "inc"]);
+
+// Tokens whose correct rendering is not a capitalized first letter.
+const TOKENS = { ai: "AI", agi: "AGI", ml: "ML", hq: "HQ" };
+
 /**
- * Derive provider name from OpenRouter model ID.
+ * The ONE vendor namer. Turns any catalog id into the plain name of the company
+ * that MADE the model — "Meta", never "Meta Llama"; the vendor, never the product.
+ *
+ * Handles every id dialect in the catalog with one rule, because they differ only
+ * in what precedes the org slug:
+ *   "meta-llama/llama-4-scout"          -> Meta      (OpenRouter)
+ *   "~anthropic/claude-opus-latest"      -> Anthropic (OpenRouter floating alias)
+ *   "huggingface/CohereLabs/aya-vision"  -> Cohere    (HuggingFace router)
+ *   "openrouter/auto"                    -> OpenRouter
+ *
+ * An unknown slug is DERIVED rather than passed through raw, so the catalog never
+ * shows a machine identifier to a human and a new vendor needs no code change.
  */
-function providerFromId(id) {
-  const slug = id.split("/")[0];
-  const names = {
-    anthropic: "Anthropic",
-    openai: "OpenAI",
-    google: "Google",
-    "meta-llama": "Meta",
-    deepseek: "DeepSeek",
-    qwen: "Qwen",
-    mistralai: "Mistral",
-    cohere: "Cohere",
-    "x-ai": "xAI",
-    nvidia: "NVIDIA",
-    amazon: "Amazon",
-    perplexity: "Perplexity",
-    minimax: "MiniMax",
-    moonshotai: "Moonshot",
-    "z-ai": "Zhipu",
-    "arcee-ai": "Arcee AI",
-    baidu: "Baidu",
-    liquid: "Liquid AI",
-    allenai: "Allen AI",
-    nousresearch: "Nous Research",
-    stepfun: "StepFun",
-    upstage: "Upstage",
-  };
-  return names[slug] || slug;
+export function vendorName(id) {
+  let slug = String(id || "").trim();
+  if (!slug) return "";
+  // HuggingFace router ids carry the HOST first; the vendor is the org after it.
+  if (slug.toLowerCase().startsWith("huggingface/")) slug = slug.slice("huggingface/".length);
+  // "~vendor/model-latest" is OpenRouter's floating-alias namespace. The tilde is
+  // routing syntax, not part of the vendor — without stripping it, Anthropic's
+  // always-current SKUs group under a separate "~anthropic" vendor.
+  slug = slug.replace(/^~/, "").split("/")[0].trim();
+  if (!slug) return "";
+
+  const key = slug.toLowerCase();
+  if (BRANDS[key]) return BRANDS[key];
+
+  // Derive: drop a registry artifact, then render each token.
+  const words = key.split(/[-_.]+/).filter(Boolean);
+  while (words.length > 1 && SUFFIXES.has(words[words.length - 1])) words.pop();
+  const derived = words
+    .map((w) => TOKENS[w] || w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+  return derived || slug;
 }
 
 /**
@@ -258,6 +318,10 @@ export function buildZenModels(zenModels, metaCatalog = []) {
     const mode = zm.mode || "";
     const entry = {
       name: zm.id,
+      // Zen is OURS: its own family, grouped as itself and never as a vendor's
+      // product line. `family` is what a surface groups by; it is set here, at the
+      // one place a Zen SKU is built, so no consumer has to know a name prefix.
+      family: "zen",
       // The open Zen family is Zen LM (open weights, co-designed with Zoo Labs
       // Foundation) — public owned_by "zenlm", not "hanzo".
       owned_by: "zenlm",
@@ -366,7 +430,10 @@ function processHuggingFaceModel(hfModel) {
   return {
     id: `huggingface/${hfModel.id}`,
     name: hfDisplayName(hfModel.id),
-    provider: "HuggingFace",
+    // The vendor is who MADE the model, not who hosts the inference. HuggingFace is
+    // the host and says so in `features`; labelling all 60 "HuggingFace" hid Cohere,
+    // DeepSeek, Qwen and Meta behind a serving platform.
+    provider: vendorName(hfModel.id),
     contextWindow: null,
     features: ["HuggingFace Serverless Inference", "Free tier"],
     isFree: true,
@@ -422,13 +489,35 @@ function doAiDisplayName(id) {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+// do-ai specialty ids carry no org prefix, so the vendor is read from the id's
+// leading token where the id names its maker. These are open models we HOST, not
+// models we made: labelling stable-diffusion or gpt-image "Hanzo" claimed someone
+// else's work as ours, which is the same defect as "Meta Llama" pointed the other
+// way. An id that names no maker (router:*) keeps "Hanzo" — we do serve those.
+const DO_AI_VENDORS = [
+  ["openai-", "OpenAI"],
+  ["qwen", "Qwen"],
+  ["stable-diffusion", "Stability AI"],
+  ["bge-", "BAAI"],
+  ["gte-", "Alibaba"],
+  ["wan2", "Alibaba"],
+  ["e5-", "Microsoft"],
+];
+
+function doAiVendor(id) {
+  const k = String(id || "").toLowerCase();
+  for (const [prefix, vendor] of DO_AI_VENDORS) if (k.startsWith(prefix)) return vendor;
+  return "Hanzo";
+}
+
 /**
- * Process a do-ai utility model into a first-party (Hanzo-hosted) catalog entry,
- * shaped like a zenCatalog entry so server.mjs renders it as owned_by:"hanzo".
+ * Process a do-ai utility model into a Hanzo-HOSTED catalog entry, shaped like a
+ * zenCatalog entry. It carries no `family`: hosting a model does not make it ours.
  */
 function processDoAiModel(m, k) {
   const entry = {
     name: m.id,
+    provider: doAiVendor(m.id),
     fullName: doAiDisplayName(m.id),
     description: `${k.feature} — hosted by Hanzo.`,
     features: [k.feature, formatContext(m.context_length)].filter(Boolean),
@@ -489,7 +578,7 @@ function processOpenRouterModel(orModel, markup) {
   return {
     id: orModel.id,
     name: orModel.name || orModel.id,
-    provider: providerFromId(orModel.id),
+    provider: vendorName(orModel.id),
     contextWindow: orModel.context_length || null,
     features,
     isFree,
@@ -710,7 +799,9 @@ export async function sync() {
   // 1c. Enso — Hanzo's proprietary frontier family, generally available (owned_by
   // "hanzo"). A small fixed-price lineup (no live gateway discovery); the 3 SKUs
   // carry their own owned_by + retail pricing (see ensoCatalog).
-  for (const em of ensoCatalog) pricedHanzo.push({ ...em });
+  // Enso is OURS and is its OWN family, separate from Zen — never folded in with it
+  // and never described in terms of an upstream model.
+  for (const em of ensoCatalog) pricedHanzo.push({ ...em, family: "enso" });
   const ensoModelCount = ensoCatalog.length;
 
   // 2. Fetch ALL third-party models from OpenRouter (dynamic detection).
@@ -925,4 +1016,24 @@ if (process.argv[1] && process.argv[1].endsWith("sync.mjs")) {
       console.error("[sync] FATAL:", err.message);
       process.exit(1);
     });
+}
+
+/**
+ * The ONE public view of a model WE serve (Zen, Enso, and the open models we host).
+ *
+ * `provider` is the plain vendor name a surface groups by; `family` marks the two
+ * families that are OURS so they can lead a list without any consumer hardcoding a
+ * name prefix. Both endpoints project through this, so /v1/models and
+ * /v1/pricing/models can never disagree about who made a model.
+ *
+ * It used to be `{...m, provider: "Hanzo", category: "zen"}` — one label stamped
+ * over Zen, Enso and 18 hosted open models alike, which both hid our two families
+ * inside a single bucket and claimed Stability's and OpenAI's models as ours.
+ */
+export function hanzoModelView(m) {
+  return {
+    ...m,
+    provider: m.family === "zen" ? "Zen" : m.family === "enso" ? "Enso" : m.provider || "Hanzo",
+    category: m.family || m.category || "specialty",
+  };
 }
