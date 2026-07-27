@@ -1,6 +1,6 @@
 {
   "name": "@hanzo/pricing",
-  "version": "1.1.0",
+  "version": "1.4.5",
   "packageManager": "pnpm@11.17.0",
   "type": "module",
   "private": true,
@@ -8,10 +8,10 @@
     "start": "node src/server.mjs",
     "sync": "node src/sync.mjs",
     "dev": "node --watch src/server.mjs",
-    "test": "node test/bundle.test.mjs"
+    "test": "node --test test/*.test.mjs"
   },
   "dependencies": {
-    "@hanzo/plans": "^1.1.1",
+    "@hanzo/plans": "1.4.1",
     "express": "^4.21.0"
   }
 }

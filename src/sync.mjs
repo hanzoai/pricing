@@ -15,6 +15,7 @@ import { homedir } from "node:os";
 import { fileURLToPath } from "node:url";
 import {
   zenCatalog,
+  ensoCatalog,
   zenFamilies,
   featuredModelIds,
   toolPricing,
@@ -32,6 +33,25 @@ import {
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(__dirname, "..", "data");
 const DATA_FILE = join(DATA_DIR, "pricing.json");
+const DATASTORE_FILE = join(__dirname, "..", "datastore.json");
+
+// ── Commerce catalog — the product/pricing source of truth ──────────────
+// The infra tiers (cloud VM plans, GPU tiers, managed-datastore tiers) live in
+// commerce's catalog and are READ from GET /v1/commerce/catalog?brand=infra, so
+// there is exactly ONE place a price or spec is edited. If commerce is
+// unreachable we FALL BACK to the hardcoded models.mjs/datastore.json copy so
+// pricing never goes empty — the cutover is safe and reversible. In-cluster set
+// COMMERCE_CATALOG_URL=http://commerce.hanzo.svc:8001/v1/commerce/catalog.
+const COMMERCE_CATALOG_URL =
+  process.env.COMMERCE_CATALOG_URL || "https://api.hanzo.ai/v1/commerce/catalog";
+
+// loadDatastoreFallback reads the hardcoded managed-datastore price list. It is
+// the offline copy behind the commerce read: the static envelope
+// (schema/trial/discounts/included/endpoints) always comes from here, and the
+// whole thing serves when commerce is unreachable.
+function loadDatastoreFallback() {
+  return JSON.parse(readFileSync(DATASTORE_FILE, "utf-8"));
+}
 
 /**
  * fetch() with an AbortController timeout.
@@ -104,12 +124,12 @@ const DO_AI_KINDS = [
   { kind: "router",    endpoint: "/v1/chat/completions",   match: (s) => s.startsWith("router:"),                                       pricing: null, feature: "Automatic model routing" },
 ];
 
-// LLM gateway internal endpoint — single source of truth for Zen pricing.
-// The gateway is a LiteLLM proxy; /model/info returns per-model cost data.
-const ZEN_GATEWAY_URL =
-  process.env.ZEN_GATEWAY_URL ||
-  "http://gateway.hanzo.svc:8080";
-const ZEN_MASTER_KEY = process.env.ZEN_MASTER_KEY || "";
+// zen serves the Zen family and owns its prices: GET /v1/models carries `pricing`
+// (the in-window rate) and `pricing_tiers` (what each context tier bills), as exact
+// decimal strings. It is the same service `ai` discovers, under the same env name —
+// a price has one home, and admin.hanzo.ai edits it there at runtime.
+const ZEN_URL = process.env.ZEN_URL || "http://zen.zen.svc.cluster.local:8080";
+const ZEN_KEY = process.env.ZEN_API_KEY || "";
 
 // DigitalOcean API for real droplet pricing.
 const DO_API = "https://api.digitalocean.com/v2/sizes";
@@ -179,102 +199,89 @@ function providerFromId(id) {
   return names[slug] || slug;
 }
 
-// ── Static fallback pricing ($/MTok) for Zen token-based models ──────
-// Used when the LLM gateway /model/info is unreachable.
-// Prices aligned with competitive LLM market rates by tier.
-const ZEN_FALLBACK_PRICING = {
-  // Zen4 Generation
-  "zen4":              { input: 1.50,  output: 4.50,  cacheRead: 0.38,  cacheWrite: 1.88 },
-  "zen4-ultra":        { input: 2.00,  output: 6.00,  cacheRead: 0.50,  cacheWrite: 2.50 },
-  "zen4-pro":          { input: 0.80,  output: 2.40,  cacheRead: 0.20,  cacheWrite: 1.00 },
-  "zen4-max":          { input: 3.00,  output: 12.00, cacheRead: 0.75,  cacheWrite: 3.75 },
-  "zen4.1":            { input: 2.00,  output: 8.00,  cacheRead: 0.50,  cacheWrite: 2.50 },
-  "zen4-mini":         { input: 0.10,  output: 0.40,  cacheRead: 0.03,  cacheWrite: 0.13 },
-  "zen4-thinking":     { input: 1.50,  output: 6.00,  cacheRead: 0.38,  cacheWrite: 1.88 },
-  // Zen4 Code
-  "zen4-coder":        { input: 1.00,  output: 3.00,  cacheRead: 0.25,  cacheWrite: 1.25 },
-  "zen4-coder-pro":    { input: 2.00,  output: 6.00,  cacheRead: 0.50,  cacheWrite: 2.50 },
-  "zen4-coder-flash":  { input: 0.30,  output: 0.90,  cacheRead: 0.08,  cacheWrite: 0.38 },
-  // Zen3 Chat
-  "zen3-omni":         { input: 1.50,  output: 4.50,  cacheRead: null,  cacheWrite: null },
-  "zen3-vl":           { input: 0.60,  output: 1.80,  cacheRead: null,  cacheWrite: null },
-  "zen3-nano":         { input: 0.05,  output: 0.15,  cacheRead: null,  cacheWrite: null },
-  "zen3-guard":        { input: 0.10,  output: 0.10,  cacheRead: null,  cacheWrite: null },
-  // Zen3 Embedding (per MTok, not per image/minute)
-  "zen3-embedding":          { input: 0.10,  output: null, cacheRead: null, cacheWrite: null },
-  "zen3-embedding-medium":   { input: 0.05,  output: null, cacheRead: null, cacheWrite: null },
-  "zen3-embedding-small":    { input: 0.02,  output: null, cacheRead: null, cacheWrite: null },
-  "zen3-embedding-openai":   { input: 0.10,  output: null, cacheRead: null, cacheWrite: null },
-  // Zen3 Reranker (per MTok)
-  "zen3-reranker":           { input: 0.10,  output: null, cacheRead: null, cacheWrite: null },
-  "zen3-reranker-medium":    { input: 0.05,  output: null, cacheRead: null, cacheWrite: null },
-  "zen3-reranker-small":     { input: 0.02,  output: null, cacheRead: null, cacheWrite: null },
-};
+/**
+ * Read the whole Zen family from zen — the service that serves those models and
+ * bills for them, so the list it returns IS the family and the price it quotes IS
+ * the price we charge. zen's /v1/models carries each SKU's id, context window,
+ * mode, pricing (exact decimal strings), and vision capability.
+ *
+ * The list is authoritative: zen is the one place a Zen SKU is born (its
+ * catalog.yaml), so a model exists here iff zen serves it. There is no local
+ * hand-maintained roster to drift — the old one listed phantom SKUs (zen5-nano-*,
+ * zen5-embedding-0.6B) zen never served, whose price lookups always missed and
+ * rendered null. If zen cannot be reached we surface no Zen model this cycle
+ * rather than a stale fiction.
+ */
+async function fetchZenFamily() {
+  const headers = ZEN_KEY ? { Authorization: `Bearer ${ZEN_KEY}` } : {};
+  const url = `${ZEN_URL}/v1/models`;
+  console.log(`[sync] Fetching Zen family from ${url}...`);
+
+  const res = await fetchWithTimeout(url, { headers }, 15_000);
+  if (!res.ok) {
+    throw new Error(`zen /v1/models returned ${res.status}`);
+  }
+  const models = (await res.json()).data || [];
+  if (models.length === 0) {
+    throw new Error("zen /v1/models carried no model");
+  }
+  console.log(`[sync] Zen serves ${models.length} models.`);
+  return models;
+}
+
+// The per-unit label for a media SKU's price (zen prices these per call/image/clip).
+const MEDIA_UNIT = { image: "image", audio: "call", video: "clip", rerank: "call" };
+
+// Title-case a zen id into a display name when no branded copy exists in the
+// catalog metadata — "zen5-flash" → "Zen5 Flash".
+function brandName(id) {
+  return id.split(/[-_]/).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+}
+
+const numOrNull = (v) => (v == null || v === "" ? null : Number(v));
 
 /**
- * Fetch Zen model pricing from LLM gateway.
- * Tries /model/info (LiteLLM) first, then /v1/models.
- * Falls back to static pricing if gateway is unreachable.
- * Returns a Map of model_name → { input, output, cacheRead, cacheWrite } in $/MTok.
+ * The Zen family as this catalog renders it: every SKU zen serves, at zen's price,
+ * with branded copy grafted on where the catalog has it. Pure — the whole reason
+ * it is separable from the sync's IO — so it is unit-testable against a captured
+ * zen /v1/models body.
+ *
+ * `zenModels` is zen's /v1/models `data` array; `metaCatalog` is the branded-copy
+ * roster (fullName/description/features/tier/specs) keyed by SKU name. Family
+ * membership and pricing come from zen; metaCatalog is presentation only, so an
+ * entry that names a SKU zen does not serve simply never matches.
  */
-async function fetchZenPricing() {
-  const headers = {};
-  if (ZEN_MASTER_KEY) {
-    headers["Authorization"] = `Bearer ${ZEN_MASTER_KEY}`;
-  }
-
-  // Try /model/info first (LiteLLM endpoint with full pricing data).
-  try {
-    const url = `${ZEN_GATEWAY_URL}/model/info`;
-    console.log(`[sync] Fetching Zen pricing from ${url}...`);
-    const res = await fetchWithTimeout(url, { headers }, 15_000);
-    if (res.ok) {
-      const body = await res.json();
-      const models = body.data || [];
-      const pricing = new Map();
-      for (const m of models) {
-        const name = m.model_name;
-        const info = m.model_info || {};
-        pricing.set(name, {
-          input: perTokenToMTok(info.input_cost_per_token),
-          output: perTokenToMTok(info.output_cost_per_token),
-          cacheRead: perTokenToMTok(info.input_cost_per_token_cache_read),
-          cacheWrite: perTokenToMTok(info.input_cost_per_token_cache_write),
-        });
-      }
-      if (pricing.size > 0) {
-        console.log(`[sync] Got live pricing for ${pricing.size} Zen models.`);
-        return pricing;
-      }
+export function buildZenModels(zenModels, metaCatalog = []) {
+  const meta = new Map(metaCatalog.map((m) => [normalizeModelName(m.name), m]));
+  return zenModels.map((zm) => {
+    const m = meta.get(normalizeModelName(zm.id)) || {};
+    const mode = zm.mode || "";
+    const entry = {
+      name: zm.id,
+      // The open Zen family is Zen LM (open weights, co-designed with Zoo Labs
+      // Foundation) — public owned_by "zenlm", not "hanzo".
+      owned_by: "zenlm",
+      fullName: m.fullName || brandName(zm.id),
+      description: m.description || "",
+      features: m.features || [],
+      tier: m.tier || "",
+      context: zm.context_window || m.context || null,
+      specs: m.specs,
+    };
+    if (zm.capabilities?.vision) entry.vision = true;
+    if (MEDIA_UNIT[mode]) {
+      entry.pricingUnit = MEDIA_UNIT[mode];
+      entry.pricing = { perUnit: numOrNull(zm.pricing?.input) };
     } else {
-      console.warn(`[sync] /model/info returned ${res.status} — trying /v1/models`);
+      entry.pricing = {
+        input: numOrNull(zm.pricing?.input),
+        output: numOrNull(zm.pricing?.output),
+        cacheRead: numOrNull(zm.pricing?.cache_read),
+        cacheWrite: null,
+      };
     }
-  } catch (err) {
-    console.warn(`[sync] /model/info failed: ${err.message} — trying /v1/models`);
-  }
-
-  // Try /v1/models (OpenAI-compatible, may not have pricing).
-  try {
-    const url = `${ZEN_GATEWAY_URL}/v1/models`;
-    console.log(`[sync] Fetching Zen models from ${url}...`);
-    const res = await fetchWithTimeout(url, { headers }, 15_000);
-    if (res.ok) {
-      const body = await res.json();
-      const models = body.data || [];
-      console.log(`[sync] Found ${models.length} models on gateway (no per-token pricing in /v1/models — using static fallback).`);
-      // /v1/models doesn't include pricing, so fall through to static
-    }
-  } catch (err) {
-    console.warn(`[sync] /v1/models failed: ${err.message}`);
-  }
-
-  // Fall back to static pricing.
-  console.log(`[sync] Using static fallback pricing for ${Object.keys(ZEN_FALLBACK_PRICING).length} Zen models.`);
-  const pricing = new Map();
-  for (const [name, prices] of Object.entries(ZEN_FALLBACK_PRICING)) {
-    pricing.set(name, { ...prices });
-  }
-  return pricing;
+    return entry;
+  });
 }
 
 /**
@@ -541,62 +548,142 @@ async function fetchDOPricing() {
 }
 
 /**
+ * Infra catalog rows of one category, ordered by the catalog `order` field.
+ */
+function pickInfra(catalog, category) {
+  return (catalog.products || [])
+    .filter((p) => p.category === category)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+}
+
+/**
+ * Map commerce `cloud` catalog rows back into the cloudPlans[] shape sync builds
+ * `data.cloud.plans` from — byte-for-byte the local models.mjs cloudPlans entry
+ * (id/name/description/vcpus/memoryGB/diskGB/cpuType/maxVMs/priceMonthly/features
+ * + optional freeTier/popular). The existing builder then derives priceHourly.
+ */
+function mapCommerceCloudPlans(catalog) {
+  return pickInfra(catalog, "cloud").map((p) => {
+    const m = p.metadata || {};
+    const plan = {
+      id: m.id,
+      name: p.name,
+      description: p.description,
+      vcpus: m.vcpus,
+      memoryGB: m.memoryGB,
+      diskGB: m.diskGB,
+      cpuType: m.cpuType,
+      maxVMs: m.maxVMs,
+      priceMonthly: m.priceMonthly,
+      features: m.features,
+    };
+    if (m.freeTier) plan.freeTier = m.freeTier;
+    if (m.popular) plan.popular = m.popular;
+    return plan;
+  });
+}
+
+/**
+ * Map commerce `gpu` catalog rows back into the gpuTiers[] shape (name/gpu/vram/
+ * price) sync exposes as `infrastructure.gpu`.
+ */
+function mapCommerceGpuTiers(catalog) {
+  return pickInfra(catalog, "gpu").map((p) => {
+    const m = p.metadata || {};
+    return { name: p.name, gpu: m.gpu, vram: m.vram, price: m.price };
+  });
+}
+
+/**
+ * Map commerce `datastore` catalog rows back into the datastore.json shape the
+ * /v1/pricing/datastore endpoint emits. Commerce owns the TIERS (prices/specs)
+ * and the usage RATES (carried on the tier metadata); the static envelope
+ * (schema/currency/unit/note/trial/discounts/included/endpoints) is product
+ * policy, not per-tier pricing, so it stays in the local datastore.json.
+ */
+function mapCommerceDatastore(catalog, fallback) {
+  const rows = pickInfra(catalog, "datastore");
+  const tiers = rows.map((p) => {
+    const m = p.metadata || {};
+    const tier = {
+      id: m.id,
+      name: p.name,
+      tagline: m.tagline,
+      replicas: m.replicas,
+      ramGiB: m.ramGiB,
+      vcpu: m.vcpu,
+      storageGB: m.storageGB ?? null,
+      priceMonthly: m.priceMonthly,
+      priceHourly: m.priceHourly,
+      billingGranularity: m.billingGranularity,
+      availabilityZones: m.availabilityZones,
+      storageLimit: m.storageLimit,
+    };
+    if (m.popular) tier.popular = m.popular;
+    tier.support = m.support;
+    tier.features = m.features;
+    if (m.contactSales) tier.contactSales = m.contactSales;
+    return tier;
+  });
+  const usage = rows[0]?.metadata?.usage || fallback.usage;
+  return { ...fallback, tiers, usage };
+}
+
+/**
+ * Fetch the infra tiers from commerce (the product/pricing SOT). Returns
+ * { cloud, gpu, datastore } mapped into the shapes the pricing endpoints emit,
+ * or null on any failure/timeout/empty so the caller falls back to the hardcoded
+ * copy. Never throws — pricing must never go empty because commerce is down.
+ */
+async function fetchCommerceInfra() {
+  const url = `${COMMERCE_CATALOG_URL}?brand=infra`;
+  try {
+    const res = await fetchWithTimeout(url, {}, 10_000);
+    if (!res.ok) {
+      console.warn(`[sync] commerce catalog ${url} returned ${res.status} — using hardcoded infra fallback`);
+      return null;
+    }
+    const body = await res.json();
+    if (!Array.isArray(body.products) || body.products.length === 0) {
+      console.warn("[sync] commerce catalog carried no infra products — using hardcoded fallback");
+      return null;
+    }
+    const cloud = mapCommerceCloudPlans(body);
+    const gpu = mapCommerceGpuTiers(body);
+    const datastore = mapCommerceDatastore(body, loadDatastoreFallback());
+    if (cloud.length === 0 || gpu.length === 0 || datastore.tiers.length === 0) {
+      console.warn("[sync] commerce catalog missing an infra section — using hardcoded fallback");
+      return null;
+    }
+    return { cloud, gpu, datastore };
+  } catch (err) {
+    console.warn(`[sync] commerce catalog fetch failed: ${err.message} — using hardcoded infra fallback`);
+    return null;
+  }
+}
+
+/**
  * Run the full sync: fetch from zen-gateway + OpenRouter + DO, write to disk.
  * Returns the pricing object.
  */
 export async function sync() {
   // 1. Fetch Zen pricing from gateway (graceful — never blocks sync).
-  let zenPricing;
+  let zenFamily;
   try {
-    zenPricing = await fetchZenPricing();
+    zenFamily = await fetchZenFamily();
   } catch (err) {
-    console.error(`[sync] Zen pricing fetch failed entirely: ${err.message} — using static fallback`);
-    zenPricing = new Map();
-    for (const [name, prices] of Object.entries(ZEN_FALLBACK_PRICING)) {
-      zenPricing.set(name, { ...prices });
-    }
+    console.error(`[sync] Zen family fetch failed: ${err.message} — no Zen models this cycle`);
+    zenFamily = [];
   }
 
-  // Build priced Zen models by merging catalog metadata with live pricing.
-  const pricedHanzo = [];
-  for (const model of zenCatalog) {
-    const prices = zenPricing.get(model.name);
-    const entry = {
-      name: model.name,
-      fullName: model.fullName,
-      description: model.description,
-      features: model.features,
-      tier: model.tier,
-      context: model.context || null,
-      specs: model.specs,
-    };
-
-    // Pass through optional metadata.
-    if (model.endpoint) entry.endpoint = model.endpoint;
-    if (model.contactSales) entry.contactSales = true;
-
-    if (model.contactSales) {
-      // Contact-sales models (e.g. zen5) — no pricing exposed.
-      entry.pricing = null;
-    } else if (model.staticPricing) {
-      // Non-token models (image, audio) use static per-unit pricing.
-      entry.pricingUnit = model.pricingUnit;
-      entry.pricing = { perUnit: model.staticPricing.perUnit };
-    } else {
-      // Token-based models: merge live gateway pricing.
-      entry.pricing = {
-        input: prices?.input ?? null,
-        output: prices?.output ?? null,
-        cacheRead: prices?.cacheRead ?? null,
-        cacheWrite: prices?.cacheWrite ?? null,
-      };
-      if (!prices) {
-        console.warn(`[sync] WARN: No pricing from zen-gateway for ${model.name}`);
-      }
-    }
-
-    pricedHanzo.push(entry);
-  }
+  // The catalog's branded copy (fullName/description/features/tier/specs), keyed by
+  // zen id, enriches the live list where we have it. It is presentation only — the
+  // family membership and pricing come from zen, so copy that names a phantom SKU
+  // simply never matches and is ignored.
+  // Build the Zen family from zen's live list: every SKU zen serves, at zen's price,
+  // branded owned_by "zenlm". buildZenModels is the ONE builder (also unit-tested), so
+  // the live path and the tests share it and branding can never drift between them.
+  const pricedHanzo = buildZenModels(zenFamily, zenCatalog);
 
   // Zen catalog size, captured before we append do-ai specialty models.
   const zenModelCount = pricedHanzo.length;
@@ -606,7 +693,7 @@ export async function sync() {
   // Zen catalog. do-ai chat models are excluded (Zen-branded + OpenRouter-mirrored).
   // Graceful: no key / unreachable => zero surfaced, sync continues.
   const doAiRaw = await fetchDoAiModels();
-  const zenNames = new Set(zenCatalog.map((m) => normalizeModelName(m.name)));
+  const zenNames = new Set(zenFamily.map((m) => normalizeModelName(m.id)));
   let doAiChatSkipped = 0;
   let doAiDupSkipped = 0;
   for (const m of doAiRaw) {
@@ -619,6 +706,12 @@ export async function sync() {
   if (doAiRaw.length > 0) {
     console.log(`[sync] do-ai: ${doAiModelCount} specialty models surfaced (${doAiChatSkipped} chat excluded, ${doAiDupSkipped} dup).`);
   }
+
+  // 1c. Enso — Hanzo's proprietary frontier family, generally available (owned_by
+  // "hanzo"). A small fixed-price lineup (no live gateway discovery); the 3 SKUs
+  // carry their own owned_by + retail pricing (see ensoCatalog).
+  for (const em of ensoCatalog) pricedHanzo.push({ ...em });
+  const ensoModelCount = ensoCatalog.length;
 
   // 2. Fetch ALL third-party models from OpenRouter (dynamic detection).
   const orModels = await fetchOpenRouterModels();
@@ -683,20 +776,30 @@ export async function sync() {
   const doPricing = await fetchDOPricing();
 
   // Build compute tiers with markup.
+  //
+  // Which supplier serves a tier, what they charge us, and what we add on top are
+  // internal facts: they ride under `_internal`, the one key every public view
+  // strips (see `publicView` in server.mjs). A customer sees the tier and its
+  // price — never our supplier, our cost, or our margin. The same rule the cloud
+  // plans below already follow ("customer-facing — no provider details").
   const compute = {
-    provider: "digitalocean",
-    region: "sfo3",
-    markupMonthly: COMPUTE_MARKUP_MONTHLY,
+    _internal: {
+      provider: "digitalocean",
+      region: "sfo3",
+      markupMonthly: COMPUTE_MARKUP_MONTHLY,
+    },
     tiers: Object.entries(doPricing).map(([slug, info]) => ({
       slug,
       vcpus: info.vcpus,
       memoryMB: info.memoryMB,
       diskGB: info.diskGB,
-      basePriceMonthly: info.priceMonthly,
-      basePriceHourly: info.priceHourly,
       priceMonthly: roundPrice(info.priceMonthly + COMPUTE_MARKUP_MONTHLY),
       priceHourly: roundPrice((info.priceMonthly + COMPUTE_MARKUP_MONTHLY) / 720),
       centsPerHour: Math.ceil(((info.priceMonthly + COMPUTE_MARKUP_MONTHLY) / 720) * 100),
+      _internal: {
+        basePriceMonthly: info.priceMonthly,
+        basePriceHourly: info.priceHourly,
+      },
     })),
     presets: computePresets.map((p) => {
       const info = doPricing[p.slug] || doFallbackPrices[p.slug];
@@ -724,9 +827,23 @@ export async function sync() {
     else providerCounts[m.provider].paid++;
   }
 
+  // 4b. Resolve the infra tiers (cloud VM plans, GPU tiers, datastore tiers)
+  // from commerce — the product/pricing source of truth — and fall back to the
+  // hardcoded models.mjs/datastore.json copy if commerce is unreachable, so
+  // pricing never goes empty. Only these three sections switch source; the live
+  // model aggregation (Zen/do-ai/OpenRouter/HF) is untouched.
+  const commerceInfra = await fetchCommerceInfra();
+  const infraSource = commerceInfra ? "commerce" : "fallback(models.mjs+datastore.json)";
+  const cloudPlansSource = commerceInfra ? commerceInfra.cloud : cloudPlans;
+  const gpuTiersSource = commerceInfra ? commerceInfra.gpu : gpuTiers;
+  const datastoreSource = commerceInfra ? commerceInfra.datastore : loadDatastoreFallback();
+  console.log(
+    `[sync] Infra tiers source: ${infraSource} (cloud:${cloudPlansSource.length} gpu:${gpuTiersSource.length} datastore:${datastoreSource.tiers.length})`
+  );
+
   // 5. Build Hanzo Cloud plans (customer-facing — no provider details).
   const cloud = {
-    plans: cloudPlans.map((plan) => {
+    plans: cloudPlansSource.map((plan) => {
       const hourly = Math.round((plan.priceMonthly / 720) * 10000) / 10000;
       // Strip internal fields before exposing
       const { freeTier, popular, ...rest } = plan;
@@ -755,6 +872,7 @@ export async function sync() {
       catalogMode: ENABLE_OPENROUTER ? "all-providers" : "do-first",
       zenModels: zenModelCount,
       doAiModels: doAiModelCount,
+      ensoModels: ensoModelCount,
       thirdPartyModels: thirdPartyModels.length,
       openRouterModels: allOpenRouter.length,
       huggingfaceModels: hfModels.length,
@@ -762,7 +880,7 @@ export async function sync() {
       featuredModels: featured.length,
       providers: Object.keys(providerCounts).length,
       totalModels: pricedHanzo.length + thirdPartyModels.length,
-      cloudPlans: cloudPlans.length,
+      cloudPlans: cloudPlansSource.length,
       cloudRegions: cloudRegions.length,
     },
     hanzoModels: pricedHanzo,
@@ -773,9 +891,12 @@ export async function sync() {
     tools: toolPricing,
     infrastructure: {
       compute,
-      gpu: gpuTiers,
+      gpu: gpuTiersSource,
     },
     cloud,
+    // Managed-datastore tiers + usage rates (from commerce, or the datastore.json
+    // fallback). Served by GET /v1/pricing/datastore.
+    datastore: datastoreSource,
   };
 
   // Ensure data directory exists.

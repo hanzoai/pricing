@@ -44,6 +44,80 @@ export const paasPlans = require('../plans-extra/paas.json')
 // should migrate to the zen5 ladder for chat/coder/reasoning, and the
 // zen3-* specialty SKUs (omni, vl, nano, guard) remain unchanged.
 export const zenCatalog = [
+  // ── Served SKUs (CLEAN names) ────────────────────────────────────────────
+  // These names match EXACTLY what the zen relay serves today
+  // (hanzoai/zen catalog.yaml → GET zen.zen.svc:8080/v1/models). buildZenModels
+  // grafts this description/features/tier onto the served SKU by name match, so
+  // the name MUST be the clean served id (zen-image, not zen3-image) or the
+  // model renders with an auto-title and empty description. The zen3-* entries
+  // further below are retired-generation metadata kept for reference; they no
+  // longer match anything the relay serves.
+  {
+    name: "zen-vl",
+    fullName: "Zen VL — Vision-Language",
+    description: "Reads images and reasons over them — visual Q&A, document and chart understanding, grounded captioning.",
+    features: ["128K context", "Vision + Language"],
+    tier: "pro",
+    context: 128000,
+  },
+  {
+    name: "zen-embedding",
+    fullName: "Zen Embedding",
+    description: "Dense text embeddings for semantic search, retrieval, and clustering.",
+    features: ["8K context", "Embeddings"],
+    tier: "starter",
+    context: 8192,
+  },
+  {
+    name: "zen-rerank",
+    fullName: "Zen Rerank",
+    description: "Cross-encoder reranker — scores (query, document) pairs to reorder retrieval results.",
+    features: ["Reranking", "Retrieval"],
+    tier: "starter",
+  },
+  {
+    name: "zen-guard",
+    fullName: "Zen Guard — Content Safety",
+    description: "Safety classifier for moderation and guardrails across a broad category and language set.",
+    features: ["128K context", "Safety classifier"],
+    tier: "starter",
+    context: 128000,
+  },
+  {
+    name: "zen-image",
+    fullName: "Zen Image",
+    description: "Text-to-image generation.",
+    features: ["Text → Image"],
+    tier: "pro",
+  },
+  {
+    name: "zen-video",
+    fullName: "Zen Video",
+    description: "Text-to-video — generates short clips from a prompt (async).",
+    features: ["Text → Video", "Async"],
+    tier: "pro max",
+  },
+  {
+    name: "zen-voice",
+    fullName: "Zen Voice",
+    description: "Text-to-speech — natural voice synthesis.",
+    features: ["Text → Speech"],
+    tier: "pro",
+  },
+  {
+    name: "zen-music",
+    fullName: "Zen Music",
+    description: "Text-to-music generation.",
+    features: ["Text → Music"],
+    tier: "pro",
+  },
+  {
+    name: "zen-foley",
+    fullName: "Zen Foley",
+    description: "Text-to-sound-effects — generates Foley and ambient audio from a prompt.",
+    features: ["Text → Sound FX"],
+    tier: "pro",
+  },
   // Zen3 Generation — Chat
   {
     name: "zen3-omni",
@@ -430,7 +504,53 @@ export const zenCatalog = [
 
 // ── Model families — groupings for catalog UI ──────────────────────────
 // Every frontend renders from this canonical list. No hardcoding elsewhere.
+// ── Enso — Hanzo's proprietary frontier family ──────────────────────
+// Enso is Hanzo's closed frontier family (unlike the open Zen family). It is
+// GENERALLY AVAILABLE (no waitlist). Full entries (metadata + retail pricing +
+// owned_by) since there is no live Enso pricing gateway wired here; prices mirror
+// the authoritative source (~/work/hanzo/enso/catalog.yaml). Upstreams are never
+// revealed — a caller only ever sees "Enso".
+export const ensoCatalog = [
+  {
+    name: "enso",
+    fullName: "Enso",
+    description: "Hanzo's proprietary frontier model — Opus-class reasoning by default with 1M-context overflow.",
+    features: ["1M context window", "Frontier reasoning"],
+    tier: "ultra max",
+    context: 1000000,
+    owned_by: "hanzo",
+    pricing: { input: 20, output: 60, cacheRead: null, cacheWrite: null },
+  },
+  {
+    name: "enso-flash",
+    fullName: "Enso Flash",
+    description: "Fast, economical Enso tier for high-volume, low-latency everyday work, with 1M-context overflow.",
+    features: ["1M context window", "Low latency"],
+    tier: "pro",
+    context: 1000000,
+    owned_by: "hanzo",
+    pricing: { input: 2, output: 6, cacheRead: null, cacheWrite: null },
+  },
+  {
+    name: "enso-ultra",
+    fullName: "Enso Ultra",
+    description: "Adaptive fan-out — probes a task-appropriate model, escalates to a top-K panel only when needed, then verifies-then-selects the best answer.",
+    features: ["200K context window", "Adaptive fan-out"],
+    tier: "ultra max",
+    context: 200000,
+    owned_by: "hanzo",
+    pricing: { input: 40, output: 120, cacheRead: null, cacheWrite: null },
+  },
+];
+
 export const zenFamilies = [
+  {
+    id: 'enso',
+    name: 'Enso',
+    description: "Hanzo's proprietary frontier family — flagship reasoning, a fast tier, and adaptive fan-out.",
+    icon: 'Sparkles',
+    models: ['enso', 'enso-flash', 'enso-ultra'],
+  },
   {
     id: 'zen5',
     name: 'Zen 5',

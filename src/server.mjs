@@ -10,6 +10,7 @@
 //   GET  /v1/pricing/featured           — featured third-party models only
 //   GET  /v1/pricing/compute            — DO-backed compute tiers with markup
 //   GET  /v1/pricing/compute/presets    — curated compute presets for LaunchPage
+//   GET  /v1/pricing/gpu                — GPU tiers (from commerce, fallback models.mjs)
 //   GET  /v1/pricing/cloud              — cloud VM resale plans (multi-provider)
 //   GET  /v1/pricing/cloud/plans        — cloud plans only (for pricing page)
 //   GET  /v1/pricing/cloud/regions      — available cloud regions
@@ -27,6 +28,7 @@
 //   GET  /v1/cloud                      — cloud VM plans + regions + storage
 //   GET  /v1/tools                      — tool pricing
 //   GET  /v1/gpu                        — GPU tier pricing
+//   GET  /v1/pricing/datastore          — managed datastore tiers + usage rates
 //   GET  /v1/pricing-policy             — transparent pricing policy
 //   GET  /v1/iam                        — IAM / identity plans
 //
@@ -37,6 +39,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import express from "express";
 import { sync } from "./sync.mjs";
+import { publicView } from "./view.mjs";
 import {
   subscriptionPlans, blockchainPlans, pricingPolicy,
   canonicalCloudPlans, canonicalGpuTiers, canonicalRegions,
@@ -46,6 +49,7 @@ import {
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_FILE = join(__dirname, "..", "data", "pricing.json");
+const DATASTORE_FILE = join(__dirname, "..", "datastore.json");
 
 const PORT = parseInt(process.env.PORT || "8080", 10);
 const API_KEY = process.env.PRICING_API_KEY || "";
@@ -77,6 +81,26 @@ function loadPricing() {
   return _cache;
 }
 
+// In-memory cache for the datastore price list.
+let _datastoreCache = null;
+
+/**
+ * Load datastore pricing from disk (cached).
+ */
+function loadDatastore() {
+  if (_datastoreCache) return _datastoreCache;
+  if (!existsSync(DATASTORE_FILE)) {
+    return null;
+  }
+  try {
+    _datastoreCache = JSON.parse(readFileSync(DATASTORE_FILE, "utf-8"));
+  } catch (err) {
+    console.error("[server] Failed to parse datastore pricing:", err.message);
+    return null;
+  }
+  return _datastoreCache;
+}
+
 const app = express();
 app.use(express.json());
 
@@ -106,18 +130,13 @@ app.get("/health", (_req, res) => {
   });
 });
 
-// Full pricing data (strips internal cost/routing data).
+// Full pricing data.
 app.get("/v1/pricing", (_req, res) => {
   const data = loadPricing();
   if (!data) {
     return res.status(503).json({ error: "Pricing data not yet available" });
   }
-  // Strip internal provider routing from cloud section.
-  if (data.cloud) {
-    const { _internal, ...publicCloud } = data.cloud;
-    return res.json({ ...data, cloud: publicCloud });
-  }
-  res.json(data);
+  res.json(publicView(data));
 });
 
 // All models with pricing (flat list).
@@ -190,7 +209,7 @@ app.get("/v1/pricing/compute", (_req, res) => {
   if (!data?.infrastructure?.compute) {
     return res.status(503).json({ error: "Compute pricing not yet available" });
   }
-  res.json(data.infrastructure.compute);
+  res.json(publicView(data.infrastructure.compute));
 });
 
 // Compute presets (for LaunchPage).
@@ -202,15 +221,22 @@ app.get("/v1/pricing/compute/presets", (_req, res) => {
   res.json({ presets: data.infrastructure.compute.presets });
 });
 
+// GPU tiers (sourced from commerce, or the models.mjs gpuTiers fallback).
+app.get("/v1/pricing/gpu", (_req, res) => {
+  const data = loadPricing();
+  if (!data?.infrastructure?.gpu?.length) {
+    return res.status(503).json({ error: "GPU pricing not yet available" });
+  }
+  res.json({ tiers: publicView(data.infrastructure.gpu) });
+});
+
 // Hanzo Cloud plans.
 app.get("/v1/pricing/cloud", (_req, res) => {
   const data = loadPricing();
   if (!data?.cloud) {
     return res.status(503).json({ error: "Cloud pricing not yet available" });
   }
-  // Strip internal routing/cost data from public response.
-  const { _internal, ...publicCloud } = data.cloud;
-  res.json(publicCloud);
+  res.json(publicView(data.cloud));
 });
 
 // Cloud plans only (for pricing page).
@@ -237,10 +263,21 @@ app.get("/v1/pricing/cloud/storage", (_req, res) => {
   if (!data?.cloud?.blockStorage) {
     return res.status(503).json({ error: "Storage pricing not yet available" });
   }
-  res.json(data.cloud.blockStorage);
+  res.json(publicView(data.cloud.blockStorage));
 });
 
 // Provider breakdown.
+// /v1/pricing/datastore — managed datastore tiers + usage rates. Prefer the
+// commerce-sourced copy from the last sync (data.datastore); fall back to the
+// hardcoded datastore.json so it serves even before the first sync completes.
+app.get("/v1/pricing/datastore", (_req, res) => {
+  const data = loadPricing()?.datastore || loadDatastore();
+  if (!data?.tiers?.length) {
+    return res.status(503).json({ error: "Datastore pricing not yet available" });
+  }
+  res.json(data);
+});
+
 app.get("/v1/pricing/providers", (_req, res) => {
   const data = loadPricing();
   if (!data) {
@@ -325,8 +362,7 @@ app.get("/v1/cloud", (_req, res) => {
   if (!data?.cloud) {
     return res.status(503).json({ error: "Cloud pricing not yet available" });
   }
-  const { _internal, ...publicCloud } = data.cloud;
-  res.json(publicCloud);
+  res.json(publicView(data.cloud));
 });
 
 // /v1/subscriptions — subscription plans (alias).
