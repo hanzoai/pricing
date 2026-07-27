@@ -131,6 +131,13 @@ const DO_AI_KINDS = [
 const ZEN_URL = process.env.ZEN_URL || "http://zen.zen.svc.cluster.local:8080";
 const ZEN_KEY = process.env.ZEN_API_KEY || "";
 
+// enso serves the Enso family and owns its STRUCTURE — which SKUs exist, at what
+// context window, in what mode. Same wire shape as zen, same env names ai uses.
+// A hardcoded Enso roster had drifted on both counts: it listed enso-flash at a
+// 1M window against a served 262144, and enso-ultra at 200K against a served 1M.
+const ENSO_URL = process.env.ENSO_URL || "http://enso.enso.svc.cluster.local:8080";
+const ENSO_KEY = process.env.ENSO_API_KEY || "";
+
 // DigitalOcean API for real droplet pricing.
 const DO_API = "https://api.digitalocean.com/v2/sizes";
 const DO_TOKEN = process.env.DO_API_TOKEN || "";
@@ -272,22 +279,25 @@ export function vendorName(id) {
  * rendered null. If zen cannot be reached we surface no Zen model this cycle
  * rather than a stale fiction.
  */
-async function fetchZenFamily() {
-  const headers = ZEN_KEY ? { Authorization: `Bearer ${ZEN_KEY}` } : {};
-  const url = `${ZEN_URL}/v1/models`;
-  console.log(`[sync] Fetching Zen family from ${url}...`);
+async function fetchFamily(label, baseUrl, key) {
+  const headers = key ? { Authorization: `Bearer ${key}` } : {};
+  const url = `${baseUrl}/v1/models`;
+  console.log(`[sync] Fetching ${label} family from ${url}...`);
 
   const res = await fetchWithTimeout(url, { headers }, 15_000);
   if (!res.ok) {
-    throw new Error(`zen /v1/models returned ${res.status}`);
+    throw new Error(`${label} /v1/models returned ${res.status}`);
   }
   const models = (await res.json()).data || [];
   if (models.length === 0) {
-    throw new Error("zen /v1/models carried no model");
+    throw new Error(`${label} /v1/models carried no model`);
   }
-  console.log(`[sync] Zen serves ${models.length} models.`);
+  console.log(`[sync] ${label} serves ${models.length} models.`);
   return models;
 }
+
+const fetchZenFamily = () => fetchFamily("Zen", ZEN_URL, ZEN_KEY);
+const fetchEnsoFamily = () => fetchFamily("Enso", ENSO_URL, ENSO_KEY);
 
 // The per-unit label for a media SKU's price (zen prices these per call/image/clip).
 const MEDIA_UNIT = { image: "image", audio: "call", video: "clip", rerank: "call" };
@@ -800,9 +810,19 @@ export async function sync() {
   // "hanzo"). A small fixed-price lineup (no live gateway discovery); the 3 SKUs
   // carry their own owned_by + retail pricing (see ensoCatalog).
   // Enso is OURS and is its OWN family, separate from Zen — never folded in with it
-  // and never described in terms of an upstream model.
-  for (const em of ensoCatalog) pricedHanzo.push({ ...em, family: "enso" });
-  const ensoModelCount = ensoCatalog.length;
+  // and never described in terms of an upstream model. Its ROSTER and windows are
+  // read from the service that serves it, so the list cannot go stale and a SKU enso
+  // does not serve cannot be invented; the PRICE stays ours (ensoCatalog). If enso
+  // is unreachable we fall back to the catalog copy rather than dropping the family.
+  let ensoModels;
+  try {
+    ensoModels = buildEnsoModels(await fetchEnsoFamily(), ensoCatalog);
+  } catch (err) {
+    console.warn(`[sync] enso unreachable (${err.message}) — using catalog copy`);
+    ensoModels = ensoCatalog.map((em) => ({ ...em, family: "enso", owned_by: "hanzo" }));
+  }
+  for (const em of ensoModels) pricedHanzo.push(em);
+  const ensoModelCount = ensoModels.length;
 
   // 2. Fetch ALL third-party models from OpenRouter (dynamic detection).
   const orModels = await fetchOpenRouterModels();
@@ -1036,4 +1056,44 @@ export function hanzoModelView(m) {
     provider: m.family === "zen" ? "Zen" : m.family === "enso" ? "Enso" : m.provider || "Hanzo",
     category: m.family || m.category || "specialty",
   };
+}
+
+/**
+ * The Enso family as this catalog renders it: every SKU enso SERVES, at the window
+ * enso serves it, with our branded copy and our retail price grafted on.
+ *
+ * This is the seam the two sides own separately, and neither duplicates the other:
+ * the family owns its STRUCTURE — which SKUs exist, their context window, their
+ * mode — and publishes it on its wire; we own the NUMBER. So a SKU appears here iff
+ * enso serves it (enso-pro was listed for months and 404s at the service; a roster
+ * read from the service cannot invent one), while the price stays ours to set and
+ * is not silently rewritten by an upstream change.
+ *
+ * A SKU enso serves that we have no price for falls back to the family's own rate
+ * rather than listing unpriced — an unpriced, selectable model is a billing hole.
+ */
+export function buildEnsoModels(liveModels, metaCatalog = []) {
+  const meta = new Map(metaCatalog.map((m) => [normalizeModelName(m.name), m]));
+  return liveModels.map((em) => {
+    const m = meta.get(normalizeModelName(em.id)) || {};
+    return {
+      name: em.id,
+      // Enso is OURS and is its OWN family — never folded in with Zen, and never
+      // described in terms of an upstream model.
+      family: "enso",
+      owned_by: "hanzo",
+      fullName: m.fullName || brandName(em.id),
+      description: m.description || "",
+      features: m.features || [],
+      tier: m.tier || "",
+      // The served window, from the service that serves it.
+      context: em.context_window || m.context || null,
+      pricing: m.pricing || {
+        input: numOrNull(em.pricing?.input),
+        output: numOrNull(em.pricing?.output),
+        cacheRead: numOrNull(em.pricing?.cache_read),
+        cacheWrite: null,
+      },
+    };
+  });
 }

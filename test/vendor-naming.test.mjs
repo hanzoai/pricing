@@ -9,7 +9,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { vendorName, hanzoModelView } from "../src/sync.mjs";
+import { vendorName, hanzoModelView, buildEnsoModels as buildEnsoModelsSync } from "../src/sync.mjs";
 
 test("the vendor is the company, not the product line", () => {
   // The named defect: "Meta Llama" is a vendor plus a product. The vendor is Meta.
@@ -114,4 +114,43 @@ test("hosting a model does not make it ours", () => {
   const img = hanzoModelView({ name: "openai-gpt-image-2", provider: "OpenAI" });
   assert.equal(img.provider, "OpenAI");
   assert.equal(img.family, undefined);
+});
+
+// ── Enso: the family owns its structure, we own the number ──────────────────
+
+test("the Enso roster is what enso serves — a SKU it does not serve cannot be listed", () => {
+  const buildEnsoModels = buildEnsoModelsSync;
+  // Exactly what enso.enso.svc:8080/v1/models returns today.
+  const live = [
+    { id: "enso", context_window: 1000000, pricing: { input: "4", output: "20" } },
+    { id: "enso-flash", context_window: 262144, pricing: { input: "2", output: "4" } },
+    { id: "enso-ultra", context_window: 1000000, pricing: { input: "5", output: "25" } },
+  ];
+  // Our copy still carries enso-pro — the phantom that 404s at the service.
+  const copy = [
+    { name: "enso", fullName: "Enso", pricing: { input: 20, output: 60 } },
+    { name: "enso-pro", fullName: "Enso Pro", pricing: { input: 30, output: 90 } },
+  ];
+  const built = buildEnsoModels(live, copy);
+  const ids = built.map((m) => m.name);
+  assert.deepEqual(ids, ["enso", "enso-flash", "enso-ultra"]);
+  assert.ok(!ids.includes("enso-pro"), "a SKU enso does not serve must never be listed");
+  assert.ok(built.every((m) => m.family === "enso"));
+});
+
+test("enso owns the window; we own the price", () => {
+  const live = [{ id: "enso-flash", context_window: 262144, pricing: { input: "2", output: "4" } }];
+  const copy = [{ name: "enso-flash", fullName: "Enso Flash", context: 1000000, pricing: { input: 2, output: 6 } }];
+  const [m] = buildEnsoModelsSync(live, copy);
+  // The served window wins over our stale copy...
+  assert.equal(m.context, 262144);
+  // ...and our retail price is NOT silently rewritten by the family.
+  assert.deepEqual(m.pricing, { input: 2, output: 6 });
+});
+
+test("a SKU enso serves that we have no price for is never listed unpriced", () => {
+  const live = [{ id: "enso-new", context_window: 500000, pricing: { input: "7", output: "21" } }];
+  const [m] = buildEnsoModelsSync(live, []);
+  assert.equal(m.pricing.input, 7, "falls back to the family's own rate");
+  assert.equal(m.pricing.output, 21);
 });
