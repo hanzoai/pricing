@@ -12,10 +12,10 @@
       "iam": {
         "issuer": "https://hanzo.id",
         "apps": {
-          "o11y": "app-o11y",
-          "sentry": "app-sentry",
-          "insights": "app-insights",
-          "console": "app-console"
+          "o11y": "hanzo-o11y",
+          "sentry": "hanzo-sentry",
+          "insights": "hanzo-insights",
+          "console": "hanzo-console"
         }
       },
       "branding": {
@@ -35,8 +35,7 @@
       "iam": {
         "issuer": "https://hanzo.id",
         "apps": {
-          "o11y": "app-o11y-lux",
-          "sentry": "app-sentry-lux"
+          "o11y": "lux-o11y"
         }
       },
       "branding": {
@@ -55,8 +54,7 @@
       "iam": {
         "issuer": "https://hanzo.id",
         "apps": {
-          "o11y": "app-o11y-pars",
-          "sentry": "app-sentry-pars"
+          "o11y": "pars-o11y"
         }
       },
       "branding": {
@@ -75,8 +73,7 @@
       "iam": {
         "issuer": "https://hanzo.id",
         "apps": {
-          "o11y": "app-o11y-zoo",
-          "sentry": "app-sentry-zoo"
+          "o11y": "zoo-o11y"
         }
       },
       "branding": {
