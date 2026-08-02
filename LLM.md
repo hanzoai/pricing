@@ -42,11 +42,46 @@ and rolls the `pricing` Deployment (ns `hanzo`). `server.mjs` syncs on boot + ev
 6h; the `pricing-sync` CronJob POSTs `/v1/sync` daily. The catalog worker's own cron
 (`0 6 * * *`) then re-primes its KV/edge from this origin.
 
-## UNRESOLVED — two owners of the Enso retail price, and a test that keeps them apart
+## DECIDED — the Enso retail price is owned by commerce
 
-**Needs a human decision. Do not "reconcile" this by editing one side.**
+**The owner is the catalog in commerce.hanzo.ai.** Decided 2026-08-01; the
+history below is kept because it explains what the old test was defending.
 
-One number has two owners, and they disagree:
+What landed:
+
+- `commerce` seeds the Enso family at the price enso BILLS
+  (`models/catalogentry/seed/enso-models.json`, released v1.49.37), and
+  `models/catalogentry/seed_test.go` pins each SKU to that number so a published
+  price cannot move on its own again.
+- `cloud/apps/pricing/commerce.go` publishes first-party prices from that
+  catalog instead of the embedded `data/pricing.json`, so `/v1/pricing` stops
+  serving a 2026-03-14 snapshot that contained no Enso rows at all.
+- `hanzo.ai` gained `scripts/audit-price-literals.mjs`, which fails the build on
+  a second copy of a rate.
+
+**This repo is no longer the owner of that number.** `src/models.mjs`'s
+`ensoCatalog` prices (~522/532/542) and the `m.pricing ||` precedence at
+`src/sync.mjs:1091` are now a THIRD copy of a number commerce owns, and they
+still hold the pre-reprice 20/60, 2/6, 40/120. Retiring them is follow-up work,
+untouched here on purpose: this service has not deployed since 2026-07-27 (see
+below), so nothing it says currently reaches production, and editing a dead
+service's numbers would look like a fix while changing nothing.
+
+When it is retired, the test at `test/vendor-naming.test.mjs:141` ("enso owns
+the window; we own the price") goes with it. **What that test was defending was
+real and must not be lost**: retail is set by US, not derived from whatever an
+upstream happens to charge, so an upstream price move can never silently
+reprice a customer. That concern is now met more strictly, not abandoned —
+commerce separates `Cost` (written only by a sync) from `Price` (set only in
+admin), and `UpsertModels` strips any price a syncer tries to state. The policy
+survives; what changed is that it is enforced in the one place that owns the
+number, instead of by a local copy that could — and did — go stale.
+
+---
+
+The original finding, kept for context:
+
+One number had two owners, and they disagreed:
 
 | Owner | Lives in | Enso | Flash | Ultra |
 |---|---|---|---|---|
@@ -81,15 +116,20 @@ customer has ever been billed for Enso (all usage rows are internal orgs
 `hanzo`, `maxpower`, and synthetic `gateprobe-*`), so there are no affected
 invoices; the exposure is claims, not refunds. That is timing, not design.
 
-**Recommendation** (one way to do everything): the catalog's `retail:` block
-should be the single owner, because it is already the thing the billing engine
-charges from — a published price that cannot be charged is not a price. Keep the
-`m.pricing ||` precedence for *metadata* (names, descriptions, tiers) and make
-retail follow the serving family, then rewrite the test to assert that published
-retail EQUALS billed retail rather than that it may differ. If instead the
-published number must stay independently settable, it needs to be reviewed
-whenever the catalog reprices, and the test should assert
-`published >= billed` so it can never again advertise under the charge.
+**What was decided, and how it differs from the recommendation above.** The
+recommendation was to make the enso catalog's `retail:` block the single owner,
+since it is what the billing engine already charges from. The decision went one
+step further: **commerce owns the number, and the enso catalog is a replica.**
+
+The reason is availability, not tidiness. Billing must not take a runtime
+dependency on commerce — a charge that fails when commerce is unreachable is
+strictly worse than one reading a local copy. So enso keeps metering from its
+own mounted catalog exactly as before, and equality is held by a test rather
+than by a network call. One owner, many readers, and the money path reads a
+local copy that CI proves equal.
+
+The "published >= billed" fallback is moot: published now IS billed, from one
+source, so it cannot advertise under the charge.
 
 ### Related, verified, and not addressed here
 
