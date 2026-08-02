@@ -7,7 +7,7 @@
 
 FROM ghcr.io/hanzoai/nodejs:v24.18.0
 WORKDIR /app
-COPY package.json package-lock.json ./
+COPY package.json pnpm-lock.yaml ./
 RUN corepack enable && pnpm install --prod --frozen-lockfile --ignore-scripts
 COPY src ./src
 COPY data ./data
