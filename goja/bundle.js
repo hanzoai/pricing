@@ -20,6 +20,7 @@
 // Host contract:
 //   globalThis.__PRICING_DATA__ = <pricing.json object>   (the served catalog)
 //   globalThis.__PLANS_EXTRA__  = { iam:<obj>, base:<obj>, paas:<obj> }
+//   globalThis.__DATASTORE__    = <obj>  (datastore.json rate card)
 //   globalThis.__PLANS_DATA__   = same shape as the plans bundle (subscription.json, ...)
 //   globalThis.__MARKUP__       = { thirdParty, computeMonthly }  (env-driven knobs)
 //   globalThis.handle({ route, params, query }) -> { status, body }
@@ -33,6 +34,7 @@
     return d || null;
   }
   function plansExtra() { return globalThis.__PLANS_EXTRA__ || {}; }
+  function datastoreCard() { return globalThis.__DATASTORE__ || null; }
   function plansData() { return globalThis.__PLANS_DATA__ || {}; }
   function markupKnobs() {
     var m = globalThis.__MARKUP__ || {};
@@ -273,6 +275,15 @@
     'iam':           function () { return { plans: iamPlans() }; },
     'base':          function () { return { plans: basePlans() }; },
     'paas':          function () { return { plans: paasPlans() }; },
+
+    // The Datastore rate card, served whole. Unlike iam/base/paas this is not a
+    // plans list — the consumer reads tiers, usage rates, discounts and trial off
+    // the top level — so it is returned as authored rather than wrapped.
+    'datastore':     function () {
+      var d = datastoreCard();
+      if (!d) return { __status: 503, error: 'Datastore pricing not yet available' };
+      return d;
+    },
     'policy':        function () { return pricingPolicy(); },
     'tools':         function () { return { tools: canonicalTools() }; },
     'gpu':           function () { return { tiers: canonicalGpuTiers() }; },

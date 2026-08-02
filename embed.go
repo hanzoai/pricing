@@ -10,6 +10,7 @@
 //   - Bundle()      goja/bundle.js for the host to run in goja.
 //   - Pricing()     data/pricing.json decoded (globalThis.__PRICING_DATA__).
 //   - PlansExtra()  iam/base/paas fragments (globalThis.__PLANS_EXTRA__).
+//   - Datastore()   datastore.json (globalThis.__DATASTORE__).
 //
 // HIP-0106 module-boundary rule: the markup logic stays here (in the bundle,
 // in this private repo); the cloud wrapper only orchestrates.
@@ -25,6 +26,7 @@ import (
 //go:embed goja/bundle.js
 //go:embed data/pricing.json
 //go:embed plans-extra/iam.json plans-extra/base.json plans-extra/paas.json
+//go:embed datastore.json
 var assets embed.FS
 
 // Bundle returns the goja bundle source (goja/bundle.js).
@@ -65,6 +67,26 @@ func PlansExtra() (map[string]any, error) {
 		out[key] = v
 	}
 	return out, nil
+}
+
+// Datastore returns datastore.json — the Hanzo Datastore rate card (tiers,
+// usage rates, discounts, trial). The host injects it as globalThis.__DATASTORE__.
+//
+// It is its own file and its own global rather than a section of data/pricing.json
+// because the synced catalog does not carry it: this rate card is authored here,
+// not produced by the sync. It sat in the repo unembedded and unserved, so
+// GET /v1/pricing/datastore 404d and hanzo.ai's Infrastructure tab rendered
+// "Live pricing is temporarily unavailable" permanently.
+func Datastore() (any, error) {
+	b, err := assets.ReadFile("datastore.json")
+	if err != nil {
+		return nil, fmt.Errorf("pricing: read embedded datastore.json: %w", err)
+	}
+	var v any
+	if err := json.Unmarshal(b, &v); err != nil {
+		return nil, fmt.Errorf("pricing: decode embedded datastore.json: %w", err)
+	}
+	return v, nil
 }
 
 // Assets exposes the raw embedded FS.
