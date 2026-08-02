@@ -507,9 +507,22 @@ export const zenCatalog = [
 // ── Enso — Hanzo's proprietary frontier family ──────────────────────
 // Enso is Hanzo's closed frontier family (unlike the open Zen family). It is
 // GENERALLY AVAILABLE (no waitlist). Full entries (metadata + retail pricing +
-// owned_by) since there is no live Enso pricing gateway wired here; prices mirror
-// the authoritative source (~/work/hanzo/enso/catalog.yaml). Upstreams are never
-// revealed — a caller only ever sees "Enso".
+// owned_by) since there is no live Enso pricing gateway wired here. Upstreams are
+// never revealed — a caller only ever sees "Enso".
+//
+// THESE NUMBERS ARE BILLED, NOT JUST DISPLAYED. The ai gateway runs with
+// `features.live_mode: true` and `pricing_url: https://pricing.hanzo.ai`, so it
+// polls /v1/pricing/models into its billing price map (mc.pricing); that map is
+// what calculateCostCentsWithCache charges when family discovery has not populated
+// yet — which is every cold start. A wrong number here is a wrong CHARGE, not a
+// wrong label.
+//
+// The authoritative retail rates are hanzoai/zen/catalog-enso.yaml (`retail:`),
+// replicated in hanzoai/commerce/models/catalogentry/seed/enso-models.json
+// (`rates[].price`) — commerce owns pricing; this file is a replica. They were
+// last out of sync at 20/60, 2/6 and 40/120 (the pre-2026-07-22 reprice), which
+// this catalog kept publishing after the reprice landed everywhere else.
+// enso-vl / enso-vl-pro are INTERNAL SKUs and must never be listed here.
 export const ensoCatalog = [
   {
     name: "enso",
@@ -519,7 +532,7 @@ export const ensoCatalog = [
     tier: "ultra max",
     context: 1000000,
     owned_by: "hanzo",
-    pricing: { input: 20, output: 60, cacheRead: null, cacheWrite: null },
+    pricing: { input: 4, output: 20, cacheRead: null, cacheWrite: null },
   },
   {
     name: "enso-flash",
@@ -529,7 +542,7 @@ export const ensoCatalog = [
     tier: "pro",
     context: 1000000,
     owned_by: "hanzo",
-    pricing: { input: 2, output: 6, cacheRead: null, cacheWrite: null },
+    pricing: { input: 2, output: 4, cacheRead: null, cacheWrite: null },
   },
   {
     name: "enso-ultra",
@@ -539,7 +552,7 @@ export const ensoCatalog = [
     tier: "ultra max",
     context: 200000,
     owned_by: "hanzo",
-    pricing: { input: 40, output: 120, cacheRead: null, cacheWrite: null },
+    pricing: { input: 5, output: 25, cacheRead: null, cacheWrite: null },
   },
 ];
 
