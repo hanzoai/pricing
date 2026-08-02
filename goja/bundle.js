@@ -272,6 +272,16 @@
 
     'subscriptions': function () { return { plans: subscriptionPlans() }; },
     'blockchain':    function () { return { plans: blockchainPlans() }; },
+
+    // The managed-service rate cards (Search, Crawl, Vector, Console, Managed),
+    // served whole. Each entry carries its own tiers, and some carry usage rates
+    // or a comparison table instead, so there is no single list shape to flatten
+    // to — the consumer picks the service it renders.
+    'services':      function () {
+      var d = plansData()['services.json'];
+      if (!d) return { __status: 503, error: 'Service pricing not yet available' };
+      return d;
+    },
     'iam':           function () { return { plans: iamPlans() }; },
     'base':          function () { return { plans: basePlans() }; },
     'paas':          function () { return { plans: paasPlans() }; },
