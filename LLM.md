@@ -154,3 +154,11 @@ source, so it cannot advertise under the charge.
   `wrangler kv key delete` on `/v1/pricing`, `/v1/models`,
   `/v1/pricing/summary` plus a CF `purge_cache`, then a priming GET. (Cache
   mechanics reported by an investigating agent, not independently verified.)
+
+## License
+
+Dual-licensed `MIT OR Apache-2.0` (`LICENSE-MIT`, `LICENSE-APACHE`), at the
+user's option. Relicensed from BSD-3-Clause under HIP-0137 "One License"
+(`hanzoai/hips`), which standardises original Hanzo work on the dual
+permissive pair. The prior BSD copyright line carries forward unchanged
+into `LICENSE-MIT`.
