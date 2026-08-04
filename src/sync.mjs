@@ -819,7 +819,13 @@ export async function sync() {
     ensoModels = buildEnsoModels(await fetchEnsoFamily(), ensoCatalog);
   } catch (err) {
     console.warn(`[sync] enso unreachable (${err.message}) — using catalog copy`);
-    ensoModels = ensoCatalog.map((em) => ({ ...em, family: "enso", owned_by: "hanzo" }));
+    // Still ONE builder. The fallback replays the catalog through it as if the
+    // service had answered with our own windows, so the fallback card is assembled
+    // by exactly the same code — a spread here is how the two paths drift.
+    ensoModels = buildEnsoModels(
+      ensoCatalog.map((em) => ({ id: em.name, context_window: em.context })),
+      ensoCatalog,
+    );
   }
   for (const em of ensoModels) pricedHanzo.push(em);
   const ensoModelCount = ensoModels.length;
@@ -1076,6 +1082,8 @@ export function buildEnsoModels(liveModels, metaCatalog = []) {
   const meta = new Map(metaCatalog.map((m) => [normalizeModelName(m.name), m]));
   return liveModels.map((em) => {
     const m = meta.get(normalizeModelName(em.id)) || {};
+    // The served window, from the service that serves it.
+    const context = em.context_window || m.context || null;
     return {
       name: em.id,
       // Enso is OURS and is its OWN family — never folded in with Zen, and never
@@ -1084,10 +1092,13 @@ export function buildEnsoModels(liveModels, metaCatalog = []) {
       owned_by: "hanzo",
       fullName: m.fullName || brandName(em.id),
       description: m.description || "",
-      features: m.features || [],
+      // The window bullet is a PROJECTION of the window that won, never a second
+      // hand-typed copy of it — the same formatter every other section uses. Our
+      // copy contributes capability bullets only, so a window change on the
+      // serving side can never leave a card contradicting its own headline.
+      features: [formatContext(context), ...(m.features || [])].filter(Boolean),
       tier: m.tier || "",
-      // The served window, from the service that serves it.
-      context: em.context_window || m.context || null,
+      context,
       pricing: m.pricing || {
         input: numOrNull(em.pricing?.input),
         output: numOrNull(em.pricing?.output),
