@@ -646,16 +646,6 @@ export const toolPricing = [
 
 export const cloudPlans = [
   {
-    id: "starter",
-    name: "Starter",
-    description: "Get started for free. Perfect for side projects, bots, and learning.",
-    vcpus: 1, memoryGB: 1, diskGB: 20, cpuType: "shared",
-    maxVMs: 1,
-    priceMonthly: 5,
-    freeTier: true,  // $5 credit for new accounts
-    features: ["1 VM", "1 vCPU", "1 GB RAM", "20 GB SSD", "500 GB transfer", "Free $5 credit"],
-  },
-  {
     id: "builder",
     name: "Builder",
     description: "For developers shipping real products. Run bots, APIs, and automation.",
