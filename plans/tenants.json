@@ -30,7 +30,7 @@
       "domains": {
         "o11y": "o11y.lux.network",
         "sentry": "sentry.lux.network",
-        "kms": "kms.lux.network"
+        "kms": "kms.lux.cloud"
       },
       "iam": {
         "issuer": "https://hanzo.id",
