@@ -1,6 +1,6 @@
 {
   "name": "@hanzo/pricing",
-  "version": "1.4.5",
+  "version": "1.4.10",
   "packageManager": "pnpm@11.17.0",
   "type": "module",
   "private": true,
