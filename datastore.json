@@ -155,7 +155,7 @@
     "30-day free trial",
     "Automated backups",
     "End-to-end encryption",
-    "ClickHouse-compatible HTTP API",
+    "SQL over HTTP \u2014 standard OLAP drivers connect",
     "JSONEachRow + Parquet ingestion",
     "Async inserts",
     "IAM SSO authentication",
