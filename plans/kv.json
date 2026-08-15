@@ -63,7 +63,7 @@
       "Active-Active geo-distribution",
       "Redis Streams, JSON, Search, TimeSeries",
       "100,000+ ops/second",
-      "99.999% uptime SLA",
+      "Multi-region redundancy with automated failover",
       "Priority support"
     ],
     "limits": {
@@ -90,7 +90,8 @@
       "Active-Active global replication",
       "BYOK encryption",
       "Private link networking",
-      "SOC 2 / HIPAA / PCI compliance",
+      "SOC 2 Type II controls",
+      "Certification scoped per engagement",
       "Custom module support",
       "Dedicated support engineer",
       "Volume discounts"

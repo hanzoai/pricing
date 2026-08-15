@@ -137,7 +137,9 @@
       "Dedicated K8s namespace pool",
       "Per-tenant TLS certs (no shared wildcard)",
       "BYOK encryption at rest (Hanzo KMS)",
-      "SOC 2 / HIPAA / GDPR controls",
+      "SOC 2 Type II controls",
+      "GDPR controls",
+      "Certification scoped per engagement",
       "99.99% SLA with credits",
       "Dedicated solutions engineer",
       "Volume discounts on per-tenant rate"
