@@ -13,15 +13,6 @@ build:
   image: ghcr.io/hanzoai/pricing
   tag-pattern: "{{git.sha}}"
   push: true
-deploy:
-  on:
-    - main
-  target:
-    cluster: hanzo-k8s
-    namespace: hanzo
-    operator: hanzo-operator
-    crd: Service
-    name: pricing
 e2e:
   spec: tests/16-pricing.spec.ts
   baseDomain: pricing.hanzo.ai
