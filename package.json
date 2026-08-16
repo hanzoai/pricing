@@ -11,7 +11,7 @@
     "test": "node --test test/*.test.mjs"
   },
   "dependencies": {
-    "@hanzo/plans": "1.4.1",
+    "@hanzo/plans": "1.4.16",
     "express": "^4.21.0"
   }
 }
