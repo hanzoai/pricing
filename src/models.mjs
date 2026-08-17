@@ -21,7 +21,6 @@ import { createRequire } from 'node:module'
 const require = createRequire(import.meta.url)
 
 export {
-  subscriptionPlans,
   blockchainPlans,
   pricingPolicy,
   cloudPlans as canonicalCloudPlans,

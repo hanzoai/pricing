@@ -16,15 +16,12 @@
 //   GET  /v1/pricing/cloud/regions      — available cloud regions
 //   GET  /v1/pricing/cloud/storage      — block storage pricing
 //   GET  /v1/pricing/providers          — provider breakdown with counts
-//   GET  /v1/pricing/subscriptions      — subscription plans (from @hanzo/plans)
 //   GET  /v1/pricing/blockchain         — blockchain / RPC plans (from @hanzo/plans)
 //   GET  /v1/pricing/iam               — IAM / identity plans (from @hanzo/plans)
 //   GET  /v1/pricing/policy             — transparent pricing policy + revenue sharing
 //
 // Convenience aliases:
 //   GET  /v1/models                     — OpenAI-compatible model listing
-//   GET  /v1/plans                      — subscription plans
-//   GET  /v1/subscriptions              — subscription plans (alias)
 //   GET  /v1/cloud                      — cloud VM plans + regions + storage
 //   GET  /v1/tools                      — tool pricing
 //   GET  /v1/gpu                        — GPU tier pricing
@@ -41,7 +38,7 @@ import express from "express";
 import { sync, hanzoModelView } from "./sync.mjs";
 import { publicView } from "./view.mjs";
 import {
-  subscriptionPlans, blockchainPlans, pricingPolicy,
+  blockchainPlans, pricingPolicy,
   canonicalCloudPlans, canonicalGpuTiers, canonicalRegions,
   canonicalStorage, canonicalTools, iamPlans,
   basePlans, paasPlans,
@@ -286,10 +283,11 @@ app.get("/v1/pricing/providers", (_req, res) => {
   res.json({ updated: data.updated, providers: data.providers });
 });
 
-// Subscription plans (from @hanzo/plans).
-app.get("/v1/pricing/subscriptions", (_req, res) => {
-  res.json({ plans: subscriptionPlans });
-});
+// The subscription ladder is served by cloud, at api.hanzo.ai/v1/pricing/subscriptions,
+// from the same @hanzo/plans subscription.json this service would have read. Commerce
+// vendors those same bytes and prices from them, so the ladder a customer reads and the
+// ladder they are charged against come from one build of one file. Publishing a second
+// copy here put a separately-versioned answer on a second host, and the two drifted.
 
 // Blockchain / RPC plans (from @hanzo/plans).
 app.get("/v1/pricing/blockchain", (_req, res) => {
@@ -350,11 +348,6 @@ app.get("/v1/models", (_req, res) => {
   });
 });
 
-// /v1/plans — subscription plans.
-app.get("/v1/plans", (_req, res) => {
-  res.json({ plans: subscriptionPlans });
-});
-
 // /v1/cloud — cloud VM plans + regions + storage.
 app.get("/v1/cloud", (_req, res) => {
   const data = loadPricing();
@@ -362,11 +355,6 @@ app.get("/v1/cloud", (_req, res) => {
     return res.status(503).json({ error: "Cloud pricing not yet available" });
   }
   res.json(publicView(data.cloud));
-});
-
-// /v1/subscriptions — subscription plans (alias).
-app.get("/v1/subscriptions", (_req, res) => {
-  res.json({ plans: subscriptionPlans });
 });
 
 // /v1/tools — tool pricing (from @hanzo/plans, fallback to synced data).
