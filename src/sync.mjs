@@ -602,13 +602,27 @@ function processOpenRouterModel(orModel, markup) {
 }
 
 /**
- * Fetch real droplet pricing from the DigitalOcean API.
- * Falls back to doFallbackPrices if no token or API error.
+ * Droplet prices from the DigitalOcean API, and where they came from.
+ *
+ * The prices alone cannot say. A revoked token is still a non-empty string, so
+ * every "is DO configured?" test passes, the fetch takes the configured branch,
+ * fails inside it, and the frozen table in models.mjs goes out as if it had been
+ * measured — presence is not reachability. Handed a bare map, the caller cannot
+ * tell today's price from one last touched in 2026-02, and reports both runs the
+ * same way.
+ *
+ * So the result carries its own provenance. `source` is "live" when DO answered,
+ * "frozen" when we asked and got no answer we could use (`reason` names what
+ * stopped us), and "unasked" when there is no token to ask with — a credential
+ * nobody set is not the same fault as one the provider refused, and the two want
+ * different repairs. The prices still come back in every case: a catalog with no
+ * compute price serves a customer worse than one whose price is stale. The
+ * staleness is now something the run can say out loud.
  */
-async function fetchDOPricing() {
+export async function fetchDOPricing() {
   if (!DO_TOKEN) {
-    console.warn("[sync] No DO_API_TOKEN — using fallback pricing");
-    return doFallbackPrices;
+    console.warn("[sync] No DO_API_TOKEN — compute prices frozen at the models.mjs table");
+    return { prices: doFallbackPrices, source: "unasked", reason: "no DO_API_TOKEN" };
   }
   try {
     console.log("[sync] Fetching DO droplet pricing...");
@@ -616,8 +630,9 @@ async function fetchDOPricing() {
       headers: { Authorization: `Bearer ${DO_TOKEN}` },
     });
     if (!res.ok) {
-      console.warn(`[sync] DO API returned ${res.status} — using fallback pricing`);
-      return doFallbackPrices;
+      const reason = `DO API returned ${res.status}`;
+      console.warn(`[sync] ${reason} — compute prices frozen at the models.mjs table`);
+      return { prices: doFallbackPrices, source: "frozen", reason };
     }
     const body = await res.json();
     const prices = {};
@@ -639,10 +654,11 @@ async function fetchDOPricing() {
       }
     }
     console.log(`[sync] Got pricing for ${Object.keys(prices).length} DO droplet sizes.`);
-    return prices;
+    return { prices, source: "live", reason: null };
   } catch (err) {
-    console.warn(`[sync] DO API fetch failed: ${err.message} — using fallback pricing`);
-    return doFallbackPrices;
+    const reason = `DO API fetch failed: ${err.message}`;
+    console.warn(`[sync] ${reason} — compute prices frozen at the models.mjs table`);
+    return { prices: doFallbackPrices, source: "frozen", reason };
   }
 }
 
@@ -886,6 +902,11 @@ export async function sync() {
   // 3. Fetch DO droplet pricing.
   const doPricing = await fetchDOPricing();
 
+  // The sections of this catalog whose numbers nobody measured this run. Compute
+  // is the only section with a live supplier behind it today; a second source
+  // that falls back appends its own name here.
+  const degraded = doPricing.source === "live" ? [] : ["compute"];
+
   // Build compute tiers with markup.
   //
   // Which supplier serves a tier, what they charge us, and what we add on top are
@@ -898,8 +919,15 @@ export async function sync() {
       provider: "digitalocean",
       region: "sfo3",
       markupMonthly: COMPUTE_MARKUP_MONTHLY,
+      // Whether these numbers were measured this run or read off the frozen
+      // table, and what stopped us — filed beside the supplier it names, under
+      // the key every public view strips. Which supplier refused us is our
+      // business, not the customer's; that a price is stale is theirs, and that
+      // half rides in `summary.degraded`.
+      source: doPricing.source,
+      reason: doPricing.reason,
     },
-    tiers: Object.entries(doPricing).map(([slug, info]) => ({
+    tiers: Object.entries(doPricing.prices).map(([slug, info]) => ({
       slug,
       vcpus: info.vcpus,
       memoryMB: info.memoryMB,
@@ -913,7 +941,7 @@ export async function sync() {
       },
     })),
     presets: computePresets.map((p) => {
-      const info = doPricing[p.slug] || doFallbackPrices[p.slug];
+      const info = doPricing.prices[p.slug] || doFallbackPrices[p.slug];
       const monthly = info.priceMonthly + COMPUTE_MARKUP_MONTHLY;
       return {
         ...p,
@@ -981,6 +1009,14 @@ export async function sync() {
     updated: new Date().toISOString(),
     summary: {
       catalogMode: ENABLE_OPENROUTER ? "all-providers" : "do-first",
+      // The sections served from a frozen table this run — empty on a healthy
+      // one. It sits in `summary` on purpose: /health and POST /v1/sync both
+      // read summary and nothing else, so this is the one place a reader that
+      // acts on the answer already looks. It names our own sections, never the
+      // supplier that refused us — that stays under _internal with the cost and
+      // the margin. `updated` still says when the catalog was assembled; this
+      // says which parts of it were measured.
+      degraded,
       zenModels: zenModelCount,
       doAiModels: doAiModelCount,
       ensoModels: ensoModelCount,
@@ -1024,11 +1060,22 @@ export async function sync() {
   return pricingData;
 }
 
+/**
+ * How a finished run may be announced: "ok" only when every source answered.
+ *
+ * A run that served a frozen table is not a success with a warning further up
+ * the scroll. Announced as "complete" it reads exactly like a measured run, and
+ * the daily job — which only ever sees an HTTP status — goes green either way.
+ * One answer, read by both server sync logs, the standalone script and
+ * POST /v1/sync, so no two of them can disagree about how the run went.
+ */
+export const syncStatus = (data) => (data.summary.degraded.length ? "degraded" : "ok");
+
 // When run as a standalone script.
 if (process.argv[1] && process.argv[1].endsWith("sync.mjs")) {
   sync()
     .then((data) => {
-      console.log("[sync] Done.");
+      console.log(`[sync] Done: ${syncStatus(data)}.`);
       console.log(`[sync] Summary: ${JSON.stringify(data.summary)}`);
       process.exit(0);
     })

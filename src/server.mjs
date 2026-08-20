@@ -35,7 +35,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import express from "express";
-import { sync, hanzoModelView } from "./sync.mjs";
+import { sync, syncStatus, hanzoModelView } from "./sync.mjs";
 import { publicView } from "./view.mjs";
 import {
   blockchainPlans, pricingPolicy,
@@ -386,7 +386,11 @@ app.post("/v1/sync", async (req, res) => {
   try {
     const data = await sync();
     invalidateCache();
-    res.json({ status: "ok", updated: data.updated, summary: data.summary });
+    // 200 with an honest status, not 4xx: the sync DID run and this catalog is
+    // the best one available, so failing the call would take the endpoint — and
+    // the daily job that calls it — down over prices that are merely stale. The
+    // caller reads `status`; `summary.degraded` names what is frozen.
+    res.json({ status: syncStatus(data), updated: data.updated, summary: data.summary });
   } catch (err) {
     console.error("[server] Sync failed:", err.message);
     res.status(500).json({ error: "Sync failed", message: err.message });
@@ -395,6 +399,17 @@ app.post("/v1/sync", async (req, res) => {
 
 // Start server.
 let syncInterval = null;
+
+// How a finished sync is announced. Both sync logs report through this, so
+// neither can say "complete" about a run that served a frozen table — the words
+// a reader scanning the scroll goes by are the same words the run's own status
+// uses, and the frozen section is named on the line that announces it.
+const announce = (label, data) =>
+  console.log(
+    `[server] ${label} sync ${syncStatus(data)}${
+      data.summary.degraded.length ? ` — frozen: ${data.summary.degraded.join(", ")}` : ""
+    }.`
+  );
 
 const server = app.listen(PORT, () => {
   console.log(`[server] Hanzo Pricing API listening on port ${PORT}`);
@@ -407,9 +422,9 @@ const server = app.listen(PORT, () => {
 
   // Run initial sync in background — don't block startup.
   sync()
-    .then(() => {
+    .then((data) => {
       invalidateCache();
-      console.log("[server] Initial sync complete.");
+      announce("Initial", data);
     })
     .catch((err) => {
       console.error("[server] Initial sync failed:", err.message);
@@ -419,9 +434,9 @@ const server = app.listen(PORT, () => {
   // Schedule periodic sync every 6 hours.
   syncInterval = setInterval(async () => {
     try {
-      await sync();
+      const data = await sync();
       invalidateCache();
-      console.log("[server] Periodic sync complete.");
+      announce("Periodic", data);
     } catch (err) {
       console.error("[server] Periodic sync failed:", err.message);
     }
