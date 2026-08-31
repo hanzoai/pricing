@@ -63,9 +63,11 @@ overlay (admin), not by editing catalogs in multiple places.
 
 ## Deploy
 
-`.github/workflows/deploy.yml` (native arcd runners) builds `ghcr.io/hanzoai/pricing`
-and rolls the `pricing` Deployment (ns `hanzo`). `server.mjs` syncs on boot + every
-6h; the `pricing-sync` CronJob POSTs `/v1/sync` daily. The catalog worker's own cron
+`hanzo.yml` drives build, deploy and e2e on platform.hanzo.ai: an in-cluster Kaniko
+Job builds `ghcr.io/hanzoai/pricing`, the hanzo operator's `pricing` Service CR
+(ns `hanzo`) takes the new tag on `main`, then the pricing e2e runs against the live
+service. `server.mjs` syncs on boot + every 6h; the `pricing-sync` CronJob POSTs
+`/v1/sync` daily. The catalog worker's own cron
 (`0 6 * * *`) then re-primes its KV/edge from this origin.
 
 ## DECIDED — the Enso retail price is owned by commerce
