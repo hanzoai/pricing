@@ -522,12 +522,21 @@ export const zenCatalog = [
 // last out of sync at 20/60, 2/6 and 40/120 (the pre-2026-07-22 reprice), which
 // this catalog kept publishing after the reprice landed everywhere else.
 // enso-vl / enso-vl-pro are INTERNAL SKUs and must never be listed here.
+//
+// THE WINDOW HAS ONE OWNER TOO, AND IT IS NOT THIS FILE. `context` here is the
+// offline fallback for the same number the serving gateway advertises
+// (catalog-enso.yaml `route[].ctx`, replicated in commerce's `spec.contextWindow`);
+// buildEnsoModels takes the served window in preference. So `features` states the
+// window nowhere — the window bullet is DERIVED from whichever window won, and
+// these lists carry only the capability copy. Hand-typing it a second time is what
+// put "200K context window" on a SKU serving 1M and "1M context window" on one
+// serving 262K on the live catalog.
 export const ensoCatalog = [
   {
     name: "enso",
     fullName: "Enso",
-    description: "Hanzo's proprietary frontier model — Opus-class reasoning by default with 1M-context overflow.",
-    features: ["1M context window", "Frontier reasoning"],
+    description: "Hanzo's proprietary frontier model — Opus-class reasoning at a 1M context window.",
+    features: ["Frontier reasoning"],
     tier: "ultra max",
     context: 1000000,
     owned_by: "hanzo",
@@ -536,10 +545,10 @@ export const ensoCatalog = [
   {
     name: "enso-flash",
     fullName: "Enso Flash",
-    description: "Fast, economical Enso tier for high-volume, low-latency everyday work, with 1M-context overflow.",
-    features: ["1M context window", "Low latency"],
+    description: "Fast, economical Enso tier for high-volume, low-latency everyday work.",
+    features: ["Low latency"],
     tier: "pro",
-    context: 1000000,
+    context: 262144,
     owned_by: "hanzo",
     pricing: { input: 2, output: 4, cacheRead: null, cacheWrite: null },
   },
@@ -547,9 +556,9 @@ export const ensoCatalog = [
     name: "enso-ultra",
     fullName: "Enso Ultra",
     description: "Adaptive fan-out — probes a task-appropriate model, escalates to a top-K panel only when needed, then verifies-then-selects the best answer.",
-    features: ["200K context window", "Adaptive fan-out"],
+    features: ["Adaptive fan-out"],
     tier: "ultra max",
-    context: 200000,
+    context: 1000000,
     owned_by: "hanzo",
     pricing: { input: 5, output: 25, cacheRead: null, cacheWrite: null },
   },
