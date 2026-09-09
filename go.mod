@@ -15,4 +15,4 @@
 // std-lib only — no third-party Go deps.
 module github.com/hanzoai/pricing
 
-go 1.26.5
+go 1.26.8
