@@ -16,6 +16,7 @@ import { fileURLToPath } from "node:url";
 import {
   zenCatalog,
   ensoCatalog,
+  decisionCatalog,
   zenFamilies,
   featuredModelIds,
   toolPricing,
@@ -846,6 +847,10 @@ export async function sync() {
   for (const em of ensoModels) pricedHanzo.push(em);
   const ensoModelCount = ensoModels.length;
 
+  // 1d. Hanzo Decision (POST /v1/decisions) — Kai, billed per call. The decision
+  // service publishes no priced catalog, so its public roster is decisionCatalog.
+  for (const dm of decisionCatalog) pricedHanzo.push({ ...dm });
+
   // 2. Fetch ALL third-party models from OpenRouter (dynamic detection).
   const orModels = await fetchOpenRouterModels();
   const markup = getThirdPartyMarkup();
@@ -1026,6 +1031,7 @@ export async function sync() {
       zenModels: zenModelCount,
       doAiModels: doAiModelCount,
       ensoModels: ensoModelCount,
+      decisionModels: decisionCatalog.length,
       thirdPartyModels: thirdPartyModels.length,
       openRouterModels: allOpenRouter.length,
       huggingfaceModels: hfModels.length,

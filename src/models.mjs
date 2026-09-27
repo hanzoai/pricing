@@ -564,6 +564,28 @@ export const ensoCatalog = [
   },
 ];
 
+// ── Hanzo Decision — served at POST /v1/decisions on api.hanzo.ai ──────────
+// Kai is Hanzo's decision model: typed choice / noul / score answers about a
+// state. It is billed per call, like zen-rerank, and listed from this roster
+// because the decision service publishes no priced catalog of its own. Only the
+// public ids belong here; the service's benchmark baselines are never listed.
+export const decisionCatalog = [
+  {
+    name: "kai",
+    owned_by: "hanzo",
+    fullName: "Kai",
+    description: "Hanzo's decision model — answers typed choice, noul and score questions about a state with calibrated probabilities.",
+    features: ["Decisions", "Calibrated probabilities"],
+    tier: "starter",
+    context: null,
+    specs: { arch: "decision" },
+    endpoint: "/v1/decisions",
+    category: "specialty",
+    pricingUnit: "call",
+    pricing: { perUnit: 0.03 },
+  },
+];
+
 export const zenFamilies = [
   {
     id: 'enso',

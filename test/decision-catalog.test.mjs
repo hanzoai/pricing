@@ -1,0 +1,43 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { decisionCatalog } from "../src/models.mjs";
+import { hanzoModelView } from "../src/sync.mjs";
+
+const DATA = join(dirname(fileURLToPath(import.meta.url)), "..", "data", "pricing.json");
+
+// Kai is served at POST /v1/decisions and billed per call. The ai gateway polls
+// /v1/pricing/models for PER-TOKEN rates only, so a per-call row must carry no
+// input/output rate: one would be read as a token price and bill the wrong unit.
+test("kai is listed per call at /v1/decisions", () => {
+  const kai = decisionCatalog.find((m) => m.name === "kai");
+  assert.ok(kai, "kai is in the decision roster");
+  assert.equal(kai.endpoint, "/v1/decisions");
+  assert.equal(kai.owned_by, "hanzo");
+  assert.equal(kai.pricingUnit, "call");
+  assert.deepEqual(Object.keys(kai.pricing), ["perUnit"]);
+  assert.ok(kai.pricing.perUnit > 0, "a listed model is never unpriced");
+
+  const view = hanzoModelView(kai);
+  assert.equal(view.provider, "Hanzo");
+  assert.equal(view.category, "specialty");
+});
+
+test("only public decision ids are listed", () => {
+  for (const m of decisionCatalog) {
+    assert.doesNotMatch(m.name, /^laya/, `${m.name} is a benchmark baseline, not a product`);
+  }
+});
+
+test("the served snapshot carries the roster as sync writes it", () => {
+  const data = JSON.parse(readFileSync(DATA, "utf-8"));
+  for (const m of decisionCatalog) {
+    const row = data.hanzoModels.find((h) => h.name === m.name);
+    assert.deepEqual(row, m, `${m.name} in data/pricing.json matches decisionCatalog`);
+  }
+  assert.equal(data.summary.decisionModels, decisionCatalog.length);
+  assert.ok(!data.hanzoModels.some((h) => /^laya/.test(h.name)));
+});

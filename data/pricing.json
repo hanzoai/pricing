@@ -5,13 +5,14 @@
     "zenModels": 14,
     "doAiModels": 18,
     "ensoModels": 3,
+    "decisionModels": 1,
     "thirdPartyModels": 397,
     "openRouterModels": 340,
     "huggingfaceModels": 57,
     "freeModels": 74,
     "featuredModels": 11,
     "providers": 57,
-    "totalModels": 432,
+    "totalModels": 433,
     "cloudPlans": 11,
     "cloudRegions": 4
   },
@@ -721,6 +722,27 @@
         "output": 25,
         "cacheRead": null,
         "cacheWrite": null
+      }
+    },
+    {
+      "name": "kai",
+      "owned_by": "hanzo",
+      "fullName": "Kai",
+      "description": "Hanzo's decision model — answers typed choice, noul and score questions about a state with calibrated probabilities.",
+      "features": [
+        "Decisions",
+        "Calibrated probabilities"
+      ],
+      "tier": "starter",
+      "context": null,
+      "specs": {
+        "arch": "decision"
+      },
+      "endpoint": "/v1/decisions",
+      "category": "specialty",
+      "pricingUnit": "call",
+      "pricing": {
+        "perUnit": 0.03
       }
     }
   ],
