@@ -728,7 +728,7 @@
       "name": "kai",
       "owned_by": "hanzo",
       "fullName": "Kai",
-      "description": "Hanzo's decision model — answers typed choice, noul and score questions about a state with calibrated probabilities.",
+      "description": "Hanzo's decision model. $0.00001 per call, under Jev's $0.042 per million input tokens.",
       "features": [
         "Decisions",
         "Calibrated probabilities"
@@ -742,7 +742,7 @@
       "category": "specialty",
       "pricingUnit": "call",
       "pricing": {
-        "perUnit": 0.03
+        "perUnit": 0.00001
       }
     }
   ],
