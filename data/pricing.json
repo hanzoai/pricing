@@ -728,7 +728,7 @@
       "name": "kai",
       "owned_by": "hanzo",
       "fullName": "Kai",
-      "description": "Hanzo's decision model. $0.00001 per call, under Jev's $0.042 per million input tokens.",
+      "description": "Hanzo's decision model. $0.021 per million input tokens, half of Jev's $0.042. Output is free.",
       "features": [
         "Decisions",
         "Calibrated probabilities"
@@ -740,9 +740,12 @@
       },
       "endpoint": "/v1/decisions",
       "category": "specialty",
-      "pricingUnit": "call",
+      "pricingUnit": "token",
       "pricing": {
-        "perUnit": 0.00001
+        "input": 0.021,
+        "output": 0,
+        "cacheRead": null,
+        "cacheWrite": null
       }
     }
   ],
