@@ -9,17 +9,17 @@ import { hanzoModelView } from "../src/sync.mjs";
 
 const DATA = join(dirname(fileURLToPath(import.meta.url)), "..", "data", "pricing.json");
 
-// Kai is served at POST /v1/decisions and billed per call. The ai gateway polls
-// /v1/pricing/models for PER-TOKEN rates only, so a per-call row must carry no
-// input/output rate: one would be read as a token price and bill the wrong unit.
-test("kai is listed per call at /v1/decisions", () => {
+// Kai is served at POST /v1/decisions and billed on its input tokens. The ai
+// gateway polls /v1/pricing/models for per-token rates, and this row is the one
+// it bills kai at: $0.021 per million input tokens, output free.
+test("kai is priced per input token at /v1/decisions", () => {
   const kai = decisionCatalog.find((m) => m.name === "kai");
   assert.ok(kai, "kai is in the decision roster");
   assert.equal(kai.endpoint, "/v1/decisions");
   assert.equal(kai.owned_by, "hanzo");
-  assert.equal(kai.pricingUnit, "call");
-  assert.deepEqual(Object.keys(kai.pricing), ["perUnit"]);
-  assert.ok(kai.pricing.perUnit > 0, "a listed model is never unpriced");
+  assert.equal(kai.pricingUnit, "token");
+  assert.equal(kai.pricing.input, 0.021);
+  assert.equal(kai.pricing.output, 0);
 
   const view = hanzoModelView(kai);
   assert.equal(view.provider, "Hanzo");

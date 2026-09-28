@@ -566,23 +566,24 @@ export const ensoCatalog = [
 
 // ── Hanzo Decision — served at POST /v1/decisions on api.hanzo.ai ──────────
 // Kai is Hanzo's decision model: typed choice / noul / score answers about a
-// state. It is billed per call, like zen-rerank, and listed from this roster
-// because the decision service publishes no priced catalog of its own. Only the
-// public ids belong here; the service's benchmark baselines are never listed.
+// state. It is billed on its input tokens, and listed from this roster because
+// the decision service publishes no priced catalog of its own; this row is the
+// price the ai gateway reads. Only the public ids belong here; the service's
+// benchmark baselines are never listed.
 export const decisionCatalog = [
   {
     name: "kai",
     owned_by: "hanzo",
     fullName: "Kai",
-    description: "Hanzo's decision model — answers typed choice, noul and score questions about a state with calibrated probabilities.",
+    description: "Hanzo's decision model. $0.021 per million input tokens, half of Jev's $0.042. Output is free.",
     features: ["Decisions", "Calibrated probabilities"],
     tier: "starter",
     context: null,
     specs: { arch: "decision" },
     endpoint: "/v1/decisions",
     category: "specialty",
-    pricingUnit: "call",
-    pricing: { perUnit: 0.03 },
+    pricingUnit: "token",
+    pricing: { input: 0.021, output: 0, cacheRead: null, cacheWrite: null },
   },
 ];
 
