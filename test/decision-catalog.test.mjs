@@ -26,6 +26,16 @@ test("kai is priced per input token at /v1/decisions", () => {
   assert.equal(view.category, "specialty");
 });
 
+// hanzo/kai is Kai's canonical id, and the gateway bills it, and its alias
+// hanzoai/kai, at this row: Kai's price, at /v1/decisions.
+test("hanzo/kai is kai's price under the canonical id", () => {
+  const kai = decisionCatalog.find((m) => m.name === "kai");
+  const canonical = decisionCatalog.find((m) => m.name === "hanzo/kai");
+  assert.ok(canonical, "hanzo/kai is in the decision roster");
+  assert.deepEqual({ ...canonical, name: "kai" }, kai);
+  assert.ok(!decisionCatalog.some((m) => m.name === "hanzoai/kai"), "an alias has no row of its own");
+});
+
 test("only public decision ids are listed", () => {
   for (const m of decisionCatalog) {
     assert.doesNotMatch(m.name, /^laya/, `${m.name} is a benchmark baseline, not a product`);

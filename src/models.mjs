@@ -569,10 +569,25 @@ export const ensoCatalog = [
 // state. It is billed on its input tokens, and listed from this roster because
 // the decision service publishes no priced catalog of its own; this row is the
 // price the ai gateway reads. Only the public ids belong here; the service's
-// benchmark baselines are never listed.
+// benchmark baselines are never listed. hanzo/kai is Kai's canonical id, at
+// Kai's price; hanzoai/kai is an alias the gateway bills as hanzo/kai.
 export const decisionCatalog = [
   {
     name: "kai",
+    owned_by: "hanzo",
+    fullName: "Kai",
+    description: "Hanzo's decision model. $0.021 per million input tokens, half of Jev's $0.042. Output is free.",
+    features: ["Decisions", "Calibrated probabilities"],
+    tier: "starter",
+    context: null,
+    specs: { arch: "decision" },
+    endpoint: "/v1/decisions",
+    category: "specialty",
+    pricingUnit: "token",
+    pricing: { input: 0.021, output: 0, cacheRead: null, cacheWrite: null },
+  },
+  {
+    name: "hanzo/kai",
     owned_by: "hanzo",
     fullName: "Kai",
     description: "Hanzo's decision model. $0.021 per million input tokens, half of Jev's $0.042. Output is free.",

@@ -5,14 +5,14 @@
     "zenModels": 14,
     "doAiModels": 18,
     "ensoModels": 3,
-    "decisionModels": 1,
+    "decisionModels": 2,
     "thirdPartyModels": 397,
     "openRouterModels": 340,
     "huggingfaceModels": 57,
     "freeModels": 74,
     "featuredModels": 11,
     "providers": 57,
-    "totalModels": 433,
+    "totalModels": 434,
     "cloudPlans": 11,
     "cloudRegions": 4
   },
@@ -726,6 +726,30 @@
     },
     {
       "name": "kai",
+      "owned_by": "hanzo",
+      "fullName": "Kai",
+      "description": "Hanzo's decision model. $0.021 per million input tokens, half of Jev's $0.042. Output is free.",
+      "features": [
+        "Decisions",
+        "Calibrated probabilities"
+      ],
+      "tier": "starter",
+      "context": null,
+      "specs": {
+        "arch": "decision"
+      },
+      "endpoint": "/v1/decisions",
+      "category": "specialty",
+      "pricingUnit": "token",
+      "pricing": {
+        "input": 0.021,
+        "output": 0,
+        "cacheRead": null,
+        "cacheWrite": null
+      }
+    },
+    {
+      "name": "hanzo/kai",
       "owned_by": "hanzo",
       "fullName": "Kai",
       "description": "Hanzo's decision model. $0.021 per million input tokens, half of Jev's $0.042. Output is free.",
