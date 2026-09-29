@@ -69,6 +69,25 @@ assert.ok(pub.body.cloud, 'has cloud section')
 assert.equal(pub.body.cloud._internal, undefined, '_internal stripped from public /v1/pricing')
 ok('public /v1/pricing strips cloud._internal (provider costs / routing)')
 
+// Jev is listed at the price we bill it at, and it is TypeSafe's: its row keeps its
+// own provider and category. Every other row in the Hanzo catalog reads Hanzo and
+// zen, exactly as before Jev was listed — a row that names a provider of its own is
+// still Hanzo's here unless it is a decision model served by someone else.
+const listed = handle({ route: 'models' }).body.models
+for (const name of ['typesafe/jev-1.13', '~typesafe/jev-latest']) {
+  const jev = listed.find((m) => m.name === name)
+  assert.equal(jev.provider, 'TypeSafe')
+  assert.equal(jev.category, 'specialty')
+  assert.equal(jev.pricing.input, 0.042)
+}
+for (const m of pricingData.hanzoModels) {
+  if (m.specs && m.specs.arch === 'decision' && m.provider) continue
+  const row = listed.find((x) => x.name === m.name)
+  assert.equal(row.provider, 'Hanzo', `${m.name} reads Hanzo`)
+  assert.equal(row.category, 'zen', `${m.name} keeps the category it had`)
+}
+ok('models keeps Jev as TypeSafe\'s and every Hanzo row as it was')
+
 const m404 = handle({ route: 'model', params: { name: 'definitely-not-a-model' } })
 assert.equal(m404.status, 404, 'unknown model -> 404')
 ok('model lookup unknown -> 404')

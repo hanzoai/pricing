@@ -29,6 +29,13 @@
 (function () {
   'use strict';
 
+  // foreignDecision reports a decision model listed at the price we bill it at but
+  // served by someone else — Jev, TypeSafe's. It keeps its own provider and
+  // category; every other row in the Hanzo catalog is Hanzo's and reads so.
+  function foreignDecision(m) {
+    return !!(m.specs && m.specs.arch === 'decision' && m.provider);
+  }
+
   function pricing() {
     var d = globalThis.__PRICING_DATA__;
     return d || null;
@@ -187,7 +194,7 @@
       var data = pricing();
       if (!data) return { __status: 503, error: 'Pricing data not yet available' };
       var models = (data.hanzoModels || []).map(function (m) {
-        return Object.assign({}, m, { provider: 'Hanzo', category: 'zen' });
+        return Object.assign({}, m, foreignDecision(m) ? {} : { provider: 'Hanzo', category: 'zen' });
       }).concat((data.thirdPartyModels || []).map(function (m) {
         return Object.assign({}, m, { category: m.featured ? 'featured' : 'third-party' });
       }));
@@ -304,7 +311,7 @@
     var data = pricing();
     if (!data) return { __status: 503, error: 'Model data not yet available' };
     var zenModels = (data.hanzoModels || []).map(function (m) {
-      return Object.assign({ id: m.id || m.name, object: 'model', owned_by: 'hanzo' }, m, { provider: 'Hanzo' });
+      return Object.assign({ id: m.id || m.name, object: 'model', owned_by: 'hanzo' }, m, { provider: foreignDecision(m) ? m.provider : 'Hanzo' });
     });
     var thirdParty = (data.thirdPartyModels || []).map(function (m) {
       return Object.assign({ id: m.id || m.name, object: 'model', owned_by: m.provider || 'third-party' }, m);
