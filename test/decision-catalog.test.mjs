@@ -36,6 +36,24 @@ test("hanzo/kai is kai's price under the canonical id", () => {
   assert.ok(!decisionCatalog.some((m) => m.name === "hanzoai/kai"), "an alias has no row of its own");
 });
 
+// Jev is listed under OpenRouter's vendor ids, which the gateway forwards to Jev
+// itself, at Jev's list price: $0.042 per million input tokens, output free, twice
+// Kai's. It is TypeSafe's, never Hanzo's.
+test("jev is priced per input token at its list price", () => {
+  const kai = decisionCatalog.find((m) => m.name === "kai");
+  for (const name of ["typesafe/jev-1.13", "~typesafe/jev-latest"]) {
+    const jev = decisionCatalog.find((m) => m.name === name);
+    assert.ok(jev, `${name} is in the decision roster`);
+    assert.equal(jev.pricingUnit, "token");
+    assert.equal(jev.pricing.input, 0.042);
+    assert.equal(jev.pricing.output, 0);
+    assert.equal(jev.pricing.input, 2 * kai.pricing.input);
+    assert.equal(jev.owned_by, "typesafe");
+    assert.equal(hanzoModelView(jev).provider, "TypeSafe");
+  }
+  assert.ok(!decisionCatalog.some((m) => /^jev/.test(m.name)), "a bare Jev id has no row");
+});
+
 test("only public decision ids are listed", () => {
   for (const m of decisionCatalog) {
     assert.doesNotMatch(m.name, /^laya/, `${m.name} is a benchmark baseline, not a product`);

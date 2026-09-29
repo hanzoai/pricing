@@ -570,7 +570,9 @@ export const ensoCatalog = [
 // the decision service publishes no priced catalog of its own; this row is the
 // price the ai gateway reads. Only the public ids belong here; the service's
 // benchmark baselines are never listed. hanzo/kai is Kai's canonical id, at
-// Kai's price; hanzoai/kai is an alias the gateway bills as hanzo/kai.
+// Kai's price; hanzoai/kai is an alias the gateway bills as hanzo/kai. Jev is
+// listed under OpenRouter's vendor ids, which the gateway forwards to Jev itself,
+// at Jev's list price — the row the gateway bills it at.
 export const decisionCatalog = [
   {
     name: "kai",
@@ -599,6 +601,36 @@ export const decisionCatalog = [
     category: "specialty",
     pricingUnit: "token",
     pricing: { input: 0.021, output: 0, cacheRead: null, cacheWrite: null },
+  },
+  {
+    name: "typesafe/jev-1.13",
+    owned_by: "typesafe",
+    provider: "TypeSafe",
+    fullName: "Jev 1.13",
+    description: "TypeSafe's decision model, reached through OpenRouter, at its list price: $0.042 per million input tokens. Output is free.",
+    features: ["Decisions"],
+    tier: "starter",
+    context: null,
+    specs: { arch: "decision" },
+    endpoint: "/v1/decisions",
+    category: "specialty",
+    pricingUnit: "token",
+    pricing: { input: 0.042, output: 0, cacheRead: null, cacheWrite: null },
+  },
+  {
+    name: "~typesafe/jev-latest",
+    owned_by: "typesafe",
+    provider: "TypeSafe",
+    fullName: "Jev",
+    description: "TypeSafe's decision model, reached through OpenRouter, at its list price: $0.042 per million input tokens. Output is free.",
+    features: ["Decisions"],
+    tier: "starter",
+    context: null,
+    specs: { arch: "decision" },
+    endpoint: "/v1/decisions",
+    category: "specialty",
+    pricingUnit: "token",
+    pricing: { input: 0.042, output: 0, cacheRead: null, cacheWrite: null },
   },
 ];
 
