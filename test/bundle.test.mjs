@@ -69,6 +69,20 @@ assert.ok(pub.body.cloud, 'has cloud section')
 assert.equal(pub.body.cloud._internal, undefined, '_internal stripped from public /v1/pricing')
 ok('public /v1/pricing strips cloud._internal (provider costs / routing)')
 
+for (const route of ['pricing', 'compute', 'cloud']) {
+  const r = handle({ route })
+  assert.equal(r.status, 200, route)
+  assert.ok(!JSON.stringify(r.body).includes('"_internal"'), `${route}: _internal never leaves the bundle`)
+}
+{
+  // Stripped at the exit, whatever a route returns: a section added later is covered.
+  const seeded = { ...pricingData, infrastructure: { ...pricingData.infrastructure, compute: { ...pricingData.infrastructure.compute, _internal: { cost: 1 } } } }
+  vm.runInContext('this.__PRICING_DATA__=' + JSON.stringify(seeded), ctx)
+  assert.ok(!JSON.stringify(handle({ route: 'compute' }).body).includes('"_internal"'), 'compute strips a nested _internal')
+  vm.runInContext('this.__PRICING_DATA__=' + JSON.stringify(pricingData), ctx)
+}
+ok('every route strips _internal at any depth')
+
 // Jev is listed at the price we bill it at, and it is TypeSafe's: its row keeps its
 // own provider and category. Every other row in the Hanzo catalog reads Hanzo and
 // zen, exactly as before Jev was listed — a row that names a provider of its own is

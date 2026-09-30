@@ -168,11 +168,13 @@
   // === read handlers (port of the /v1/pricing/* surface of server.mjs) =======
   // Each returns either a plain body (=> 200) or { __status, ... }.
 
-  function pubCloud(data) {
-    if (!data || !data.cloud) return null;
-    var c = data.cloud;
+  // `_internal` is never part of a response: stripped recursively at the one
+  // exit below, so no route and no section can carry it out (src/view.mjs).
+  function pub(v) {
+    if (Array.isArray(v)) return v.map(pub);
+    if (!v || typeof v !== 'object') return v;
     var out = {};
-    Object.keys(c).forEach(function (k) { if (k !== '_internal') out[k] = c[k]; });
+    Object.keys(v).forEach(function (k) { if (k !== '_internal') out[k] = pub(v[k]); });
     return out;
   }
 
@@ -182,11 +184,6 @@
     'pricing': function () {
       var data = pricing();
       if (!data) return { __status: 503, error: 'Pricing data not yet available' };
-      if (data.cloud) {
-        var copy = Object.assign({}, data);
-        copy.cloud = pubCloud(data);
-        return copy;
-      }
       return data;
     },
 
@@ -248,7 +245,8 @@
     },
 
     'cloud': function () {
-      var c = pubCloud(pricing());
+      var d = pricing();
+      var c = d && d.cloud;
       if (!c) return { __status: 503, error: 'Cloud pricing not yet available' };
       return c;
     },
@@ -332,9 +330,9 @@
       var out = fn(ctx);
       if (out && out.__status) {
         var status = out.__status; delete out.__status;
-        return { status: status, body: out };
+        return { status: status, body: pub(out) };
       }
-      return { status: 200, body: out };
+      return { status: 200, body: pub(out) };
     } catch (err) {
       return { status: 500, body: { error: String(err && err.message || err) } };
     }

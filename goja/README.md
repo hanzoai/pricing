@@ -38,5 +38,5 @@ and drives `applyMarkup()` from the admin-gated `POST /v1/pricing/sync`.
 ## Tests
 
 `test/bundle.test.mjs` (run via `npm test`) asserts the read handlers shape data
-correctly + strip `cloud._internal`, and that the markup math is exact
+correctly + strip `_internal` at any depth, and that the markup math is exact
 (`toMTok(0.0000025) -> 2.5 $/MTok`).
