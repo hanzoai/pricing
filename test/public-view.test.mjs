@@ -8,24 +8,16 @@ import { publicView } from "../src/view.mjs";
 
 const DATA = join(dirname(fileURLToPath(import.meta.url)), "..", "data", "pricing.json");
 
-// What a customer must never learn from us: which supplier serves a SKU, what
-// that supplier charges us, and the margin we add. This ran against the real
-// catalog and found the live leak — `infrastructure` published `digitalocean`,
-// `basePriceMonthly` and `markupMonthly` to anyone who asked, because the strip
-// lived at three call sites that each only knew about `cloud`.
+// The public catalog names SKUs and prices only: never a supplier, a cost
+// basis or a markup. Checked against the committed snapshot and the served view.
 const FORBIDDEN = /"(basePriceMonthly|basePriceHourly|markupMonthly|markupHourly|providerCosts|planRouting)"|"digitalocean"/;
 
-test("the served view carries no supplier, cost or margin", () => {
-  const raw = JSON.parse(readFileSync(DATA, "utf-8"));
-
-  // The catalog itself HOLDS these — that is the point of the file, and it is
-  // what makes this test non-vacuous: if the assertion below ever passes because
-  // the data went empty rather than because the view strips, this fails first.
-  assert.match(JSON.stringify(raw), FORBIDDEN, "fixture no longer contains internals — the test would prove nothing");
-
-  const served = JSON.stringify(publicView(raw));
-  const leaked = served.match(new RegExp(FORBIDDEN.source, "g")) || [];
-  assert.deepEqual(leaked, [], `served view leaks: ${[...new Set(leaked)].join(", ")}`);
+test("the snapshot and the served view carry no supplier, cost or margin", () => {
+  const text = readFileSync(DATA, "utf-8");
+  for (const [name, body] of [["snapshot", text], ["served view", JSON.stringify(publicView(JSON.parse(text)))]]) {
+    const found = body.match(new RegExp(FORBIDDEN.source, "g")) || [];
+    assert.deepEqual(found, [], `${name} carries: ${[...new Set(found)].join(", ")}`);
+  }
 });
 
 test("stripping internals leaves the customer's price intact", () => {

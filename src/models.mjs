@@ -518,9 +518,8 @@ export const zenCatalog = [
 //
 // The authoritative retail rates are hanzoai/zen/catalog-enso.yaml (`retail:`),
 // replicated in hanzoai/commerce/models/catalogentry/seed/enso-models.json
-// (`rates[].price`) — commerce owns pricing; this file is a replica. They were
-// last out of sync at 20/60, 2/6 and 40/120 (the pre-2026-07-22 reprice), which
-// this catalog kept publishing after the reprice landed everywhere else.
+// (`rates[].price`) — commerce owns pricing; this file is a replica, held equal
+// by test/enso-rates.test.mjs.
 // enso-vl / enso-vl-pro are INTERNAL SKUs and must never be listed here.
 //
 // THE WINDOW HAS ONE OWNER TOO, AND IT IS NOT THIS FILE. `context` here is the
@@ -528,9 +527,7 @@ export const zenCatalog = [
 // (catalog-enso.yaml `route[].ctx`, replicated in commerce's `spec.contextWindow`);
 // buildEnsoModels takes the served window in preference. So `features` states the
 // window nowhere — the window bullet is DERIVED from whichever window won, and
-// these lists carry only the capability copy. Hand-typing it a second time is what
-// put "200K context window" on a SKU serving 1M and "1M context window" on one
-// serving 262K on the live catalog.
+// these lists carry only the capability copy.
 export const ensoCatalog = [
   {
     name: "enso",
@@ -718,9 +715,6 @@ export const toolPricing = [
 // The developer cloud that doesn't nickel-and-dime you.
 // Consistent global pricing. No egress fees. No hidden costs.
 // All plans include DDoS protection, automated backups, and IPv4/IPv6.
-//
-// Internal: Provider routing is transparent to customers.
-// Margins: 50-80% on dedicated tiers via cost-optimized backend selection.
 
 export const cloudPlans = [
   {
@@ -832,133 +826,6 @@ export const blockStoragePricing = {
   pricePerGBMonthly: 0.08,  // $/GB/month
   minSizeGB: 1,
   maxSizeGB: 16384,
-  // Internal cost basis (not exposed to API)
-  _internalCosts: {
-    tier1: { costPerGBMonthly: 0.048 },  // primary backend
-    tier2: { costPerGBMonthly: 0.10 },   // premium backend
-  },
-};
-
-// ── INTERNAL: Provider cost basis (never exposed via API) ────────
-// Used for margin calculation and backend routing decisions.
-// Customer-facing price is ALWAYS from cloudPlans above.
-// BRAND POLICY: Provider names must NEVER appear in API responses.
-
-export const providerCosts = {
-  hetzner: {
-    regions: ["eu-central", "us-east", "us-west", "ap-southeast"],
-    costs: {
-      // EU (Falkenstein/Nuremberg) — best margins
-      // Prices from SpareCores / Hetzner Cloud (EUR→USD at ~1.10)
-      "eu-central": {
-        "cx22":  { vcpus: 2,  memoryMB: 4096,   diskGB: 40,   priceMonthly: 3.60 },
-        "cpx11": { vcpus: 2,  memoryMB: 2048,   diskGB: 40,   priceMonthly: 4.20 },
-        "cpx21": { vcpus: 3,  memoryMB: 4096,   diskGB: 80,   priceMonthly: 7.10 },
-        "cpx31": { vcpus: 4,  memoryMB: 8192,   diskGB: 160,  priceMonthly: 13.70 },
-        "cpx41": { vcpus: 8,  memoryMB: 16384,  diskGB: 240,  priceMonthly: 24.60 },
-        "ccx13": { vcpus: 2,  memoryMB: 8192,   diskGB: 80,   priceMonthly: 14.80 },
-        "ccx23": { vcpus: 4,  memoryMB: 16384,  diskGB: 160,  priceMonthly: 27.90 },
-        "ccx33": { vcpus: 8,  memoryMB: 32768,  diskGB: 240,  priceMonthly: 54.20 },
-        "ccx43": { vcpus: 16, memoryMB: 65536,  diskGB: 360,  priceMonthly: 123.50 },  // €112.27
-        "ccx53": { vcpus: 32, memoryMB: 131072, diskGB: 600,  priceMonthly: 247.00 },  // €224.62
-        "ccx63": { vcpus: 48, memoryMB: 196608, diskGB: 960,  priceMonthly: 371.00 },  // €336.90
-      },
-      // US (Ashburn/Hillsboro)
-      "us-east": {
-        "cx22":  { vcpus: 2,  memoryMB: 4096,   diskGB: 40,   priceMonthly: 3.99 },
-        "cpx11": { vcpus: 2,  memoryMB: 2048,   diskGB: 40,   priceMonthly: 4.49 },
-        "cpx21": { vcpus: 3,  memoryMB: 4096,   diskGB: 80,   priceMonthly: 7.49 },
-        "cpx31": { vcpus: 4,  memoryMB: 8192,   diskGB: 160,  priceMonthly: 14.49 },
-        "cpx41": { vcpus: 8,  memoryMB: 16384,  diskGB: 240,  priceMonthly: 25.99 },
-        "ccx13": { vcpus: 2,  memoryMB: 8192,   diskGB: 80,   priceMonthly: 15.49 },
-        "ccx23": { vcpus: 4,  memoryMB: 16384,  diskGB: 160,  priceMonthly: 29.49 },
-        "ccx33": { vcpus: 8,  memoryMB: 32768,  diskGB: 240,  priceMonthly: 56.99 },
-        "ccx43": { vcpus: 16, memoryMB: 65536,  diskGB: 360,  priceMonthly: 128.70 },  // €117.02
-        "ccx53": { vcpus: 32, memoryMB: 131072, diskGB: 600,  priceMonthly: 257.40 },  // €233.97
-        "ccx63": { vcpus: 48, memoryMB: 196608, diskGB: 960,  priceMonthly: 386.10 },  // €350.98
-      },
-      "us-west": {
-        "cx22":  { vcpus: 2,  memoryMB: 4096,   diskGB: 40,   priceMonthly: 3.99 },
-        "cpx11": { vcpus: 2,  memoryMB: 2048,   diskGB: 40,   priceMonthly: 4.49 },
-        "cpx21": { vcpus: 3,  memoryMB: 4096,   diskGB: 80,   priceMonthly: 7.49 },
-        "cpx31": { vcpus: 4,  memoryMB: 8192,   diskGB: 160,  priceMonthly: 14.49 },
-        "cpx41": { vcpus: 8,  memoryMB: 16384,  diskGB: 240,  priceMonthly: 25.99 },
-        "ccx13": { vcpus: 2,  memoryMB: 8192,   diskGB: 80,   priceMonthly: 15.49 },
-        "ccx23": { vcpus: 4,  memoryMB: 16384,  diskGB: 160,  priceMonthly: 29.49 },
-        "ccx33": { vcpus: 8,  memoryMB: 32768,  diskGB: 240,  priceMonthly: 56.99 },
-        "ccx43": { vcpus: 16, memoryMB: 65536,  diskGB: 360,  priceMonthly: 128.70 },  // €117.02
-        "ccx53": { vcpus: 32, memoryMB: 131072, diskGB: 600,  priceMonthly: 257.40 },  // €233.97
-        "ccx63": { vcpus: 48, memoryMB: 196608, diskGB: 960,  priceMonthly: 386.10 },  // €350.98
-      },
-      // Singapore — premium region
-      "ap-southeast": {
-        "cpx12": { vcpus: 2,  memoryMB: 2048,   diskGB: 40,   priceMonthly: 5.49 },
-        "cpx22": { vcpus: 3,  memoryMB: 4096,   diskGB: 80,   priceMonthly: 8.99 },
-        "cpx32": { vcpus: 4,  memoryMB: 8192,   diskGB: 160,  priceMonthly: 17.49 },
-        "cpx42": { vcpus: 8,  memoryMB: 16384,  diskGB: 240,  priceMonthly: 30.99 },
-        "ccx13": { vcpus: 2,  memoryMB: 8192,   diskGB: 80,   priceMonthly: 17.49 },
-        "ccx23": { vcpus: 4,  memoryMB: 16384,  diskGB: 160,  priceMonthly: 33.49 },
-        "ccx33": { vcpus: 8,  memoryMB: 32768,  diskGB: 240,  priceMonthly: 63.99 },
-        "ccx43": { vcpus: 16, memoryMB: 65536,  diskGB: 360,  priceMonthly: 176.35 },  // €160.32
-        "ccx53": { vcpus: 32, memoryMB: 131072, diskGB: 600,  priceMonthly: 378.00 },  // €343.78
-        "ccx63": { vcpus: 48, memoryMB: 196608, diskGB: 960,  priceMonthly: 620.00 },  // €563.86
-      },
-    },
-  },
-  digitalocean: {
-    regions: ["us-east", "us-west", "eu-central", "ap-southeast"],
-    premium: true, // higher customer-facing price for DO regions
-    costs: {
-      // Basic (shared CPU)
-      "s-1vcpu-1gb":     { vcpus: 1,  memoryMB: 1024,   diskGB: 25,  priceMonthly: 6 },
-      "s-1vcpu-2gb":     { vcpus: 1,  memoryMB: 2048,   diskGB: 50,  priceMonthly: 12 },
-      "s-2vcpu-2gb":     { vcpus: 2,  memoryMB: 2048,   diskGB: 60,  priceMonthly: 18 },
-      "s-2vcpu-4gb":     { vcpus: 2,  memoryMB: 4096,   diskGB: 80,  priceMonthly: 24 },
-      "s-4vcpu-8gb":     { vcpus: 4,  memoryMB: 8192,   diskGB: 160, priceMonthly: 48 },
-      "s-8vcpu-16gb":    { vcpus: 8,  memoryMB: 16384,  diskGB: 320, priceMonthly: 96 },
-      // General Purpose (dedicated CPU) — premium fallback for high-end plans
-      "g-8vcpu-32gb":    { vcpus: 8,  memoryMB: 32768,  diskGB: 100, priceMonthly: 240 },
-      "g-16vcpu-64gb":   { vcpus: 16, memoryMB: 65536,  diskGB: 200, priceMonthly: 480 },
-      "g-32vcpu-128gb":  { vcpus: 32, memoryMB: 131072, diskGB: 400, priceMonthly: 960 },
-      "g-40vcpu-160gb":  { vcpus: 40, memoryMB: 163840, diskGB: 500, priceMonthly: 1200 },
-      // CPU-Optimized (dedicated CPU)
-      "c-8":             { vcpus: 8,  memoryMB: 16384,  diskGB: 100, priceMonthly: 160 },
-      "c-16":            { vcpus: 16, memoryMB: 32768,  diskGB: 200, priceMonthly: 320 },
-      "c-32":            { vcpus: 32, memoryMB: 65536,  diskGB: 400, priceMonthly: 640 },
-      "c-48":            { vcpus: 48, memoryMB: 98304,  diskGB: 600, priceMonthly: 960 },
-    },
-  },
-  lightsail: {
-    regions: ["us-east", "us-west", "eu-central", "ap-southeast"],
-    premium: true,
-    costs: {
-      "nano_3_0":   { vcpus: 1, memoryMB: 512,   diskGB: 20,  priceMonthly: 3.50 },
-      "micro_3_0":  { vcpus: 1, memoryMB: 1024,  diskGB: 40,  priceMonthly: 5 },
-      "small_3_0":  { vcpus: 1, memoryMB: 2048,  diskGB: 60,  priceMonthly: 10 },
-      "medium_3_0": { vcpus: 2, memoryMB: 4096,  diskGB: 80,  priceMonthly: 20 },
-      "large_3_0":  { vcpus: 2, memoryMB: 8192,  diskGB: 160, priceMonthly: 40 },
-      "xlarge_3_0": { vcpus: 4, memoryMB: 16384, diskGB: 320, priceMonthly: 80 },
-    },
-  },
-};
-
-// ── Plan-to-provider routing ──────────────────────────────────────
-// Maps each cloud plan to the cheapest backend provider per region.
-// Internal routing — maps plan IDs to backend provider instance types.
-// Customers never see provider names. "default" = best margin, "premium" = fallback.
-export const planRouting = {
-  // Free tier: route to AWS/DO (credit-subsidized) — $3.50 cost on $5 plan
-  starter:           { default: { provider: "lightsail", type: "nano_3_0" },  premium: { provider: "digitalocean", type: "s-1vcpu-1gb" } },
-  builder:           { default: { provider: "hetzner", type: "cpx11" },       premium: { provider: "digitalocean", type: "s-2vcpu-2gb" } },
-  dev:               { default: { provider: "hetzner", type: "cpx31" },       premium: { provider: "lightsail", type: "large_3_0" } },
-  pro:               { default: { provider: "hetzner", type: "ccx13" },       premium: { provider: "lightsail", type: "large_3_0" } },
-  turbo:             { default: { provider: "hetzner", type: "cpx41" },       premium: { provider: "digitalocean", type: "s-8vcpu-16gb" } },
-  "turbo-dedicated": { default: { provider: "hetzner", type: "ccx23" },      premium: { provider: "digitalocean", type: "s-8vcpu-16gb" } },
-  business:          { default: { provider: "hetzner", type: "ccx33" },       premium: { provider: "digitalocean", type: "g-8vcpu-32gb" } },
-  enterprise:        { default: { provider: "hetzner", type: "ccx43" },       premium: { provider: "digitalocean", type: "g-16vcpu-64gb" } },
-  scale:             { default: { provider: "hetzner", type: "ccx53" },       premium: { provider: "digitalocean", type: "g-32vcpu-128gb" } },
-  mega:              { default: { provider: "hetzner", type: "ccx63" },       premium: { provider: "digitalocean", type: "g-40vcpu-160gb" } },
-  ultra:             { default: { provider: "hetzner", type: "2x-ccx63" },    premium: { provider: "digitalocean", type: "2x-g-40vcpu-160gb" } },
 };
 
 // ── Cloud regions ─────────────────────────────────────────────────
@@ -970,7 +837,7 @@ export const cloudRegions = [
 ];
 
 // ── Compute presets mapped to real DO droplet slugs ─────────────────
-// Base prices fetched from DO API at sync time; markup applied on top.
+// Base prices fetched from the DO API at sync time.
 export const computePresets = [
   { id: "starter", name: "Starter", slug: "s-1vcpu-2gb", description: "Light tasks, chat bots, simple automations" },
   { id: "pro", name: "Pro", slug: "s-2vcpu-4gb", description: "Code generation, research, multi-tool agents" },

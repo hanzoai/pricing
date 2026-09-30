@@ -8069,11 +8069,6 @@
   ],
   "infrastructure": {
     "compute": {
-      "_internal": {
-        "provider": "digitalocean",
-        "region": "sfo3",
-        "markupMonthly": 1
-      },
       "tiers": [
         {
           "slug": "s-1vcpu-1gb",
@@ -8082,11 +8077,7 @@
           "diskGB": 25,
           "priceMonthly": 7,
           "priceHourly": 0.0097,
-          "centsPerHour": 1,
-          "_internal": {
-            "basePriceMonthly": 6,
-            "basePriceHourly": 0.00893
-          }
+          "centsPerHour": 1
         },
         {
           "slug": "s-1vcpu-2gb",
@@ -8095,11 +8086,7 @@
           "diskGB": 50,
           "priceMonthly": 13,
           "priceHourly": 0.018,
-          "centsPerHour": 2,
-          "_internal": {
-            "basePriceMonthly": 12,
-            "basePriceHourly": 0.01786
-          }
+          "centsPerHour": 2
         },
         {
           "slug": "s-2vcpu-2gb",
@@ -8108,11 +8095,7 @@
           "diskGB": 60,
           "priceMonthly": 19,
           "priceHourly": 0.026,
-          "centsPerHour": 3,
-          "_internal": {
-            "basePriceMonthly": 18,
-            "basePriceHourly": 0.02679
-          }
+          "centsPerHour": 3
         },
         {
           "slug": "s-2vcpu-4gb",
@@ -8121,11 +8104,7 @@
           "diskGB": 80,
           "priceMonthly": 25,
           "priceHourly": 0.035,
-          "centsPerHour": 4,
-          "_internal": {
-            "basePriceMonthly": 24,
-            "basePriceHourly": 0.03571
-          }
+          "centsPerHour": 4
         },
         {
           "slug": "s-4vcpu-8gb",
@@ -8134,11 +8113,7 @@
           "diskGB": 160,
           "priceMonthly": 49,
           "priceHourly": 0.068,
-          "centsPerHour": 7,
-          "_internal": {
-            "basePriceMonthly": 48,
-            "basePriceHourly": 0.07143
-          }
+          "centsPerHour": 7
         },
         {
           "slug": "s-8vcpu-16gb",
@@ -8147,11 +8122,7 @@
           "diskGB": 320,
           "priceMonthly": 97,
           "priceHourly": 0.135,
-          "centsPerHour": 14,
-          "_internal": {
-            "basePriceMonthly": 96,
-            "basePriceHourly": 0.14286
-          }
+          "centsPerHour": 14
         },
         {
           "slug": "s-16vcpu-32gb",
@@ -8160,11 +8131,7 @@
           "diskGB": 640,
           "priceMonthly": 193,
           "priceHourly": 0.268,
-          "centsPerHour": 27,
-          "_internal": {
-            "basePriceMonthly": 192,
-            "basePriceHourly": 0.28571
-          }
+          "centsPerHour": 27
         },
         {
           "slug": "g-2vcpu-8gb",
@@ -8173,11 +8140,7 @@
           "diskGB": 25,
           "priceMonthly": 49,
           "priceHourly": 0.068,
-          "centsPerHour": 7,
-          "_internal": {
-            "basePriceMonthly": 48,
-            "basePriceHourly": 0.07143
-          }
+          "centsPerHour": 7
         },
         {
           "slug": "g-4vcpu-16gb",
@@ -8186,11 +8149,7 @@
           "diskGB": 50,
           "priceMonthly": 97,
           "priceHourly": 0.135,
-          "centsPerHour": 14,
-          "_internal": {
-            "basePriceMonthly": 96,
-            "basePriceHourly": 0.14286
-          }
+          "centsPerHour": 14
         },
         {
           "slug": "c-2vcpu-4gb",
@@ -8199,11 +8158,7 @@
           "diskGB": 25,
           "priceMonthly": 41,
           "priceHourly": 0.057,
-          "centsPerHour": 6,
-          "_internal": {
-            "basePriceMonthly": 40,
-            "basePriceHourly": 0.05952
-          }
+          "centsPerHour": 6
         },
         {
           "slug": "c-4vcpu-8gb",
@@ -8212,11 +8167,7 @@
           "diskGB": 50,
           "priceMonthly": 81,
           "priceHourly": 0.113,
-          "centsPerHour": 12,
-          "_internal": {
-            "basePriceMonthly": 80,
-            "basePriceHourly": 0.11905
-          }
+          "centsPerHour": 12
         }
       ],
       "presets": [
@@ -8547,540 +8498,6 @@
       "pricePerGBMonthly": 0.08,
       "minSizeGB": 1,
       "maxSizeGB": 16384
-    },
-    "_internal": {
-      "providerCosts": {
-        "hetzner": {
-          "regions": [
-            "eu-central",
-            "us-east",
-            "us-west",
-            "ap-southeast"
-          ],
-          "costs": {
-            "eu-central": {
-              "cx22": {
-                "vcpus": 2,
-                "memoryMB": 4096,
-                "diskGB": 40,
-                "priceMonthly": 3.6
-              },
-              "cpx11": {
-                "vcpus": 2,
-                "memoryMB": 2048,
-                "diskGB": 40,
-                "priceMonthly": 4.2
-              },
-              "cpx21": {
-                "vcpus": 3,
-                "memoryMB": 4096,
-                "diskGB": 80,
-                "priceMonthly": 7.1
-              },
-              "cpx31": {
-                "vcpus": 4,
-                "memoryMB": 8192,
-                "diskGB": 160,
-                "priceMonthly": 13.7
-              },
-              "cpx41": {
-                "vcpus": 8,
-                "memoryMB": 16384,
-                "diskGB": 240,
-                "priceMonthly": 24.6
-              },
-              "ccx13": {
-                "vcpus": 2,
-                "memoryMB": 8192,
-                "diskGB": 80,
-                "priceMonthly": 14.8
-              },
-              "ccx23": {
-                "vcpus": 4,
-                "memoryMB": 16384,
-                "diskGB": 160,
-                "priceMonthly": 27.9
-              },
-              "ccx33": {
-                "vcpus": 8,
-                "memoryMB": 32768,
-                "diskGB": 240,
-                "priceMonthly": 54.2
-              },
-              "ccx43": {
-                "vcpus": 16,
-                "memoryMB": 65536,
-                "diskGB": 360,
-                "priceMonthly": 123.5
-              },
-              "ccx53": {
-                "vcpus": 32,
-                "memoryMB": 131072,
-                "diskGB": 600,
-                "priceMonthly": 247
-              },
-              "ccx63": {
-                "vcpus": 48,
-                "memoryMB": 196608,
-                "diskGB": 960,
-                "priceMonthly": 371
-              }
-            },
-            "us-east": {
-              "cx22": {
-                "vcpus": 2,
-                "memoryMB": 4096,
-                "diskGB": 40,
-                "priceMonthly": 3.99
-              },
-              "cpx11": {
-                "vcpus": 2,
-                "memoryMB": 2048,
-                "diskGB": 40,
-                "priceMonthly": 4.49
-              },
-              "cpx21": {
-                "vcpus": 3,
-                "memoryMB": 4096,
-                "diskGB": 80,
-                "priceMonthly": 7.49
-              },
-              "cpx31": {
-                "vcpus": 4,
-                "memoryMB": 8192,
-                "diskGB": 160,
-                "priceMonthly": 14.49
-              },
-              "cpx41": {
-                "vcpus": 8,
-                "memoryMB": 16384,
-                "diskGB": 240,
-                "priceMonthly": 25.99
-              },
-              "ccx13": {
-                "vcpus": 2,
-                "memoryMB": 8192,
-                "diskGB": 80,
-                "priceMonthly": 15.49
-              },
-              "ccx23": {
-                "vcpus": 4,
-                "memoryMB": 16384,
-                "diskGB": 160,
-                "priceMonthly": 29.49
-              },
-              "ccx33": {
-                "vcpus": 8,
-                "memoryMB": 32768,
-                "diskGB": 240,
-                "priceMonthly": 56.99
-              },
-              "ccx43": {
-                "vcpus": 16,
-                "memoryMB": 65536,
-                "diskGB": 360,
-                "priceMonthly": 128.7
-              },
-              "ccx53": {
-                "vcpus": 32,
-                "memoryMB": 131072,
-                "diskGB": 600,
-                "priceMonthly": 257.4
-              },
-              "ccx63": {
-                "vcpus": 48,
-                "memoryMB": 196608,
-                "diskGB": 960,
-                "priceMonthly": 386.1
-              }
-            },
-            "us-west": {
-              "cx22": {
-                "vcpus": 2,
-                "memoryMB": 4096,
-                "diskGB": 40,
-                "priceMonthly": 3.99
-              },
-              "cpx11": {
-                "vcpus": 2,
-                "memoryMB": 2048,
-                "diskGB": 40,
-                "priceMonthly": 4.49
-              },
-              "cpx21": {
-                "vcpus": 3,
-                "memoryMB": 4096,
-                "diskGB": 80,
-                "priceMonthly": 7.49
-              },
-              "cpx31": {
-                "vcpus": 4,
-                "memoryMB": 8192,
-                "diskGB": 160,
-                "priceMonthly": 14.49
-              },
-              "cpx41": {
-                "vcpus": 8,
-                "memoryMB": 16384,
-                "diskGB": 240,
-                "priceMonthly": 25.99
-              },
-              "ccx13": {
-                "vcpus": 2,
-                "memoryMB": 8192,
-                "diskGB": 80,
-                "priceMonthly": 15.49
-              },
-              "ccx23": {
-                "vcpus": 4,
-                "memoryMB": 16384,
-                "diskGB": 160,
-                "priceMonthly": 29.49
-              },
-              "ccx33": {
-                "vcpus": 8,
-                "memoryMB": 32768,
-                "diskGB": 240,
-                "priceMonthly": 56.99
-              },
-              "ccx43": {
-                "vcpus": 16,
-                "memoryMB": 65536,
-                "diskGB": 360,
-                "priceMonthly": 128.7
-              },
-              "ccx53": {
-                "vcpus": 32,
-                "memoryMB": 131072,
-                "diskGB": 600,
-                "priceMonthly": 257.4
-              },
-              "ccx63": {
-                "vcpus": 48,
-                "memoryMB": 196608,
-                "diskGB": 960,
-                "priceMonthly": 386.1
-              }
-            },
-            "ap-southeast": {
-              "cpx12": {
-                "vcpus": 2,
-                "memoryMB": 2048,
-                "diskGB": 40,
-                "priceMonthly": 5.49
-              },
-              "cpx22": {
-                "vcpus": 3,
-                "memoryMB": 4096,
-                "diskGB": 80,
-                "priceMonthly": 8.99
-              },
-              "cpx32": {
-                "vcpus": 4,
-                "memoryMB": 8192,
-                "diskGB": 160,
-                "priceMonthly": 17.49
-              },
-              "cpx42": {
-                "vcpus": 8,
-                "memoryMB": 16384,
-                "diskGB": 240,
-                "priceMonthly": 30.99
-              },
-              "ccx13": {
-                "vcpus": 2,
-                "memoryMB": 8192,
-                "diskGB": 80,
-                "priceMonthly": 17.49
-              },
-              "ccx23": {
-                "vcpus": 4,
-                "memoryMB": 16384,
-                "diskGB": 160,
-                "priceMonthly": 33.49
-              },
-              "ccx33": {
-                "vcpus": 8,
-                "memoryMB": 32768,
-                "diskGB": 240,
-                "priceMonthly": 63.99
-              },
-              "ccx43": {
-                "vcpus": 16,
-                "memoryMB": 65536,
-                "diskGB": 360,
-                "priceMonthly": 176.35
-              },
-              "ccx53": {
-                "vcpus": 32,
-                "memoryMB": 131072,
-                "diskGB": 600,
-                "priceMonthly": 378
-              },
-              "ccx63": {
-                "vcpus": 48,
-                "memoryMB": 196608,
-                "diskGB": 960,
-                "priceMonthly": 620
-              }
-            }
-          }
-        },
-        "digitalocean": {
-          "regions": [
-            "us-east",
-            "us-west",
-            "eu-central",
-            "ap-southeast"
-          ],
-          "premium": true,
-          "costs": {
-            "s-1vcpu-1gb": {
-              "vcpus": 1,
-              "memoryMB": 1024,
-              "diskGB": 25,
-              "priceMonthly": 6
-            },
-            "s-1vcpu-2gb": {
-              "vcpus": 1,
-              "memoryMB": 2048,
-              "diskGB": 50,
-              "priceMonthly": 12
-            },
-            "s-2vcpu-2gb": {
-              "vcpus": 2,
-              "memoryMB": 2048,
-              "diskGB": 60,
-              "priceMonthly": 18
-            },
-            "s-2vcpu-4gb": {
-              "vcpus": 2,
-              "memoryMB": 4096,
-              "diskGB": 80,
-              "priceMonthly": 24
-            },
-            "s-4vcpu-8gb": {
-              "vcpus": 4,
-              "memoryMB": 8192,
-              "diskGB": 160,
-              "priceMonthly": 48
-            },
-            "s-8vcpu-16gb": {
-              "vcpus": 8,
-              "memoryMB": 16384,
-              "diskGB": 320,
-              "priceMonthly": 96
-            },
-            "g-8vcpu-32gb": {
-              "vcpus": 8,
-              "memoryMB": 32768,
-              "diskGB": 100,
-              "priceMonthly": 240
-            },
-            "g-16vcpu-64gb": {
-              "vcpus": 16,
-              "memoryMB": 65536,
-              "diskGB": 200,
-              "priceMonthly": 480
-            },
-            "g-32vcpu-128gb": {
-              "vcpus": 32,
-              "memoryMB": 131072,
-              "diskGB": 400,
-              "priceMonthly": 960
-            },
-            "g-40vcpu-160gb": {
-              "vcpus": 40,
-              "memoryMB": 163840,
-              "diskGB": 500,
-              "priceMonthly": 1200
-            },
-            "c-8": {
-              "vcpus": 8,
-              "memoryMB": 16384,
-              "diskGB": 100,
-              "priceMonthly": 160
-            },
-            "c-16": {
-              "vcpus": 16,
-              "memoryMB": 32768,
-              "diskGB": 200,
-              "priceMonthly": 320
-            },
-            "c-32": {
-              "vcpus": 32,
-              "memoryMB": 65536,
-              "diskGB": 400,
-              "priceMonthly": 640
-            },
-            "c-48": {
-              "vcpus": 48,
-              "memoryMB": 98304,
-              "diskGB": 600,
-              "priceMonthly": 960
-            }
-          }
-        },
-        "lightsail": {
-          "regions": [
-            "us-east",
-            "us-west",
-            "eu-central",
-            "ap-southeast"
-          ],
-          "premium": true,
-          "costs": {
-            "nano_3_0": {
-              "vcpus": 1,
-              "memoryMB": 512,
-              "diskGB": 20,
-              "priceMonthly": 3.5
-            },
-            "micro_3_0": {
-              "vcpus": 1,
-              "memoryMB": 1024,
-              "diskGB": 40,
-              "priceMonthly": 5
-            },
-            "small_3_0": {
-              "vcpus": 1,
-              "memoryMB": 2048,
-              "diskGB": 60,
-              "priceMonthly": 10
-            },
-            "medium_3_0": {
-              "vcpus": 2,
-              "memoryMB": 4096,
-              "diskGB": 80,
-              "priceMonthly": 20
-            },
-            "large_3_0": {
-              "vcpus": 2,
-              "memoryMB": 8192,
-              "diskGB": 160,
-              "priceMonthly": 40
-            },
-            "xlarge_3_0": {
-              "vcpus": 4,
-              "memoryMB": 16384,
-              "diskGB": 320,
-              "priceMonthly": 80
-            }
-          }
-        }
-      },
-      "planRouting": {
-        "starter": {
-          "default": {
-            "provider": "lightsail",
-            "type": "nano_3_0"
-          },
-          "premium": {
-            "provider": "digitalocean",
-            "type": "s-1vcpu-1gb"
-          }
-        },
-        "builder": {
-          "default": {
-            "provider": "hetzner",
-            "type": "cpx11"
-          },
-          "premium": {
-            "provider": "digitalocean",
-            "type": "s-2vcpu-2gb"
-          }
-        },
-        "dev": {
-          "default": {
-            "provider": "hetzner",
-            "type": "cpx31"
-          },
-          "premium": {
-            "provider": "lightsail",
-            "type": "large_3_0"
-          }
-        },
-        "pro": {
-          "default": {
-            "provider": "hetzner",
-            "type": "ccx13"
-          },
-          "premium": {
-            "provider": "lightsail",
-            "type": "large_3_0"
-          }
-        },
-        "turbo": {
-          "default": {
-            "provider": "hetzner",
-            "type": "cpx41"
-          },
-          "premium": {
-            "provider": "digitalocean",
-            "type": "s-8vcpu-16gb"
-          }
-        },
-        "turbo-dedicated": {
-          "default": {
-            "provider": "hetzner",
-            "type": "ccx23"
-          },
-          "premium": {
-            "provider": "digitalocean",
-            "type": "s-8vcpu-16gb"
-          }
-        },
-        "business": {
-          "default": {
-            "provider": "hetzner",
-            "type": "ccx33"
-          },
-          "premium": {
-            "provider": "digitalocean",
-            "type": "g-8vcpu-32gb"
-          }
-        },
-        "enterprise": {
-          "default": {
-            "provider": "hetzner",
-            "type": "ccx43"
-          },
-          "premium": {
-            "provider": "digitalocean",
-            "type": "g-16vcpu-64gb"
-          }
-        },
-        "scale": {
-          "default": {
-            "provider": "hetzner",
-            "type": "ccx53"
-          },
-          "premium": {
-            "provider": "digitalocean",
-            "type": "g-32vcpu-128gb"
-          }
-        },
-        "mega": {
-          "default": {
-            "provider": "hetzner",
-            "type": "ccx63"
-          },
-          "premium": {
-            "provider": "digitalocean",
-            "type": "g-40vcpu-160gb"
-          }
-        },
-        "ultra": {
-          "default": {
-            "provider": "hetzner",
-            "type": "2x-ccx63"
-          },
-          "premium": {
-            "provider": "digitalocean",
-            "type": "2x-g-40vcpu-160gb"
-          }
-        }
-      }
     }
   },
   "datastore": {
@@ -9240,7 +8657,7 @@
       "30-day free trial",
       "Automated backups",
       "End-to-end encryption",
-      "SQL over HTTP \u2014 standard OLAP drivers connect",
+      "SQL over HTTP — standard OLAP drivers connect",
       "JSONEachRow + Parquet ingestion",
       "Async inserts",
       "IAM SSO authentication",

@@ -26,8 +26,6 @@ import {
   gpuTiers,
   cloudPlans,
   blockStoragePricing,
-  providerCosts,
-  planRouting,
   cloudRegions,
 } from "./models.mjs";
 
@@ -918,23 +916,11 @@ export async function sync() {
   // that falls back appends its own name here.
   const degraded = doPricing.source === "live" ? [] : ["compute"];
 
-  // Build compute tiers with markup.
-  //
-  // Which supplier serves a tier, what they charge us, and what we add on top are
-  // internal facts: they ride under `_internal`, the one key every public view
-  // strips (see `publicView` in server.mjs). A customer sees the tier and its
-  // price — never our supplier, our cost, or our margin. The same rule the cloud
-  // plans below already follow ("customer-facing — no provider details").
+  // Build compute tiers. `_internal` carries only the sync's own provenance
+  // (measured this run or read off the frozen table, and why); every public
+  // view strips it, and the customer-facing half rides in `summary.degraded`.
   const compute = {
     _internal: {
-      provider: "digitalocean",
-      region: "sfo3",
-      markupMonthly: COMPUTE_MARKUP_MONTHLY,
-      // Whether these numbers were measured this run or read off the frozen
-      // table, and what stopped us — filed beside the supplier it names, under
-      // the key every public view strips. Which supplier refused us is our
-      // business, not the customer's; that a price is stale is theirs, and that
-      // half rides in `summary.degraded`.
       source: doPricing.source,
       reason: doPricing.reason,
     },
@@ -946,10 +932,6 @@ export async function sync() {
       priceMonthly: roundPrice(info.priceMonthly + COMPUTE_MARKUP_MONTHLY),
       priceHourly: roundPrice((info.priceMonthly + COMPUTE_MARKUP_MONTHLY) / 720),
       centsPerHour: Math.ceil(((info.priceMonthly + COMPUTE_MARKUP_MONTHLY) / 720) * 100),
-      _internal: {
-        basePriceMonthly: info.priceMonthly,
-        basePriceHourly: info.priceHourly,
-      },
     })),
     presets: computePresets.map((p) => {
       const info = doPricing.prices[p.slug] || doFallbackPrices[p.slug];
@@ -1011,8 +993,6 @@ export async function sync() {
       minSizeGB: blockStoragePricing.minSizeGB,
       maxSizeGB: blockStoragePricing.maxSizeGB,
     },
-    // Internal routing data — kept in memory for backend, NOT in API response
-    _internal: { providerCosts, planRouting },
   };
 
   // 6. Build final pricing response.
@@ -1023,10 +1003,9 @@ export async function sync() {
       // The sections served from a frozen table this run — empty on a healthy
       // one. It sits in `summary` on purpose: /health and POST /v1/sync both
       // read summary and nothing else, so this is the one place a reader that
-      // acts on the answer already looks. It names our own sections, never the
-      // supplier that refused us — that stays under _internal with the cost and
-      // the margin. `updated` still says when the catalog was assembled; this
-      // says which parts of it were measured.
+      // acts on the answer already looks. It names our own sections; the detail
+      // of what stopped a source stays under _internal. `updated` still says
+      // when the catalog was assembled; this says which parts of it were measured.
       degraded,
       zenModels: zenModelCount,
       doAiModels: doAiModelCount,

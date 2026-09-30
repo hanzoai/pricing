@@ -13,10 +13,7 @@ import { buildEnsoModels } from "../src/sync.mjs";
 // cold start, and cloud deploys with a single replica and strategy Recreate. So a
 // wrong number in ensoCatalog is a wrong CHARGE.
 //
-// This catalog went on publishing the pre-2026-07-22 rates (20/60, 2/6, 40/120) for
-// months after the reprice landed in the two owners below — a 5x-8x overcharge on the
-// path above, and a wrong quote everywhere the pricing feed is rendered. Nothing was
-// comparing the copies, so nothing failed. This test is that comparison.
+// This test holds the copies equal: the literals here must match the owners below.
 //
 // Owners of the truth, which must agree with the literals here:
 //   - hanzoai/zen/catalog-enso.yaml            → `retail: { in, out }`
@@ -25,8 +22,7 @@ import { buildEnsoModels } from "../src/sync.mjs";
 // `context` is held to the same comparison. It is the offline fallback for the
 // window the serving gateway advertises (catalog-enso.yaml `route[].ctx`, replicated
 // in commerce's `spec.contextWindow`), so a stale copy publishes a window we do not
-// serve on every cycle enso is unreachable. It was stale in both directions at once —
-// flash at 1000000 against a 262144 route, ultra at 200000 against a 1M one.
+// serve on every cycle enso is unreachable.
 const RETAIL = {
   enso: { input: 4, output: 20, context: 1000000 },
   "enso-flash": { input: 2, output: 4, context: 262144 },
